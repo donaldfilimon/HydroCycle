@@ -34,3 +34,6 @@ data/attachments/*
 # QA scratch
 tmp/
 qa/
+
+# Isolated continuation worktrees
+.worktrees/
