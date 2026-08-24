@@ -1,0 +1,335 @@
+{
+  "bubble_population": {
+    "bins": [
+      {
+        "diameter_nm": {
+          "basis": "literature",
+          "distribution": "lognormal",
+          "source_id": "literature-comparison-bubble-size",
+          "standard_uncertainty": 40.0,
+          "unit": "nm",
+          "value": 200.0
+        },
+        "number_per_ml": {
+          "basis": "literature",
+          "distribution": "lognormal",
+          "source_id": "literature-comparison-number-density",
+          "standard_uncertainty": 50000000.0,
+          "unit": "1/mL",
+          "value": 100000000.0
+        }
+      }
+    ],
+    "hydrogen_content_scale": {
+      "basis": "user_assumption",
+      "distribution": "lognormal",
+      "source_id": "bubble-gas-identity-and-content-uncertainty",
+      "standard_uncertainty": 0.75,
+      "unit": "1",
+      "value": 1.0
+    },
+    "method": "particle-sizing diagnostic; gas identity requires orthogonal confirmation",
+    "surface_tension_n_m": {
+      "basis": "literature",
+      "distribution": "normal",
+      "source_id": "water-surface-tension-298K",
+      "standard_uncertainty": 0.002,
+      "unit": "N/m",
+      "value": 0.07197
+    }
+  },
+  "combustion": {
+    "combustion_duration_deg": {
+      "basis": "user_assumption",
+      "distribution": "normal",
+      "source_id": "wiebe-duration-assumption",
+      "standard_uncertainty": 5.0,
+      "unit": "deg",
+      "value": 60.0
+    },
+    "combustion_efficiency": {
+      "basis": "user_assumption",
+      "distribution": "normal",
+      "source_id": "combustion-efficiency-assumption",
+      "standard_uncertainty": 0.02,
+      "unit": "1",
+      "value": 0.95
+    },
+    "combustion_start_deg_atdc": {
+      "basis": "user_assumption",
+      "distribution": "normal",
+      "source_id": "wiebe-start-assumption",
+      "standard_uncertainty": 2.0,
+      "unit": "deg",
+      "value": -10.0
+    },
+    "gate_wall_loss_fraction": {
+      "basis": "user_assumption",
+      "distribution": "normal",
+      "source_id": "wall-loss-wide-assumption",
+      "standard_uncertainty": 0.05,
+      "unit": "1",
+      "value": 0.2
+    },
+    "motored_gamma": {
+      "basis": "user_assumption",
+      "distribution": "normal",
+      "source_id": "polytropic-gamma-assumption",
+      "standard_uncertainty": 0.02,
+      "unit": "1",
+      "value": 1.35
+    },
+    "target_equivalence_ratio": {
+      "basis": "synthetic",
+      "distribution": "normal",
+      "source_id": "synthetic-equivalence-ratio",
+      "standard_uncertainty": 0.03,
+      "unit": "1",
+      "value": 0.8
+    },
+    "wall_temperature_k": {
+      "basis": "user_assumption",
+      "distribution": "normal",
+      "source_id": "wall-temperature-assumption",
+      "standard_uncertainty": 20.0,
+      "unit": "K",
+      "value": 450.0
+    },
+    "wiebe_a": {
+      "basis": "user_assumption",
+      "distribution": "fixed",
+      "source_id": "wiebe-shape-assumption",
+      "standard_uncertainty": 0.0,
+      "unit": "1",
+      "value": 5.0
+    },
+    "wiebe_m": {
+      "basis": "user_assumption",
+      "distribution": "fixed",
+      "source_id": "wiebe-shape-assumption",
+      "standard_uncertainty": 0.0,
+      "unit": "1",
+      "value": 2.0
+    }
+  },
+  "engine": {
+    "bore_mm": {
+      "basis": "synthetic",
+      "distribution": "normal",
+      "source_id": "synthetic-engine-bore",
+      "standard_uncertainty": 0.05,
+      "unit": "mm",
+      "value": 86.0
+    },
+    "compression_ratio": {
+      "basis": "synthetic",
+      "distribution": "normal",
+      "source_id": "synthetic-engine-compression-ratio",
+      "standard_uncertainty": 0.05,
+      "unit": "1",
+      "value": 10.5
+    },
+    "connecting_rod_mm": {
+      "basis": "synthetic",
+      "distribution": "normal",
+      "source_id": "synthetic-engine-rod",
+      "standard_uncertainty": 0.1,
+      "unit": "mm",
+      "value": 143.0
+    },
+    "displacement_l": {
+      "basis": "synthetic",
+      "distribution": "normal",
+      "source_id": "synthetic-engine-displacement",
+      "standard_uncertainty": 0.001,
+      "unit": "L",
+      "value": 0.5
+    },
+    "speed_rpm": {
+      "basis": "synthetic",
+      "distribution": "normal",
+      "source_id": "synthetic-engine-speed",
+      "standard_uncertainty": 10.0,
+      "unit": "rpm",
+      "value": 2000.0
+    },
+    "stroke_mm": {
+      "basis": "synthetic",
+      "distribution": "normal",
+      "source_id": "synthetic-engine-stroke",
+      "standard_uncertainty": 0.05,
+      "unit": "mm",
+      "value": 86.0
+    },
+    "target_imep_bar": {
+      "basis": "synthetic",
+      "distribution": "normal",
+      "source_id": "synthetic-target-imep",
+      "standard_uncertainty": 0.2,
+      "unit": "bar",
+      "value": 6.0
+    },
+    "volumetric_efficiency": {
+      "basis": "synthetic",
+      "distribution": "normal",
+      "source_id": "synthetic-engine-ve",
+      "standard_uncertainty": 0.03,
+      "unit": "1",
+      "value": 0.9
+    }
+  },
+  "environment": {
+    "henry_loading_scale": {
+      "basis": "user_assumption",
+      "distribution": "normal",
+      "source_id": "henry-reference-and-temperature-model-uncertainty",
+      "standard_uncertainty": 0.15,
+      "unit": "1",
+      "value": 1.0
+    },
+    "hydrogen_headspace_mole_fraction": {
+      "basis": "user_assumption",
+      "distribution": "fixed",
+      "source_id": "pure-h2-headspace-assumption",
+      "standard_uncertainty": 0.0,
+      "unit": "1",
+      "value": 1.0
+    },
+    "intake_pressure_bar": {
+      "basis": "user_assumption",
+      "distribution": "normal",
+      "source_id": "intake-pressure",
+      "standard_uncertainty": 0.01,
+      "unit": "bar",
+      "value": 1.0
+    },
+    "intake_temperature_k": {
+      "basis": "user_assumption",
+      "distribution": "normal",
+      "source_id": "intake-temperature",
+      "standard_uncertainty": 1.0,
+      "unit": "K",
+      "value": 300.0
+    },
+    "water_pressure_bar": {
+      "basis": "user_assumption",
+      "distribution": "normal",
+      "source_id": "sample-pressure",
+      "standard_uncertainty": 0.01,
+      "unit": "bar",
+      "value": 1.0
+    },
+    "water_temperature_k": {
+      "basis": "user_assumption",
+      "distribution": "normal",
+      "source_id": "sample-temperature",
+      "standard_uncertainty": 0.25,
+      "unit": "K",
+      "value": 298.15
+    }
+  },
+  "heat_recovery": {
+    "recovered_heat_j_per_cycle": {
+      "basis": "derived",
+      "distribution": "fixed",
+      "source_id": "no-measured-recovery",
+      "standard_uncertainty": 0.0,
+      "unit": "J/cycle",
+      "value": 0.0
+    }
+  },
+  "retention": {
+    "elapsed_time_s": {
+      "basis": "user_assumption",
+      "distribution": "normal",
+      "source_id": "elapsed-time",
+      "standard_uncertainty": 5.0,
+      "unit": "s",
+      "value": 3600.0
+    },
+    "first_order_rate_constant_per_s": {
+      "basis": "user_assumption",
+      "distribution": "normal",
+      "source_id": "retention-wide-assumption",
+      "standard_uncertainty": 5e-06,
+      "unit": "1/s",
+      "value": 1e-05
+    },
+    "handling_loss_fraction": {
+      "basis": "user_assumption",
+      "distribution": "normal",
+      "source_id": "handling-loss-wide-assumption",
+      "standard_uncertainty": 0.05,
+      "unit": "1",
+      "value": 0.1
+    },
+    "intake_delivery_fraction": {
+      "basis": "user_assumption",
+      "distribution": "fixed",
+      "source_id": "complete-release-assumption",
+      "standard_uncertainty": 0.0,
+      "unit": "1",
+      "value": 1.0
+    },
+    "measured_time_series": [],
+    "release_method": "passive transfer to intake; user assumption",
+    "reported_released_fraction": {
+      "basis": "derived",
+      "distribution": "fixed",
+      "source_id": null,
+      "standard_uncertainty": 0.0,
+      "unit": "1",
+      "value": null
+    }
+  },
+  "sample": {
+    "carrier_volume_ml_per_cycle": {
+      "basis": "user_assumption",
+      "distribution": "normal",
+      "source_id": "carrier-delivery",
+      "standard_uncertainty": 0.05,
+      "unit": "mL/cycle",
+      "value": 1.0
+    },
+    "measured_total_h2_mg_l": {
+      "basis": "derived",
+      "distribution": "fixed",
+      "source_id": null,
+      "standard_uncertainty": 0.0,
+      "unit": "mg/L",
+      "value": null
+    },
+    "separate_h2_mg_per_cycle": {
+      "basis": "synthetic",
+      "distribution": "normal",
+      "source_id": "synthetic-separate-h2",
+      "standard_uncertainty": 0.5,
+      "unit": "mg/cycle",
+      "value": 20.0
+    },
+    "water_injection_mg_per_cycle": {
+      "basis": "synthetic",
+      "distribution": "normal",
+      "source_id": "synthetic-water-injection",
+      "standard_uncertainty": 1.0,
+      "unit": "mg/cycle",
+      "value": 20.0
+    },
+    "water_volume_l": {
+      "basis": "user_assumption",
+      "distribution": "normal",
+      "source_id": "sample-volume",
+      "standard_uncertainty": 0.01,
+      "unit": "L",
+      "value": 1.0
+    }
+  },
+  "scenario": "hydrogen_with_water_injection",
+  "schema_version": "1.0.0",
+  "uncertainty": {
+    "analytical_samples": 200,
+    "cycle_samples": 64,
+    "enabled": true,
+    "seed": 20260824
+  }
+}

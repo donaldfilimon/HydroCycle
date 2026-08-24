@@ -1,0 +1,19 @@
+{
+  "name": "hydrocycle",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "bun@1.4.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bash scripts/dev.sh",
+    "check": "bash scripts/check.sh",
+    "check:web": "bun run --cwd apps/web check",
+    "check:model": "bash scripts/check-model.sh",
+    "contracts": "bash scripts/generate-contracts.sh",
+    "contracts:check": "bash scripts/check-contracts.sh",
+    "test:e2e": "bun run --cwd apps/web test:e2e"
+  }
+}

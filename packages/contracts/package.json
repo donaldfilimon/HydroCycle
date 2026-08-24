@@ -1,0 +1,33 @@
+{
+  "name": "@hydrocycle/contracts",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./openapi": "./src/api.generated.ts",
+    "./units": "./src/units.ts"
+  },
+  "files": [
+    "fixtures",
+    "src",
+    "templates",
+    "openapi.json"
+  ],
+  "scripts": {
+    "format:check": "prettier --check . --ignore-path .prettierignore",
+    "typecheck": "tsc --noEmit --pretty false",
+    "test": "vitest run",
+    "check": "bun run format:check && bun run typecheck && bun run test"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.14.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "openapi-typescript": "^7.9.1",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

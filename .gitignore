@@ -1,0 +1,36 @@
+# JavaScript
+node_modules/
+apps/web/dist/
+apps/web/coverage/
+playwright-report/
+test-results/
+
+# Python
+.venv/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Runtime data
+data/*.db
+data/*.db-*
+data/attachments/*
+!data/attachments/.gitkeep
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# OS and editors
+.DS_Store
+.idea/
+.vscode/
+
+# QA scratch
+tmp/
+qa/

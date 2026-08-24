@@ -1,0 +1,2 @@
+HydroCycle's local SQLite schema history. Run from services/model with
+`uv run alembic upgrade head`.
