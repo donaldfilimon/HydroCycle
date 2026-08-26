@@ -32,6 +32,7 @@ interface TestRunsScreenProps {
   runs: TestRunView[];
   selectedId: string;
   onSelect: (id: string) => void;
+  onDirtyChange: (dirty: boolean) => void;
   onSave: (run: TestRunView) => Promise<boolean>;
   onNew: () => void;
   onDuplicate: (id: string) => void;
@@ -146,6 +147,7 @@ export function TestRunsScreen({
   runs,
   selectedId,
   onSelect,
+  onDirtyChange,
   onSave,
   onNew,
   onDuplicate,
@@ -166,16 +168,8 @@ export function TestRunsScreen({
   useEffect(() => {
     setDraft(selected ?? null);
     setDirty(false);
-  }, [selected]);
-
-  useEffect(() => {
-    if (!dirty) return;
-    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-    };
-    window.addEventListener("beforeunload", warnBeforeUnload);
-    return () => window.removeEventListener("beforeunload", warnBeforeUnload);
-  }, [dirty]);
+    onDirtyChange(false);
+  }, [onDirtyChange, selected]);
 
   const visibleRuns = useMemo(
     () =>
@@ -216,6 +210,7 @@ export function TestRunsScreen({
   function patchDraft(patch: Partial<TestRunView>) {
     setDraft((current) => (current ? { ...current, ...patch } : current));
     setDirty(true);
+    onDirtyChange(true);
   }
 
   function patchStandardUncertainty(
@@ -234,18 +229,11 @@ export function TestRunsScreen({
         : current,
     );
     setDirty(true);
+    onDirtyChange(true);
   }
 
   function requestRunSelection(id: string) {
     if (id === selectedId) return;
-    if (
-      dirty &&
-      !window.confirm(
-        "This run has unsaved changes. Discard them and switch runs?",
-      )
-    ) {
-      return;
-    }
     onSelect(id);
   }
 
@@ -255,7 +243,11 @@ export function TestRunsScreen({
     const next: TestRunView = { ...current, status: "draft" };
     setDraft(next);
     setDirty(true);
-    if (await onSave(next)) setDirty(false);
+    onDirtyChange(true);
+    if (await onSave(next)) {
+      setDirty(false);
+      onDirtyChange(false);
+    }
   }
 
   function moveRunTab(
@@ -425,7 +417,10 @@ export function TestRunsScreen({
               disabled={!dirty}
               onClick={() =>
                 void onSave(draft).then((saved) => {
-                  if (saved) setDirty(false);
+                  if (saved) {
+                    setDirty(false);
+                    onDirtyChange(false);
+                  }
                 })
               }
             >
@@ -1271,8 +1266,12 @@ export function TestRunsScreen({
               const next = { ...draft, status };
               setDraft(next);
               setDirty(true);
+              onDirtyChange(true);
               void onSave(next).then((saved) => {
-                if (saved) setDirty(false);
+                if (saved) {
+                  setDirty(false);
+                  onDirtyChange(false);
+                }
               });
             }}
           >

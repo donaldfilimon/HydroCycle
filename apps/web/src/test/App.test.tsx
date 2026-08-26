@@ -296,27 +296,118 @@ describe("HydroCycle application flows", () => {
     expect(document.querySelectorAll(".quality-row[open]")).toHaveLength(0);
   });
 
-  it("requires confirmation before a dirty run selection discards edits", async () => {
+  it("uses one accessible confirmation path for dirty product and primary navigation", async () => {
     const user = userEvent.setup();
-    const confirm = vi
-      .spyOn(window, "confirm")
-      .mockReturnValueOnce(false)
-      .mockReturnValueOnce(true);
     render(<App />);
     await user.click(screen.getByRole("button", { name: "Test Runs" }));
-    await user.type(screen.getByLabelText("Operator"), " edited");
+    const operator = screen.getByLabelText("Operator");
+    await user.type(operator, " edited");
 
-    await user.click(screen.getByRole("button", { name: /^Synthetic-002$/ }));
-    expect(confirm).toHaveBeenCalledOnce();
+    await user.click(screen.getByRole("button", { name: /HydroCycle home/i }));
+    const dialog = screen.getByRole("alertdialog");
+    expect(dialog).toHaveTextContent(/discard unsaved changes/i);
+    expect(dialog).toHaveTextContent(/this Test Run has unsaved changes/i);
+    expect(
+      within(dialog).getByRole("button", { name: /cancel/i }),
+    ).toHaveFocus();
+    await user.keyboard("{Escape}");
     expect(
       screen.getByRole("heading", { name: /Synthetic-003/i }),
     ).toBeInTheDocument();
+    expect(operator).toHaveValue("Demo operator edited");
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: /HydroCycle home/i }),
+      ).toHaveFocus(),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Workbench" }));
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: /discard changes/i,
+      }),
+    );
+    expect(
+      screen.getByRole("region", {
+        name: /bounded zero-dimensional engine-cycle workbench/i,
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("guards dirty new and import actions while preserving the draft on cancellation", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Test Runs" }));
+    const operator = screen.getByLabelText("Operator");
+    await user.type(operator, " edited");
+
+    await user.click(screen.getByRole("button", { name: "New run" }));
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: /cancel/i,
+      }),
+    );
+    expect(operator).toHaveValue("Demo operator edited");
+
+    await user.click(screen.getByRole("button", { name: /import run/i }));
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: /discard changes/i,
+      }),
+    );
+    expect(
+      screen.getByRole("dialog", { name: /import measured data/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("requires confirmation before a dirty run selection discards edits", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Test Runs" }));
+    const operator = screen.getByLabelText("Operator");
+    await user.type(operator, " edited");
 
     await user.click(screen.getByRole("button", { name: /^Synthetic-002$/ }));
-    expect(confirm).toHaveBeenCalledTimes(2);
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: /cancel/i,
+      }),
+    );
+    expect(
+      screen.getByRole("heading", { name: /Synthetic-003/i }),
+    ).toBeInTheDocument();
+    expect(operator).toHaveValue("Demo operator edited");
+
+    await user.click(screen.getByRole("button", { name: /^Synthetic-002$/ }));
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: /discard changes/i,
+      }),
+    );
     expect(
       screen.getByRole("heading", { name: /Synthetic-002/i }),
     ).toBeInTheDocument();
+  });
+
+  it("does not guard clean navigation, evaluation, or export, and retains the unload warning", async () => {
+    const user = userEvent.setup();
+    const anchorClick = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => {});
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Workbench" }));
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Test Runs" }));
+    await user.type(screen.getByLabelText("Operator"), " edited");
+    await user.click(screen.getByRole("button", { name: /run model/i }));
+    await user.click(screen.getByRole("button", { name: /^export$/i }));
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(anchorClick).toHaveBeenCalledOnce();
+
+    const unload = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(unload);
+    expect(unload.defaultPrevented).toBe(true);
   });
 
   it("explains why neutral CFD export is unavailable without an owned pass result", async () => {
