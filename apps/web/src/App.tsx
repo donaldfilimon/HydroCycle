@@ -1330,6 +1330,53 @@ function DeleteDialog({
   );
 }
 
+function DiscardChangesDialog({
+  onClose,
+  onConfirm,
+}: {
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  const dialogRef = useDialogFocus(onClose);
+  return createPortal(
+    <div className="modal-backdrop" role="presentation">
+      <section
+        ref={dialogRef}
+        className="modal modal--confirm"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="discard-changes-title"
+        tabIndex={-1}
+      >
+        <header>
+          <div>
+            <AlertTriangle size={20} />
+            <h2 id="discard-changes-title">Discard unsaved changes?</h2>
+          </div>
+        </header>
+        <p>This Test Run has unsaved changes. Discard them and continue?</p>
+        <div className="modal-actions">
+          <button
+            className="button button--quiet"
+            type="button"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button
+            className="button button--danger"
+            type="button"
+            onClick={onConfirm}
+          >
+            Discard changes
+          </button>
+        </div>
+      </section>
+    </div>,
+    document.body,
+  );
+}
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>(initialScreen);
   const [inputs, setInputs] = useState<WorkbenchInputs>(DEFAULT_INPUTS);
@@ -1344,11 +1391,15 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editorDirty, setEditorDirty] = useState(false);
+  const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
   const [notice, setNotice] = useState(
     "Literature comparison loaded; no measurement is implied.",
   );
   const [health, setHealth] = useState<ApiHealth | null>(null);
   const dialogInvokerRef = useRef<HTMLElement | null>(null);
+  const discardDialogInvokerRef = useRef<HTMLElement | null>(null);
+  const pendingDiscardActionRef = useRef<(() => void) | null>(null);
   const selectedRun = useMemo(
     () => runs.find((run) => run.id === selectedRunId) ?? null,
     [runs, selectedRunId],
@@ -1389,6 +1440,15 @@ export default function App() {
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
+  useEffect(() => {
+    if (!editorDirty) return;
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", warnBeforeUnload);
+    return () => window.removeEventListener("beforeunload", warnBeforeUnload);
+  }, [editorDirty]);
+
   const navigate = useCallback((next: Screen) => {
     setScreen(next);
     const url = new URL(window.location.href);
@@ -1401,6 +1461,41 @@ export default function App() {
     );
   }, []);
 
+  const requestDiscard = useCallback(
+    (action: () => void) => {
+      if (!editorDirty) {
+        action();
+        return;
+      }
+      discardDialogInvokerRef.current =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
+      pendingDiscardActionRef.current = action;
+      setDiscardDialogOpen(true);
+    },
+    [editorDirty],
+  );
+
+  const closeDiscardDialog = useCallback(() => {
+    pendingDiscardActionRef.current = null;
+    setDiscardDialogOpen(false);
+    window.setTimeout(() => discardDialogInvokerRef.current?.focus(), 0);
+  }, []);
+
+  const confirmDiscard = useCallback(() => {
+    const action = pendingDiscardActionRef.current;
+    pendingDiscardActionRef.current = null;
+    setDiscardDialogOpen(false);
+    setEditorDirty(false);
+    action?.();
+  }, []);
+
+  const guardedNavigate = useCallback(
+    (next: Screen) => requestDiscard(() => navigate(next)),
+    [navigate, requestDiscard],
+  );
+
   const openImportDialog = useCallback(() => {
     dialogInvokerRef.current =
       document.activeElement instanceof HTMLElement
@@ -1408,6 +1503,11 @@ export default function App() {
         : null;
     setImportOpen(true);
   }, []);
+
+  const requestImport = useCallback(
+    () => requestDiscard(openImportDialog),
+    [openImportDialog, requestDiscard],
+  );
 
   const closeImportDialog = useCallback(() => {
     setImportOpen(false);
@@ -1742,11 +1842,11 @@ export default function App() {
       active={screen}
       busy={busy}
       gatePassed={simulation.gate.passed}
-      onNavigate={navigate}
+      onNavigate={guardedNavigate}
       onRun={() => void runModel()}
-      onImport={openImportDialog}
+      onImport={requestImport}
       onExport={() => void exportBundle()}
-      dialogOpen={importOpen || deleteId !== null}
+      dialogOpen={importOpen || deleteId !== null || discardDialogOpen}
     >
       <div className="app-notice" role="status" aria-live="polite">
         <span>{notice}</span>
@@ -1758,7 +1858,7 @@ export default function App() {
           simulation={simulation}
           uncertaintyVisible={uncertaintyVisible}
           onToggleUncertainty={() => setUncertaintyVisible((value) => !value)}
-          onOpenWorkbench={() => navigate("workbench")}
+          onOpenWorkbench={() => guardedNavigate("workbench")}
         />
       ) : null}
       {screen === "workbench" ? (
@@ -1780,12 +1880,13 @@ export default function App() {
         <TestRunsScreen
           runs={runs}
           selectedId={selectedRunId}
-          onSelect={setSelectedRunId}
+          onSelect={(id) => requestDiscard(() => setSelectedRunId(id))}
+          onDirtyChange={setEditorDirty}
           onSave={saveRun}
-          onNew={() => void newRun()}
-          onDuplicate={(id) => void duplicateRun(id)}
+          onNew={() => requestDiscard(() => void newRun())}
+          onDuplicate={(id) => requestDiscard(() => void duplicateRun(id))}
           onDelete={openDeleteDialog}
-          onImport={openImportDialog}
+          onImport={requestImport}
           linkedSimulation={
             simulation.id && selectedRun?.simulationIds.includes(simulation.id)
               ? simulation
@@ -1829,6 +1930,13 @@ export default function App() {
         <DeleteDialog
           onClose={closeDeleteDialog}
           onConfirm={() => void removeRun(deleteId)}
+        />
+      ) : null}
+
+      {discardDialogOpen ? (
+        <DiscardChangesDialog
+          onClose={closeDiscardDialog}
+          onConfirm={confirmDiscard}
         />
       ) : null}
     </AppShell>

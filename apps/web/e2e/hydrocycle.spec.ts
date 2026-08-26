@@ -261,6 +261,34 @@ test("malformed import produces actionable field and file guidance", async ({
   await expect(dialog.getByRole("alert")).toContainText("strictly increasing");
 });
 
+test("dirty Test Run navigation and import use the shared discard confirmation", async ({
+  page,
+}) => {
+  await page.getByRole("button", { name: "Test Runs", exact: true }).click();
+  const operator = page.getByLabel("Operator");
+  await operator.fill("Guarded browser editor");
+
+  await page.getByRole("button", { name: "Summary", exact: true }).click();
+  const discard = page.getByRole("alertdialog", {
+    name: /discard unsaved changes/i,
+  });
+  await expect(discard).toContainText(/this Test Run has unsaved changes/i);
+  await discard.getByRole("button", { name: /cancel/i }).click();
+  await expect(
+    page.getByRole("heading", { name: /Synthetic-003/i }),
+  ).toBeVisible();
+  await expect(operator).toHaveValue("Guarded browser editor");
+
+  await page.getByRole("button", { name: /import run/i }).click();
+  await page
+    .getByRole("alertdialog", { name: /discard unsaved changes/i })
+    .getByRole("button", { name: /discard changes/i })
+    .click();
+  await expect(
+    page.getByRole("dialog", { name: /import measured data/i }),
+  ).toBeVisible();
+});
+
 test("canonical export and re-import preserve a persisted simulation result hash", async ({
   page,
 }) => {
