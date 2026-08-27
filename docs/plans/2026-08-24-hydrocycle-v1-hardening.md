@@ -10,8 +10,8 @@ the binding product specification.
 
 ## Completion status — 2026-08-27
 
-All four tasks are implemented in the current local `main` working tree. Task 1
-landed in `b0bbe25`; the still-uncommitted Tasks 2–4 changes now add
+All four tasks are implemented and committed on the canonical local `main`.
+Task 1 landed in `b0bbe25`; Tasks 2–4 landed in `39a84c2` and add
 deterministic multi-metric comparisons, scope-correct Summary evidence counts,
 and Starlette's supported `httpx2`
 test-client path. This complete local tree passes `bun run check` (78 model/API,
@@ -45,8 +45,9 @@ whole-tree review is tracked separately from these implementation gates.
   `Single-zone state — schematic, not CFD.`
 - Use test-driven changes with focused tests plus the repository gate. Test
   output must be pristine; do not suppress warnings to make it appear clean.
-- Work only on the isolated continuation branch. Commit each task locally;
-  do not push, merge, publish, or add a remote.
+- Keep the finished work on this repository's canonical local `main`. The
+  repository has no remote; do not add one, push, publish, or deploy it as part
+  of this continuation.
 
 ## Task 1: Complete unsaved-change protection
 
@@ -150,7 +151,7 @@ supported dependency boundary changes. Commit the task.
 - Generated OpenAPI/TypeScript contracts have no drift.
 - Scientific reference, gate suppression, deterministic uncertainty, import,
   export, comparison, and no-hardware-command invariants remain green.
-- The continuation branch receives a broad whole-branch review against this
+- The complete canonical tree receives a broad whole-tree review against this
   plan and the original v1 contract.
-- `main` remains untouched after the isolated branch is created; no remote,
-  push, merge, deployment, or publication occurs.
+- Local `main` contains Task 1 at `b0bbe25` and the Tasks 2–4 closeout at
+  `39a84c2`; no remote, push, deployment, or publication occurs.
