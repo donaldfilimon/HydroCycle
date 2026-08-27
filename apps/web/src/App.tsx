@@ -32,6 +32,11 @@ import { TestRunsScreen } from "./screens/TestRunsScreen";
 import { WorkbenchScreen } from "./screens/WorkbenchScreen";
 
 const validScreens = new Set<Screen>(["summary", "workbench", "test-runs"]);
+const STATIC_DEMO = import.meta.env.VITE_STATIC_DEMO === "true";
+
+interface AppProps {
+  staticDemo?: boolean;
+}
 
 function initialScreen(): Screen {
   const query = new URLSearchParams(window.location.search).get("view");
@@ -1417,7 +1422,7 @@ function DiscardChangesDialog({
   );
 }
 
-export default function App() {
+export default function App({ staticDemo = STATIC_DEMO }: AppProps = {}) {
   const [screen, setScreen] = useState<Screen>(initialScreen);
   const [inputs, setInputs] = useState<WorkbenchInputs>(DEFAULT_INPUTS);
   const [simulation, setSimulation] = useState(() =>
@@ -1434,7 +1439,9 @@ export default function App() {
   const [editorDirty, setEditorDirty] = useState(false);
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
   const [notice, setNotice] = useState(
-    "Literature comparison loaded; no measurement is implied.",
+    staticDemo
+      ? "Static fixture preview loaded; no model computation is implied."
+      : "Literature comparison loaded; no measurement is implied.",
   );
   const [health, setHealth] = useState<ApiHealth | null>(null);
   const dialogInvokerRef = useRef<HTMLElement | null>(null);
@@ -1462,6 +1469,7 @@ export default function App() {
   }, [inputs.fixture, selectedRun]);
 
   useEffect(() => {
+    if (staticDemo) return;
     void Promise.all([getHealth(), getTestRunsRaw()])
       .then(([nextHealth, documents]) => {
         setHealth(nextHealth);
@@ -1472,7 +1480,7 @@ export default function App() {
         }
       })
       .catch(() => setHealth(null));
-  }, []);
+  }, [staticDemo]);
 
   useEffect(() => {
     const onPopState = () => setScreen(initialScreen());
@@ -1544,10 +1552,13 @@ export default function App() {
     setImportOpen(true);
   }, []);
 
-  const requestImport = useCallback(
-    () => requestDiscard(openImportDialog),
-    [openImportDialog, requestDiscard],
-  );
+  const requestImport = useCallback(() => {
+    if (staticDemo) {
+      setNotice("Import requires the local HydroCycle application.");
+      return;
+    }
+    requestDiscard(openImportDialog);
+  }, [openImportDialog, requestDiscard, staticDemo]);
 
   const closeImportDialog = useCallback(() => {
     setImportOpen(false);
@@ -1586,6 +1597,14 @@ export default function App() {
           label: `Selected Test Run measurements — ${measurementRun.name}`,
         }
       : fixtureFallback;
+    if (staticDemo) {
+      setSimulation(fallback);
+      setNotice(
+        `Loaded deterministic ${fallback.label.toLowerCase()}; no model service computation was performed.`,
+      );
+      setBusy(false);
+      return;
+    }
     try {
       const persistence = selectedRun?.persisted
         ? { testRunId: selectedRun.id }
@@ -1627,7 +1646,7 @@ export default function App() {
     } finally {
       setBusy(false);
     }
-  }, [inputs, measurementRun, selectedRun, selectedRunId]);
+  }, [inputs, measurementRun, selectedRun, selectedRunId, staticDemo]);
 
   function updateInput(
     key: keyof WorkbenchInputs,
@@ -1866,6 +1885,7 @@ export default function App() {
   }
 
   const apiLabel = useMemo(() => {
+    if (staticDemo) return "GitHub Pages: static fixtures only";
     if (!health) return "Local model service: offline / checking";
     const status = health.status;
     const service = health.service;
@@ -1876,13 +1896,14 @@ export default function App() {
           ? service
           : "connected";
     return `Local model service: ${label}`;
-  }, [health]);
+  }, [health, staticDemo]);
 
   return (
     <AppShell
       active={screen}
       busy={busy}
       gatePassed={simulation.gate.passed}
+      staticDemo={staticDemo}
       onNavigate={guardedNavigate}
       onRun={() => void runModel()}
       onImport={requestImport}
@@ -1910,6 +1931,7 @@ export default function App() {
           measurementRun={measurementRun}
           cursorDeg={cursorDeg}
           reducedMotion={reducedMotion}
+          staticDemo={staticDemo}
           onCursorChange={(value) =>
             setCursorDeg(Math.max(-180, Math.min(180, value)))
           }

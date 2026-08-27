@@ -35,6 +35,7 @@ interface WorkbenchScreenProps {
   measurementRun: TestRunView | null;
   cursorDeg: number;
   reducedMotion: boolean;
+  staticDemo: boolean;
   onCursorChange: (value: number) => void;
   onReducedMotionChange: (value: boolean) => void;
   onInputChange: (
@@ -133,6 +134,7 @@ export function WorkbenchScreen({
   measurementRun,
   cursorDeg,
   reducedMotion,
+  staticDemo,
   onCursorChange,
   onReducedMotionChange,
   onInputChange,
@@ -803,7 +805,8 @@ export function WorkbenchScreen({
             type="button"
             onClick={onRun}
           >
-            <Play size={15} fill="currentColor" /> Re-run gate
+            <Play size={15} fill="currentColor" />
+            {staticDemo ? "Load demo fixture" : "Re-run gate"}
           </button>
         </aside>
 

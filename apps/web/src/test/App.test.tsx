@@ -40,6 +40,18 @@ describe("HydroCycle application flows", () => {
     expect(screen.getByText(/reactive trace suppressed/i)).toBeInTheDocument();
   });
 
+  it("keeps the Pages build fixture-only without probing the local API", async () => {
+    render(<App staticDemo />);
+    expect(
+      screen.getByText(/static fixture preview.*no model service/i),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /import run/i })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: /load demo fixture/i }),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(fetch).not.toHaveBeenCalled());
+  });
+
   it("shows and hides uncertainty without losing the evidence basis", async () => {
     const user = userEvent.setup();
     render(<App />);
