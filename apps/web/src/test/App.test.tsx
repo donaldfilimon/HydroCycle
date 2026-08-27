@@ -41,6 +41,7 @@ describe("HydroCycle application flows", () => {
   });
 
   it("keeps the Pages build fixture-only without probing the local API", async () => {
+    const user = userEvent.setup();
     render(<App staticDemo />);
     expect(
       screen.getByText(/static fixture preview.*no model service/i),
@@ -48,6 +49,16 @@ describe("HydroCycle application flows", () => {
     expect(screen.getByRole("button", { name: /import run/i })).toBeDisabled();
     expect(
       screen.getByRole("button", { name: /load demo fixture/i }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Test Runs" }));
+    const operator = screen.getByLabelText("Operator");
+    await user.clear(operator);
+    await user.type(operator, "Static reviewer");
+    await user.click(screen.getByRole("button", { name: /^save$/i }));
+    expect(
+      screen.getByText(
+        /persistence requires the local HydroCycle application/i,
+      ),
     ).toBeInTheDocument();
     await waitFor(() => expect(fetch).not.toHaveBeenCalled());
   });

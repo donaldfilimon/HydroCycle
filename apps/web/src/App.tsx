@@ -1772,6 +1772,12 @@ export default function App({ staticDemo = STATIC_DEMO }: AppProps = {}) {
       persisted: false,
     };
     navigate("test-runs");
+    if (staticDemo) {
+      setRuns((current) => [run, ...current]);
+      setSelectedRunId(id);
+      setNotice("Created an in-memory demo draft; persistence is unavailable.");
+      return;
+    }
     try {
       const document = await createTestRun(testRunPayload(run));
       const persisted = mapApiTestRun(document);
@@ -1788,6 +1794,10 @@ export default function App({ staticDemo = STATIC_DEMO }: AppProps = {}) {
   }
 
   async function saveRun(run: TestRunView) {
+    if (staticDemo) {
+      setNotice("Persistence requires the local HydroCycle application.");
+      return false;
+    }
     try {
       const document = run.persisted
         ? await patchTestRun(run.id, testRunPatchPayload(run))

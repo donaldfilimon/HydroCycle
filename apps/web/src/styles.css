@@ -317,6 +317,15 @@ p {
   text-align: center;
 }
 
+.static-demo-unavailable {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
 .safety-strip__lead,
 .safety-strip__scope {
   display: flex;
