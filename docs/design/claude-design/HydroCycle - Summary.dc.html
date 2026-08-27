@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../../apps/web/src/styles.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</helmet>
+<div class="app-shell app-shell--summary">
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="topbar">
+    <button class="brand-button" type="button">
+      <div class="brand" aria-label="HydroCycle home">
+        <span class="brand__mark" aria-hidden="true"><i data-lucide="droplets" width="23" height="23"></i></span>
+        <span>HydroCycle</span>
+      </div>
+    </button>
+    <nav class="topnav" aria-label="Primary">
+      <button class="topnav__item is-active" type="button" aria-current="page">Summary</button>
+      <button class="topnav__item" type="button">Workbench</button>
+      <button class="topnav__item" type="button">Test Runs</button>
+    </nav>
+    <div class="topbar__actions">
+      <button class="button button--quiet" type="button"><i data-lucide="upload" width="16" height="16"></i><span>Import run</span></button>
+      <button class="button button--quiet" type="button"><i data-lucide="download" width="16" height="16"></i><span>Export</span></button>
+      <button class="button button--primary" type="button"><i data-lucide="play" width="16" height="16" fill="currentColor"></i><span>Run model</span></button>
+    </div>
+  </header>
+
+  <div class="safety-strip" role="note">
+    <span class="safety-strip__lead"><i data-lucide="alert-triangle" width="17" height="17"></i>Simulation only — not validated for engine control.</span>
+    <span class="safety-strip__scope">0D single-zone model <i></i> Cantera thermochemistry <i></i> No hardware control</span>
+  </div>
+
+  <div class="{{ mobileGateClass }}" role="status">{{ mobileGateText }}</div>
+
+  <main id="main-content" tabindex="-1">
+    <div class="summary-screen screen-frame">
+      <section class="summary-overview" aria-labelledby="summary-title">
+        <div class="summary-overview__heading">
+          <h1 id="summary-title">Concept feasibility at a glance</h1>
+          <div>
+            <span>Conclusion</span>
+            <strong>Hydrogen is the fuel; water is the carrier and thermal load.</strong>
+            <p>{{ conclusionText }}</p>
+          </div>
+        </div>
+
+        <div class="summary-overview__body">
+          <div class="summary-overview__main">
+            <div class="summary-metrics">
+              <div class="summary-metric">
+                <span>Derived total H₂ reference <i data-lucide="info" width="13" height="13"></i></span>
+                <strong>{{ metric1Value }}</strong>
+                <sc-if value="{{ uncertaintyVisible }}" hint-placeholder-val="{{ false }}"><small>{{ metric1Interval }}</small></sc-if>
+                <em>NIST dissolved reference + explicit bubble estimate</em>
+              </div>
+              <div class="summary-metric">
+                <span>Chemical energy carried (LHV) <i data-lucide="info" width="13" height="13"></i></span>
+                <strong>{{ metric2Value }}</strong>
+                <sc-if value="{{ uncertaintyVisible }}" hint-placeholder-val="{{ false }}"><small>≈120 MJ/kg H₂ basis</small></sc-if>
+                <em>Hydrogen chemical energy only</em>
+              </div>
+              <div class="summary-metric">
+                <span>Carrier liquid-to-vapor burden <i data-lucide="info" width="13" height="13"></i></span>
+                <strong>{{ metric3Value }}</strong>
+                <sc-if value="{{ uncertaintyVisible }}" hint-placeholder-val="{{ false }}"><small>313.5 kJ/L sensible heating in this case</small></sc-if>
+                <em>Positive system load unless recovered heat is measured</em>
+              </div>
+              <div class="summary-gate-metric">
+                <span>Feasibility gate</span>
+                <section class="{{ gateStatusClass }}" aria-label="Feasibility gate result">
+                  <span class="gate-status__icon" aria-hidden="true">
+                    <sc-if value="{{ gatePassed }}" hint-placeholder-val="{{ false }}"><i data-lucide="check" width="23" height="23"></i></sc-if>
+                    <sc-if value="{{ gateFailedFlag }}" hint-placeholder-val="{{ true }}"><i data-lucide="triangle-alert" width="23" height="23"></i></sc-if>
+                  </span>
+                  <span>
+                    <strong>{{ gateLabel }}</strong>
+                    <small>{{ gateNote }}</small>
+                  </span>
+                </section>
+                <em>{{ gateEmText }}</em>
+              </div>
+            </div>
+
+            <section class="energy-theater" aria-labelledby="pathway-title">
+              <div class="energy-theater__header">
+                <h2 id="pathway-title">Energy pathway per litre of carrier</h2>
+                <div>
+                  <label class="toggle-control">
+                    <input type="checkbox" checked readonly>
+                    <span></span> LHV basis
+                  </label>
+                  <button class="theater-button" type="button" onclick="{{ toggleUncertainty }}">
+                    <i data-lucide="eye" width="14" height="14"></i>
+                    {{ uncertaintyToggleLabel }}
+                  </button>
+                  <button class="theater-button" type="button">Open in Workbench <i data-lucide="external-link" width="13" height="13"></i></button>
+                </div>
+              </div>
+
+              <div class="energy-flow" role="img" aria-label="Energy-flow comparison showing hydrogen chemical energy, water heating, vaporization burden, losses, and indicated work">
+                <div class="energy-flow__stage energy-flow__stage--input">
+                  <span>H₂ chemical energy</span>
+                  <strong>{{ flowChemicalValue }}</strong>
+                  <i style="height:{{ flowChemicalHeight }}"></i>
+                </div>
+                <i data-lucide="arrow-right" class="energy-flow__arrow" width="26" height="26"></i>
+                <div class="energy-flow__stage energy-flow__stage--burden">
+                  <span>Carrier water heating</span>
+                  <strong>−313.5 kJ/L</strong>
+                  <i></i>
+                </div>
+                <i data-lucide="arrow-right" class="energy-flow__arrow" width="26" height="26"></i>
+                <div class="energy-flow__stage energy-flow__stage--burden energy-flow__stage--large">
+                  <span>Upstream vaporization</span>
+                  <strong>−2,440 kJ/L</strong>
+                  <i></i>
+                </div>
+                <i data-lucide="arrow-right" class="energy-flow__arrow" width="26" height="26"></i>
+                <div class="energy-flow__stage energy-flow__stage--loss">
+                  <span>Wall / cycle loss</span>
+                  <strong>{{ flowWallValue }}</strong>
+                  <i></i>
+                </div>
+                <i data-lucide="arrow-right" class="energy-flow__arrow" width="26" height="26"></i>
+                <div class="{{ flowWorkClass }}">
+                  <span>Indicated work</span>
+                  <strong>{{ flowWorkValue }}</strong>
+                </div>
+              </div>
+
+              <sc-if value="{{ gateFailedFlag }}" hint-placeholder-val="{{ true }}">
+                <div class="energy-gap-callout" role="alert">
+                  <i data-lucide="shield-alert" width="18" height="18"></i>
+                  <span>
+                    <strong>Energy and hydrogen gap prevents combustion evaluation.</strong>
+                    The motored baseline and sensitivities remain available; the proposed reactive trace is null.
+                  </span>
+                </div>
+              </sc-if>
+
+              <div class="energy-scale" aria-label="Logarithmic energy-density comparison">
+                <span class="energy-scale__axis"></span>
+                <div class="energy-scale__marker energy-scale__marker--reference" style="left:11%">
+                  <i></i>
+                  <span>Ambient dissolved H₂<br>≈ 0.189 kJ/L</span>
+                </div>
+                <div class="energy-scale__marker energy-scale__marker--threshold" style="left:58%">
+                  <i></i>
+                  <span>Selected engine-cycle demand<br>model-dependent</span>
+                </div>
+                <div class="energy-scale__marker energy-scale__marker--fuel" style="left:90%">
+                  <i></i>
+                  <span>Conventional fuel scale<br>orders of magnitude higher</span>
+                </div>
+              </div>
+
+              <aside class="summary-cycle-schematic" aria-label="Homogeneous cycle scope">
+                <figure class="cylinder-figure">
+                  <svg viewBox="0 0 520 600" role="img" aria-label="Single-zone cylinder schematic">
+                    <defs>
+                      <filter id="zoneGlow" x="-40%" y="-40%" width="180%" height="180%">
+                        <feGaussianBlur stdDeviation="10" result="blur"></feGaussianBlur>
+                        <feMerge><feMergeNode in="blur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+                      </filter>
+                    </defs>
+                    <g class="cylinder-metal">
+                      <path d="M115 132 L148 104 H372 L405 132 V468 Q405 500 375 514 H145 Q115 500 115 468 Z"></path>
+                      <path d="M143 150 L170 128 H350 L377 150 V448 H143 Z"></path>
+                      <path d="M165 112 Q176 60 216 54 H304 Q344 60 355 112"></path>
+                      <path d="M178 101 L144 61 L160 51 L205 92"></path>
+                      <path d="M342 101 L376 61 L360 51 L315 92"></path>
+                      <line x1="235" x2="235" y1="46" y2="116"></line>
+                      <line x1="285" x2="285" y1="46" y2="116"></line>
+                      <path d="M250 44 H270 V114 H250 Z"></path>
+                      <circle cx="260" cy="119" r="8"></circle>
+                    </g>
+                    <path class="zone-fill" d="M171 151 H349 V307 H171 Z" fill="{{ cylinderFill }}" filter="url(#zoneGlow)"></path>
+                    <g class="water-layer">
+                      <path d="M171 272 C210 259, 249 283, 287 269 C315 260, 335 276, 349 271 V307 H171 Z"></path>
+                      <circle cx="212" cy="248" r="4"></circle>
+                      <circle cx="293" cy="233" r="3"></circle>
+                      <circle cx="323" cy="252" r="5"></circle>
+                    </g>
+                    <g class="piston" style="transform:translateY(6px)">
+                      <path d="M158 302 H362 V372 Q350 398 327 405 H193 Q170 398 158 372 Z"></path>
+                      <line x1="165" x2="355" y1="326" y2="326"></line>
+                      <line x1="165" x2="355" y1="342" y2="342"></line>
+                      <circle cx="260" cy="357" r="14"></circle>
+                    </g>
+                    <g class="crank" style="transform:translateY(6px)">
+                      <line x1="260" x2="260" y1="405" y2="474"></line>
+                      <circle cx="260" cy="487" r="35"></circle>
+                      <circle cx="260" cy="487" r="18"></circle>
+                    </g>
+                    <g class="cylinder-copy">
+                      <text x="260" y="206" text-anchor="middle">Single-zone state</text>
+                      <text x="260" y="230" text-anchor="middle">schematic, not CFD</text>
+                      <text class="readout" x="260" y="263" text-anchor="middle">Uniform P, T, Y</text>
+                      <text class="readout" x="260" y="286" text-anchor="middle">{{ cylinderTempText }}</text>
+                      <text class="water-label" x="190" y="279">liquid + vapor water</text>
+                    </g>
+                    <g class="inventory-copy">
+                      <circle cx="384" cy="258" r="5"></circle>
+                      <text x="397" y="255">H₂ inventory</text>
+                      <text x="397" y="274">{{ cylinderH2Text }}</text>
+                      <text x="397" y="310">H₂O(l) 295 mg</text>
+                      <text x="397" y="330">H₂O(g) 205 mg</text>
+                    </g>
+                  </svg>
+                  <figcaption>Single-zone state — schematic, not CFD.</figcaption>
+                </figure>
+                <p>Homogeneous pressure, temperature, and composition only. No spatial field is generated.</p>
+              </aside>
+            </section>
+          </div>
+
+          <aside class="decision-rail" aria-labelledby="decision-title">
+            <h2 id="decision-title">Decision</h2>
+            <div class="decision-item">
+              <i data-lucide="beaker"></i>
+              <span>
+                <strong>Proceed with bench measurement</strong>
+                <p>Measure total hydrogen by headspace GC or another mass method, then resolve retention under intake-relevant handling.</p>
+              </span>
+            </div>
+            <div class="decision-item">
+              <i data-lucide="flame"></i>
+              <span>
+                <strong>Do not treat water as fuel</strong>
+                <p>Water contributes no chemical energy in this model. It creates heating and phase-change demands.</p>
+              </span>
+            </div>
+            <div class="decision-item">
+              <i data-lucide="snowflake"></i>
+              <span>
+                <strong>Preserve water injection as a separate scenario</strong>
+                <p>Evaluate charge cooling and relative thermal-NOₓ risk while hydrogen remains separately supplied fuel.</p>
+              </span>
+            </div>
+
+            <section class="evidence-quality">
+              <h3>Evidence quality <i data-lucide="circle-help" width="14" height="14"></i></h3>
+              <details>
+                <summary>
+                  <span class="evidence-dot evidence-dot--measured"></span>
+                  Selected Test Run measurements
+                  <em>0 datasets</em>
+                </summary>
+                <p>No eligible reviewed persisted Test Run is selected; draft, invalid, and volatile runs count as zero datasets.</p>
+              </details>
+              <details>
+                <summary>
+                  <span class="evidence-dot evidence-dot--literature"></span>
+                  Global literature ledger
+                  <em>1 record</em>
+                </summary>
+                <p>NIST Henry-law reference at 298.15 K</p>
+              </details>
+              <details>
+                <summary>
+                  <span class="evidence-dot evidence-dot--user_assumption"></span>
+                  Current model assumptions
+                  <em>2 records</em>
+                </summary>
+                <p>First-order retention estimate · Synthetic 0.5 L single-cylinder geometry</p>
+              </details>
+              <a href="https://webbook.nist.gov/cgi/cbook.cgi?Mask=877&Source=1970TAK5793&Units=SI" target="_blank" rel="noreferrer">Review NIST source <i data-lucide="external-link" width="12" height="12"></i></a>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section class="model-answers" aria-labelledby="answers-title">
+        <h2 id="answers-title">What the model can answer</h2>
+        <div>
+          <article>
+            <i data-lucide="beaker"></i>
+            <span>
+              <h3>Loading — how much H₂ is actually carried?</h3>
+              <p>Separates dissolved, bubble-contained, released, retained, and unaccounted hydrogen without double counting.</p>
+              <button type="button">Open in Workbench <i data-lucide="arrow-right" width="14" height="14"></i></button>
+            </span>
+          </article>
+          <article>
+            <i data-lucide="waves"></i>
+            <span>
+              <h3>Retention — how much reaches the intake?</h3>
+              <p>Uses a measured series when available; otherwise exposes the first-order decay assumption and uncertainty.</p>
+              <button type="button">Open in Workbench <i data-lucide="arrow-right" width="14" height="14"></i></button>
+            </span>
+          </article>
+          <article>
+            <i data-lucide="gauge"></i>
+            <span>
+              <h3>Cycle — what pressure and work follow if the gate passes?</h3>
+              <p>Returns a bounded homogeneous 0D cycle only after the mass-and-energy feasibility gate succeeds.</p>
+              <button type="button">Open in Workbench <i data-lucide="arrow-right" width="14" height="14"></i></button>
+            </span>
+          </article>
+        </div>
+      </section>
+
+      <section class="summary-sensitivity" aria-labelledby="summary-sensitivity-title">
+        <h2 id="summary-sensitivity-title">What changes the conclusion?</h2>
+        <ol class="sensitivity-bars" aria-label="Normalized one-at-a-time sensitivity values">
+          <li class="sensitivity-row" aria-label="Total H2 loading: 1.00, positive influence">
+            <span>Total H₂ loading</span>
+            <div aria-hidden="true"><i class="is-positive" style="width:100%"></i></div>
+            <strong>1.00</strong>
+          </li>
+          <li class="sensitivity-row" aria-label="Retention at intake: 0.73, positive influence">
+            <span>Retention at intake</span>
+            <div aria-hidden="true"><i class="is-positive" style="width:73%"></i></div>
+            <strong>0.73</strong>
+          </li>
+          <li class="sensitivity-row" aria-label="Carrier volume: 0.61, negative influence">
+            <span>Carrier volume</span>
+            <div aria-hidden="true"><i class="is-negative" style="width:61%"></i></div>
+            <strong>0.61</strong>
+          </li>
+          <li class="sensitivity-row" aria-label="Recovered heat: 0.44, positive influence">
+            <span>Recovered heat</span>
+            <div aria-hidden="true"><i class="is-positive" style="width:44%"></i></div>
+            <strong>0.44</strong>
+          </li>
+        </ol>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1536,&quot;height&quot;:1100},&quot;gatePassed&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Model state&quot;},&quot;uncertaintyVisible&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Model state&quot;}}">
+class Component extends DCLogic {
+  state = { uncertaintyVisible: this.props.uncertaintyVisible ?? false };
+
+  componentDidMount() {
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  componentDidUpdate() {
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  fmt(n) {
+    return new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(n);
+  }
+
+  renderVals() {
+    const gatePassed = this.props.gatePassed ?? false;
+    const uncertaintyVisible = this.state.uncertaintyVisible;
+
+    const initialTotalMgL = gatePassed ? 62000 : 1.57;
+    const energyKjL = (initialTotalMgL * 120) / 1000;
+    const interval = { low: initialTotalMgL * 0.78, high: initialTotalMgL * 1.22 };
+
+    return {
+      gatePassed,
+      gateFailedFlag: !gatePassed,
+      uncertaintyVisible,
+      toggleUncertainty: () => this.setState((s) => ({ uncertaintyVisible: !s.uncertaintyVisible })),
+      uncertaintyToggleLabel: uncertaintyVisible ? "Hide uncertainty" : "Show uncertainty",
+
+      mobileGateClass: gatePassed ? "mobile-gate mobile-gate--pass" : "mobile-gate mobile-gate--fail",
+      mobileGateText: gatePassed ? "Gate passed — synthetic/model-domain result" : "Gate failed — reactive trace suppressed",
+
+      conclusionText: gatePassed
+        ? "The bounded input clears the mass-and-energy gate; inspect the proposed single-zone cycle."
+        : "Current loading does not carry enough retained hydrogen to sustain the selected operating point.",
+
+      metric1Value: `${this.fmt(initialTotalMgL)} mg H₂/L`,
+      metric1Interval: `[${this.fmt(interval.low)} – ${this.fmt(interval.high)}]`,
+      metric2Value: `${this.fmt(energyKjL)} kJ/L`,
+      metric3Value: "2,440 kJ/L",
+
+      gateStatusClass: gatePassed ? "gate-status gate-status--pass" : "gate-status gate-status--fail",
+      gateLabel: gatePassed ? "Pass" : "Failed",
+      gateNote: gatePassed
+        ? "Mass and energy thresholds met for this bounded input."
+        : "Insufficient retained H₂ · Carrier preheat deficit",
+      gateEmText: gatePassed ? "Reactive trace available" : "Required/available H₂ ratio ≈ 30,254.78",
+
+      flowChemicalValue: `${this.fmt(energyKjL)} kJ/L`,
+      flowChemicalHeight: gatePassed ? "80px" : "20px",
+      flowWallValue: gatePassed ? "−170 J/cycle" : "Not evaluated",
+      flowWorkValue: gatePassed ? "628 J" : "Suppressed",
+      flowWorkClass: gatePassed ? "energy-flow__work is-reached" : "energy-flow__work",
+
+      cylinderFill: gatePassed ? "hsl(123 83% 48%)" : "hsl(172 83% 48%)",
+      cylinderTempText: gatePassed ? "1146 K" : "576 K",
+      cylinderH2Text: gatePassed ? "18.5 mg/cycle" : "0.00 mg/cycle",
+    };
+  }
+}
+</script>
+</body>
+</html>
