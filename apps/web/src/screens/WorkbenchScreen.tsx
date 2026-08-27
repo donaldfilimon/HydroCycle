@@ -35,6 +35,7 @@ interface WorkbenchScreenProps {
   measurementRun: TestRunView | null;
   cursorDeg: number;
   reducedMotion: boolean;
+  staticDemo: boolean;
   onCursorChange: (value: number) => void;
   onReducedMotionChange: (value: boolean) => void;
   onInputChange: (
@@ -133,6 +134,7 @@ export function WorkbenchScreen({
   measurementRun,
   cursorDeg,
   reducedMotion,
+  staticDemo,
   onCursorChange,
   onReducedMotionChange,
   onInputChange,
@@ -803,7 +805,8 @@ export function WorkbenchScreen({
             type="button"
             onClick={onRun}
           >
-            <Play size={15} fill="currentColor" /> Re-run gate
+            <Play size={15} fill="currentColor" />
+            {staticDemo ? "Load demo fixture" : "Re-run gate"}
           </button>
         </aside>
 
@@ -946,9 +949,15 @@ export function WorkbenchScreen({
                   <li>No particle trajectories</li>
                   <li>No numeric emissions claim</li>
                 </ul>
-                <a href="/api/v1/model-metadata" target="_blank">
-                  View equations &amp; uncertainty <ExternalLink size={12} />
-                </a>
+                {staticDemo ? (
+                  <span className="static-demo-unavailable">
+                    Equations are available in the local application.
+                  </span>
+                ) : (
+                  <a href="/api/v1/model-metadata" target="_blank">
+                    View equations &amp; uncertainty <ExternalLink size={12} />
+                  </a>
+                )}
               </section>
             </aside>
           </div>
@@ -1288,14 +1297,20 @@ export function WorkbenchScreen({
                 engine trace.
               </p>
             </section>
-            <a
-              className="button button--outline rail-button"
-              href="/api/v1/model-metadata"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <BookOpen size={15} /> View equations &amp; source ledger
-            </a>
+            {staticDemo ? (
+              <p className="static-demo-unavailable">
+                <BookOpen size={15} /> Source ledger available locally
+              </p>
+            ) : (
+              <a
+                className="button button--outline rail-button"
+                href="/api/v1/model-metadata"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <BookOpen size={15} /> View equations &amp; source ledger
+              </a>
+            )}
             <p className="rail-footnote">
               <CircleHelp size={13} /> All uncertainty bands are 95% intervals
               unless noted.

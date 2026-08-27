@@ -8,12 +8,20 @@
     "packages/*"
   ],
   "scripts": {
+    "setup": "bun install --frozen-lockfile && uv lock --check --project services/model && uv sync --frozen --project services/model",
     "dev": "bash scripts/dev.sh",
+    "build": "bun run --cwd apps/web build",
+    "build:pages": "VITE_STATIC_DEMO=true bun run --cwd apps/web build",
     "check": "bash scripts/check.sh",
     "check:web": "bun run --cwd apps/web check",
     "check:model": "bash scripts/check-model.sh",
+    "test": "bun run test:model && bun run test:contracts && bun run test:web",
+    "test:model": "uv run --project services/model --frozen pytest",
+    "test:contracts": "bun run --cwd packages/contracts test",
+    "test:web": "bun run --cwd apps/web test",
     "contracts": "bash scripts/generate-contracts.sh",
     "contracts:check": "bash scripts/check-contracts.sh",
+    "test:e2e:install": "bun run --cwd apps/web test:e2e:install",
     "test:e2e": "bun run --cwd apps/web test:e2e"
   }
 }

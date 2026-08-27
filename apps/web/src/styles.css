@@ -304,6 +304,28 @@ p {
   font-size: 12px;
 }
 
+.demo-strip {
+  margin: 16px 24px 8px;
+  border: 1px solid #997000;
+  border-radius: 6px;
+  padding: 10px 14px;
+  background: #fff8d8;
+  color: #493700;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.static-demo-unavailable {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
 .safety-strip__lead,
 .safety-strip__scope {
   display: flex;

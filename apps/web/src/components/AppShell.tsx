@@ -20,6 +20,7 @@ interface AppShellProps {
   active: Screen;
   busy: boolean;
   gatePassed: boolean;
+  staticDemo: boolean;
   onNavigate: (screen: Screen) => void;
   onRun: () => void;
   onImport: () => void;
@@ -32,6 +33,7 @@ export function AppShell({
   active,
   busy,
   gatePassed,
+  staticDemo,
   onNavigate,
   onRun,
   onImport,
@@ -74,6 +76,10 @@ export function AppShell({
             className="button button--quiet"
             type="button"
             onClick={onImport}
+            disabled={staticDemo}
+            title={
+              staticDemo ? "Import requires the local application" : undefined
+            }
           >
             <Upload size={16} aria-hidden="true" />
             <span>Import run</span>
@@ -101,7 +107,13 @@ export function AppShell({
             ) : (
               <Play size={16} fill="currentColor" aria-hidden="true" />
             )}
-            <span>{busy ? "Evaluating…" : "Run model"}</span>
+            <span>
+              {busy
+                ? "Evaluating…"
+                : staticDemo
+                  ? "Load demo fixture"
+                  : "Run model"}
+            </span>
           </button>
           {active === "workbench" ? (
             <span className="topbar-safety">
@@ -111,6 +123,14 @@ export function AppShell({
           ) : null}
         </div>
       </header>
+
+      {staticDemo ? (
+        <div className="demo-strip" role="note">
+          Static fixture preview. No model service, persistence, or measured
+          data is available on GitHub Pages. Run HydroCycle locally for computed
+          results.
+        </div>
+      ) : null}
 
       <div
         className="safety-strip"

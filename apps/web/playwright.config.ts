@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const webPort = process.env.HYDROCYCLE_WEB_PORT ?? "5173";
+const webUrl = `http://127.0.0.1:${webPort}`;
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
@@ -7,7 +10,7 @@ export default defineConfig({
   retries: 0,
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
-    baseURL: "http://127.0.0.1:5173",
+    baseURL: webUrl,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
@@ -36,7 +39,7 @@ export default defineConfig({
   ],
   webServer: {
     command: "bash ../../scripts/e2e-dev.sh",
-    url: "http://127.0.0.1:5173",
+    url: webUrl,
     reuseExistingServer: false,
     timeout: 120_000,
   },
