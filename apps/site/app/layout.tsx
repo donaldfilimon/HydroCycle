@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 
+import "./globals.css";
 import "../../web/src/styles.css";
 
 const title = "HydroCycle";
 const description = "Evidence-gated hydrogen–water engine simulation";
-const fallbackOrigin = "https://hydrocycle-simulator.chatgpt-team.site";
+const fallbackOrigin = "https://hydrocycle-simulator.underswitch.chatgpt.site";
 
 function trustedOrigin(hostHeader: string | null): string | null {
   if (!hostHeader) return null;
@@ -17,6 +18,8 @@ function trustedOrigin(hostHeader: string | null): string | null {
   if (
     hostname === "chatgpt-team.site" ||
     hostname.endsWith(".chatgpt-team.site") ||
+    hostname === "chatgpt.site" ||
+    hostname.endsWith(".chatgpt.site") ||
     hostname === "openai.site" ||
     hostname.endsWith(".openai.site")
   ) {
