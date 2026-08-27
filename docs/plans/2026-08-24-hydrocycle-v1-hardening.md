@@ -8,6 +8,22 @@ four non-blocking improvements identified by the independent final verifier.
 The original evidence-gated scientific and hardware-safety contract remains
 the binding product specification.
 
+## Completion status — 2026-08-27
+
+All four tasks are implemented in the current local `main` working tree. Task 1
+landed in `b0bbe25`; the still-uncommitted Tasks 2–4 changes now add
+deterministic multi-metric comparisons, scope-correct Summary evidence counts,
+and Starlette's supported `httpx2`
+test-client path. This complete local tree passes `bun run check` (78 model/API,
+6 contract, and 26 frontend tests plus formatting, lint, type checking,
+generated-contract drift, and production build) and `bun run test:e2e` (17
+desktop, tablet, and mobile tests). The API contract did not change, so the
+generated OpenAPI and TypeScript artifacts remain current without regeneration.
+
+The implementation remains local-only: no remote, push, merge, deployment,
+publication, or hardware-control surface was added. The final independent
+whole-tree review is tracked separately from these implementation gates.
+
 ## Global Constraints
 
 - Keep the application local-only. Add no remote, deployment, analytics,
@@ -34,6 +50,8 @@ the binding product specification.
 
 ## Task 1: Complete unsaved-change protection
 
+**Status:** Complete.
+
 Extend the existing dirty Test Run guard to every action that can discard the
 current editor state:
 
@@ -58,6 +76,8 @@ Run focused frontend tests, then `bun run check:web` and the relevant Playwright
 project. Commit the task.
 
 ## Task 2: Persist all compatible comparison metrics
+
+**Status:** Complete.
 
 Replace the single prioritized generated comparison with a deterministic
 collection containing every compatible measured/model metric for a linked
@@ -85,6 +105,8 @@ contracts only if the public schema changes. Run focused API tests and
 
 ## Task 3: Distinguish selected measurements from the global source ledger
 
+**Status:** Complete.
+
 Make Summary evidence counts describe their actual scopes instead of presenting
 the global scientific source ledger as if it were selected Test Run evidence.
 
@@ -108,6 +130,8 @@ frontend tests, `bun run check:web`, and relevant Playwright coverage, then
 commit the task.
 
 ## Task 4: Remove the test-client deprecation warning safely
+
+**Status:** Complete.
 
 Eliminate the Starlette warning that says its `httpx`-backed `TestClient` path
 is deprecated. Use a supported client/dependency path or refactor the API test

@@ -5,7 +5,9 @@ hydrogen carried in micro/nanobubble water and used in an
 internal-combustion-engine cycle. It presents the same model through three
 views:
 
-- **Summary** gives the direct feasibility conclusion and energy gap.
+- **Summary** gives the direct feasibility conclusion and energy gap, while
+  separating selected reviewed measurements from the global literature and
+  model-assumption ledgers.
 - **Workbench** exposes loading, retention, uncertainty, the mass-and-energy
   gate, and the bounded 0D cycle.
 - **Test Runs** manages local measurements, calibration/provenance, model
@@ -191,10 +193,20 @@ Missing measurements stay `null`, never zero. Deletion requires explicit
 confirmation and removes only database references and HydroCycle-owned
 attachments.
 
-When a simulation is linked to a Test Run, the service also upserts a typed,
-deterministically keyed comparison record. Compatible measured/model pairs are
-stored with their units; if no compatible measurement exists, the measured
-side remains `null`. Existing operator and imported comparisons are preserved.
+When a simulation is linked to a Test Run, the service upserts every compatible
+typed measured/model comparison in a deterministic metric order: total H2,
+retained H2, retention fraction, and peak pressure. Stable IDs use
+`simulation:{result_id}:{metric}`. Re-linking is idempotent, legacy generated
+records are replaced, and existing operator/imported comparisons retain their
+order. If no compatible measurement exists, exactly one modeled-total record
+is stored with a `null` measured side; no measurement is invented.
+
+Summary counts each populated canonical scalar and each present canonical
+series as one selected Test Run dataset only when that run is persisted,
+non-synthetic, and reviewed (`needs_review` or `valid`). Draft, invalid,
+volatile, and synthetic/demo runs contribute zero operator-measurement
+datasets. Literature and user-assumption counts remain global properties of
+the current model result.
 
 Populated scalar measurements use the complete `ValueWithUncertainty` shape:
 value, canonical unit, positive standard uncertainty, distribution, source ID,

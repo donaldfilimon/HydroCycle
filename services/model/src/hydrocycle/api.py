@@ -60,6 +60,13 @@ from .test_run_contracts import (
 API_PREFIX = "/api/v1"
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 LOCAL_WEB_ORIGINS = ("http://127.0.0.1:5173", "http://localhost:5173")
+SIMULATION_COMPARISON_METRICS = (
+    "total_h2",
+    "retained_h2",
+    "retention_fraction",
+    "peak_pressure",
+    "modeled_total_h2",
+)
 
 
 def _default_database_url() -> str:
@@ -145,65 +152,107 @@ def _new_test_run(payload: TestRunCreate) -> TestRunRecord:
     )
 
 
-def _simulation_comparison(
+def _simulation_comparisons(
     test_run: TestRunRecord,
     result: SimulationResult,
-) -> ComparisonRecord:
-    """Build one deterministic, typed comparison without inventing measurements."""
+) -> list[ComparisonRecord]:
+    """Build every compatible comparison without inventing measurements."""
 
     measurements = TestRunMeasurements.model_validate(test_run.measurements_json)
-    measured_value: float | None = None
-    modeled_value: float | None = result.loading.total_h2_mg_l.value
-    unit: str | None = "mg/L" if modeled_value is not None else None
-    label = "Modeled total H2 loading"
-    metric_note = "No compatible canonical measurement was available for a paired value."
+    records: list[ComparisonRecord] = []
+    reproducibility_note = (
+        f"Reproducibility: model {result.reproducibility.model_version}, seed "
+        f"{result.reproducibility.random_seed}, result {result.result_id}."
+    )
 
-    if measurements.total_h2_mg_l is not None:
-        measured_value = measurements.total_h2_mg_l.value
-        label = "Total H2 loading: measured vs modeled"
-        metric_note = "Measured total H2 is compared with the model loading output."
-    elif measurements.headspace_gc_mg_l is not None:
-        measured_value = measurements.headspace_gc_mg_l.value
-        label = "Headspace-GC total H2: measured vs modeled"
-        metric_note = "Headspace-GC total H2 is compared with the model loading output."
-    elif measurements.retained_h2_mg_l is not None:
-        measured_value = measurements.retained_h2_mg_l.value
-        modeled_value = result.retention.retained_at_intake_mg_l.value
-        unit = "mg/L" if modeled_value is not None else None
-        label = "Retained H2 at intake: measured vs modeled"
-        metric_note = "Measured retained H2 is compared with modeled intake retention."
-    elif measurements.retention_fraction is not None:
-        measured_value = measurements.retention_fraction.value
-        modeled_value = result.retention.retained_fraction.value
-        unit = "1" if modeled_value is not None else None
-        label = "Retention fraction: measured vs modeled"
-        metric_note = "Measured retention fraction is compared with modeled retention."
-    elif measurements.pressure_trace_csv:
-        trace = result.proposed_cycle or result.motored_baseline
-        measured_value = max(point.pressure_bar for point in measurements.pressure_trace_csv)
-        modeled_value = max(trace.pressure_pa) / 100_000.0
-        unit = "bar"
-        label = "Peak cylinder pressure: measured vs bounded 0D model"
-        trace_kind = "proposed reactive" if result.proposed_cycle is not None else "motored"
-        metric_note = (
-            f"Measured peak pressure is compared with the {trace_kind} single-zone trace; "
-            "the modeled trace is schematic and not hardware-predictive."
+    def add(
+        metric: str,
+        *,
+        label: str,
+        measured_value: float | None,
+        modeled_value: float | None,
+        unit: str | None,
+        note: str,
+    ) -> None:
+        records.append(
+            ComparisonRecord(
+                id=f"simulation:{result.result_id}:{metric}",
+                kind="simulation",
+                label=label,
+                simulation_id=result.result_id,
+                measured_value=measured_value,
+                modeled_value=modeled_value,
+                unit=unit,
+                notes=f"{note} {reproducibility_note}",
+            )
         )
 
-    return ComparisonRecord(
-        id=f"simulation:{result.result_id}",
-        kind="simulation",
-        label=label,
-        simulation_id=result.result_id,
-        measured_value=measured_value,
-        modeled_value=modeled_value,
-        unit=unit,
-        notes=(
-            f"{metric_note} Reproducibility: model "
-            f"{result.reproducibility.model_version}, seed "
-            f"{result.reproducibility.random_seed}, result {result.result_id}."
-        ),
-    )
+    if measurements.total_h2_mg_l is not None:
+        add(
+            "total_h2",
+            label="Total H2 loading: measured vs modeled",
+            measured_value=measurements.total_h2_mg_l.value,
+            modeled_value=result.loading.total_h2_mg_l.value,
+            unit="mg/L",
+            note="Measured total H2 is compared with the model loading output.",
+        )
+    elif measurements.headspace_gc_mg_l is not None:
+        add(
+            "total_h2",
+            label="Headspace-GC total H2: measured vs modeled",
+            measured_value=measurements.headspace_gc_mg_l.value,
+            modeled_value=result.loading.total_h2_mg_l.value,
+            unit="mg/L",
+            note="Headspace-GC total H2 is compared with the model loading output.",
+        )
+
+    if measurements.retained_h2_mg_l is not None:
+        add(
+            "retained_h2",
+            label="Retained H2 at intake: measured vs modeled",
+            measured_value=measurements.retained_h2_mg_l.value,
+            modeled_value=result.retention.retained_at_intake_mg_l.value,
+            unit="mg/L",
+            note="Measured retained H2 is compared with modeled intake retention.",
+        )
+
+    if measurements.retention_fraction is not None:
+        add(
+            "retention_fraction",
+            label="Retention fraction: measured vs modeled",
+            measured_value=measurements.retention_fraction.value,
+            modeled_value=result.retention.retained_fraction.value,
+            unit="1",
+            note="Measured retention fraction is compared with modeled retention.",
+        )
+
+    if measurements.pressure_trace_csv:
+        trace = result.proposed_cycle or result.motored_baseline
+        trace_kind = "proposed reactive" if result.proposed_cycle is not None else "motored"
+        add(
+            "peak_pressure",
+            label="Peak cylinder pressure: measured vs bounded 0D model",
+            measured_value=max(point.pressure_bar for point in measurements.pressure_trace_csv),
+            modeled_value=max(trace.pressure_pa) / 100_000.0,
+            unit="bar",
+            note=(
+                f"Measured peak pressure is compared with the {trace_kind} single-zone "
+                "trace; the modeled trace is schematic and not hardware-predictive."
+            ),
+        )
+
+    if not records:
+        modeled_value = result.loading.total_h2_mg_l.value
+        add(
+            "modeled_total_h2",
+            label="Modeled total H2 loading",
+            measured_value=None,
+            modeled_value=modeled_value,
+            unit="mg/L" if modeled_value is not None else None,
+            note="No compatible canonical measurement was available for a paired value.",
+        )
+
+    return records
 
 
 def _upsert_simulation_comparison(
@@ -211,19 +260,14 @@ def _upsert_simulation_comparison(
     result: SimulationResult,
 ) -> bool:
     collection = ComparisonCollection.model_validate(test_run.comparisons_json)
-    comparison = _simulation_comparison(test_run, result)
-    updated_items: list[ComparisonRecord] = []
-    replaced = False
-    for item in collection.items:
-        matches_result = item.kind == "simulation" and item.simulation_id == result.result_id
-        if item.id == comparison.id or matches_result:
-            if not replaced:
-                updated_items.append(comparison)
-                replaced = True
-            continue
-        updated_items.append(item)
-    if not replaced:
-        updated_items.append(comparison)
+    comparisons = _simulation_comparisons(test_run, result)
+    generated_prefix = f"simulation:{result.result_id}"
+    generated_ids = {
+        generated_prefix,
+        *(f"{generated_prefix}:{metric}" for metric in SIMULATION_COMPARISON_METRICS),
+    }
+    updated_items = [item for item in collection.items if item.id not in generated_ids]
+    updated_items.extend(comparisons)
 
     updated = ComparisonCollection(items=updated_items).model_dump(mode="json", exclude_none=False)
     if updated == test_run.comparisons_json:

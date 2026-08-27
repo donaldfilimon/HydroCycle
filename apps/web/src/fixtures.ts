@@ -302,6 +302,7 @@ export const demoRuns: TestRunView[] = [
     pressureTrace: null,
     attachmentHashes: [],
     simulationIds: [],
+    measurementDatasetCount: 0,
     persisted: false,
   },
   {
@@ -364,6 +365,7 @@ export const demoRuns: TestRunView[] = [
     pressureTrace: null,
     attachmentHashes: [],
     simulationIds: [],
+    measurementDatasetCount: 0,
     persisted: false,
   },
   {
@@ -416,6 +418,7 @@ export const demoRuns: TestRunView[] = [
     pressureTrace: null,
     attachmentHashes: [],
     simulationIds: [],
+    measurementDatasetCount: 0,
     persisted: false,
   },
 ];

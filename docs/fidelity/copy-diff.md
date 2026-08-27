@@ -21,7 +21,7 @@ source-ledger, literature-preset, or explicitly synthetic content.
 | Show the decisive gate | `Feasibility gate` with `Pass` or `Failed` | Preserved |
 | Explain suppression | `Energy and hydrogen gap prevents combustion evaluation. The proposed reactive trace is null.` | Scientific clarification |
 | Lead into analysis | `Open in Workbench` | Preserved |
-| Make evidence quality visible | `Evidence quality` | Exact |
+| Make evidence quality visible | `Evidence quality`, split into `Selected Test Run measurements`, `Global literature ledger`, and `Current model assumptions` | Preserved and scope-clarified |
 | Separate loading, retention, and cycle questions | Model-answer rows for loading, retention, and cycle | Preserved with API-derived answers |
 
 ## Workbench

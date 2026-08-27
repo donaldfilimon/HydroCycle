@@ -12,13 +12,14 @@ import {
   Waves,
 } from "lucide-react";
 
-import type { SimulationView } from "../domain";
+import type { SimulationView, TestRunView } from "../domain";
 import { GateStatus } from "../components/GateStatus";
 import { SensitivityBars } from "../components/Charts";
 import { CylinderSchematic } from "../components/CylinderSchematic";
 
 interface SummaryScreenProps {
   simulation: SimulationView;
+  selectedRun: TestRunView | null;
   uncertaintyVisible: boolean;
   onToggleUncertainty: () => void;
   onOpenWorkbench: () => void;
@@ -51,6 +52,7 @@ function Metric({
 
 export function SummaryScreen({
   simulation,
+  selectedRun,
   uncertaintyVisible,
   onToggleUncertainty,
   onOpenWorkbench,
@@ -82,6 +84,20 @@ export function SummaryScreen({
   const conclusion = simulation.gate.passed
     ? "The bounded input clears the mass-and-energy gate; inspect the proposed single-zone cycle."
     : "Current loading does not carry enough retained hydrogen to sustain the selected operating point.";
+  const selectedRunEligible =
+    selectedRun !== null &&
+    selectedRun.persisted &&
+    !selectedRun.synthetic &&
+    (selectedRun.status === "needs_review" || selectedRun.status === "valid");
+  const selectedMeasurementCount = selectedRunEligible
+    ? selectedRun.measurementDatasetCount
+    : 0;
+  const literatureEvidence = simulation.evidence.filter(
+    (item) => item.basis === "literature",
+  );
+  const assumptionEvidence = simulation.evidence.filter(
+    (item) => item.basis === "user_assumption",
+  );
 
   return (
     <div className="summary-screen screen-frame">
@@ -390,36 +406,53 @@ export function SummaryScreen({
               <h3>
                 Evidence quality <CircleHelp size={14} aria-hidden="true" />
               </h3>
-              {(["measured", "literature", "user_assumption"] as const).map(
-                (basis) => {
-                  const count = simulation.evidence.filter(
-                    (item) => item.basis === basis,
-                  ).length;
-                  return (
-                    <details key={basis}>
-                      <summary>
-                        <span
-                          className={`evidence-dot evidence-dot--${basis}`}
-                        />
-                        {basis === "user_assumption"
-                          ? "User assumption"
-                          : basis.charAt(0).toUpperCase() + basis.slice(1)}
-                        <em>
-                          {count} record{count === 1 ? "" : "s"}
-                        </em>
-                      </summary>
-                      <p>
-                        {count === 0
-                          ? "No evidence record is attached in this category."
-                          : simulation.evidence
-                              .filter((item) => item.basis === basis)
-                              .map((item) => item.title)
-                              .join(" · ")}
-                      </p>
-                    </details>
-                  );
-                },
-              )}
+              <details>
+                <summary>
+                  <span className="evidence-dot evidence-dot--measured" />
+                  Selected Test Run measurements
+                  <em>
+                    {selectedMeasurementCount} dataset
+                    {selectedMeasurementCount === 1 ? "" : "s"}
+                  </em>
+                </summary>
+                <p>
+                  {selectedRunEligible
+                    ? `${selectedRun.name} contributes ${selectedMeasurementCount} canonical measurement dataset${selectedMeasurementCount === 1 ? "" : "s"} in its ${selectedRun.status.replace("_", " ")} persisted record.`
+                    : selectedRun?.synthetic
+                      ? "The selected synthetic demo is not counted as operator measurement evidence."
+                      : "No eligible reviewed persisted Test Run is selected; draft, invalid, and volatile runs count as zero datasets."}
+                </p>
+              </details>
+              <details>
+                <summary>
+                  <span className="evidence-dot evidence-dot--literature" />
+                  Global literature ledger
+                  <em>
+                    {literatureEvidence.length} record
+                    {literatureEvidence.length === 1 ? "" : "s"}
+                  </em>
+                </summary>
+                <p>
+                  {literatureEvidence.length === 0
+                    ? "No literature record is attached to the current simulation."
+                    : literatureEvidence.map((item) => item.title).join(" · ")}
+                </p>
+              </details>
+              <details>
+                <summary>
+                  <span className="evidence-dot evidence-dot--user_assumption" />
+                  Current model assumptions
+                  <em>
+                    {assumptionEvidence.length} record
+                    {assumptionEvidence.length === 1 ? "" : "s"}
+                  </em>
+                </summary>
+                <p>
+                  {assumptionEvidence.length === 0
+                    ? "No user-assumption record is attached to the current simulation."
+                    : assumptionEvidence.map((item) => item.title).join(" · ")}
+                </p>
+              </details>
               <a
                 href="https://webbook.nist.gov/cgi/cbook.cgi?Mask=877&Source=1970TAK5793&Units=SI"
                 target="_blank"

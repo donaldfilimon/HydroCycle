@@ -788,6 +788,7 @@ def test_persisted_pass_simulation_and_neutral_0d_boundary_export(
     linked_run = client.get(f"/api/v1/test-runs/{run['id']}")
     assert linked_run.status_code == 200
     link_comparison = linked_run.json()["comparisons"]["items"][0]
+    assert link_comparison["id"] == f"simulation:{result['result_id']}:modeled_total_h2"
     assert link_comparison["simulation_id"] == result["result_id"]
     assert link_comparison["measured_value"] is None
     assert link_comparison["modeled_value"] == result["loading"]["total_h2_mg_l"]["value"]
@@ -860,7 +861,7 @@ def test_persisted_simulation_comparison_is_typed_deterministic_and_exported(
     comparisons = retrieved.json()["comparisons"]["items"]
     assert [item["id"] for item in comparisons] == [
         "operator-comparison",
-        f"simulation:{result['result_id']}",
+        f"simulation:{result['result_id']}:total_h2",
     ]
     generated = comparisons[1]
     assert generated["kind"] == "simulation"
@@ -913,11 +914,141 @@ def test_persisted_simulation_comparison_is_typed_deterministic_and_exported(
         "items"
     ][0]
     assert series_comparison["simulation_id"] == series_result.json()["result_id"]
+    assert series_comparison["id"] == (
+        f"simulation:{series_result.json()['result_id']}:peak_pressure"
+    )
     assert series_comparison["measured_value"] == pytest.approx(30.0)
     assert series_comparison["modeled_value"] == pytest.approx(
         max(series_result.json()["proposed_cycle"]["pressure_pa"]) / 100_000.0
     )
     assert series_comparison["unit"] == "bar"
+
+    mixed_run = create_run(
+        client,
+        name="Mixed comparison run",
+        measurements={
+            "headspace_gc_mg_l": measured(2.2, "mg/L", "MIXED-CAL"),
+            "retained_h2_mg_l": measured(1.4, "mg/L", "MIXED-CAL"),
+            "retention_fraction": measured(0.64, "1", "MIXED-CAL"),
+            "pressure_trace.csv": [
+                {
+                    "crank_angle_deg": -180.0,
+                    "pressure_bar": 1.0,
+                    "uncertainty_bar": 0.02,
+                },
+                {
+                    "crank_angle_deg": 0.0,
+                    "pressure_bar": 31.0,
+                    "uncertainty_bar": 0.1,
+                },
+            ],
+        },
+        calibration_references=[calibration("MIXED-CAL", "pressure_trace.csv")],
+        comparisons={
+            "items": [
+                {
+                    "id": "operator-mixed-comparison",
+                    "kind": "retention",
+                    "label": "Operator mixed comparison sentinel",
+                    "measured_value": 0.6,
+                    "modeled_value": 0.58,
+                    "unit": "1",
+                }
+            ]
+        },
+    )
+    mixed_response = client.post(
+        "/api/v1/simulations",
+        params={"test_run_id": mixed_run["id"]},
+        json=simulation_input.model_dump(mode="json"),
+    )
+    assert mixed_response.status_code == 200, mixed_response.text
+    mixed_result = mixed_response.json()
+    mixed_result_id = mixed_result["result_id"]
+
+    legacy_patch = client.patch(
+        f"/api/v1/test-runs/{mixed_run['id']}",
+        json={
+            "comparisons": {
+                "items": [
+                    {
+                        "id": "operator-mixed-comparison",
+                        "kind": "retention",
+                        "label": "Operator mixed comparison sentinel",
+                        "measured_value": 0.6,
+                        "modeled_value": 0.58,
+                        "unit": "1",
+                    },
+                    {
+                        "id": "operator-simulation-comparison",
+                        "kind": "simulation",
+                        "label": "Operator simulation comparison sentinel",
+                        "simulation_id": mixed_result_id,
+                        "measured_value": 0.5,
+                        "modeled_value": 0.48,
+                        "unit": "1",
+                    },
+                    {
+                        "id": f"simulation:{mixed_result_id}:operator-note",
+                        "kind": "simulation",
+                        "label": "Operator prefixed comparison sentinel",
+                        "simulation_id": mixed_result_id,
+                        "measured_value": 0.4,
+                        "modeled_value": 0.38,
+                        "unit": "1",
+                    },
+                    {
+                        "id": f"simulation:{mixed_result_id}",
+                        "kind": "simulation",
+                        "label": "Legacy generated comparison",
+                        "simulation_id": mixed_result_id,
+                        "measured_value": 999.0,
+                        "modeled_value": 999.0,
+                        "unit": "mg/L",
+                    },
+                ]
+            }
+        },
+    )
+    assert legacy_patch.status_code == 200, legacy_patch.text
+
+    relinked_mixed = client.post(
+        "/api/v1/simulations",
+        params={"test_run_id": mixed_run["id"]},
+        json=simulation_input.model_dump(mode="json"),
+    )
+    assert relinked_mixed.status_code == 200, relinked_mixed.text
+    mixed_comparisons = client.get(f"/api/v1/test-runs/{mixed_run['id']}").json()["comparisons"][
+        "items"
+    ]
+    assert [item["id"] for item in mixed_comparisons] == [
+        "operator-mixed-comparison",
+        "operator-simulation-comparison",
+        f"simulation:{mixed_result_id}:operator-note",
+        f"simulation:{mixed_result_id}:total_h2",
+        f"simulation:{mixed_result_id}:retained_h2",
+        f"simulation:{mixed_result_id}:retention_fraction",
+        f"simulation:{mixed_result_id}:peak_pressure",
+    ]
+    assert mixed_comparisons[1]["kind"] == "simulation"
+    assert mixed_comparisons[1]["simulation_id"] == mixed_result_id
+    assert [item["measured_value"] for item in mixed_comparisons[3:]] == pytest.approx(
+        [2.2, 1.4, 0.64, 31.0]
+    )
+    assert (
+        mixed_comparisons[3]["modeled_value"] == mixed_result["loading"]["total_h2_mg_l"]["value"]
+    )
+    assert (
+        mixed_comparisons[4]["modeled_value"]
+        == mixed_result["retention"]["retained_at_intake_mg_l"]["value"]
+    )
+    assert (
+        mixed_comparisons[5]["modeled_value"]
+        == mixed_result["retention"]["retained_fraction"]["value"]
+    )
+    assert mixed_comparisons[6]["modeled_value"] == pytest.approx(
+        max(mixed_result["proposed_cycle"]["pressure_pa"]) / 100_000.0
+    )
 
 
 def test_delete_never_unlinks_non_owned_attachment(

@@ -21,7 +21,9 @@ units, positive standard uncertainty, distribution, measured source ID, and
 calibration provenance. Measured retention-series ordinates carry the same
 provenance-bearing uncertainty contract and enter seeded propagation directly.
 Canonical simulation imports are rerun and compared exactly before regenerated
-output is persisted.
+output is persisted. Linking a result to a Test Run persists all compatible
+total-H2, retained-H2, retention-fraction, and peak-pressure comparisons under
+deterministic metric-qualified IDs while preserving operator-authored records.
 
 Verify this service:
 
@@ -31,3 +33,6 @@ uv run ruff check .
 uv run mypy src
 uv run pytest
 ```
+
+The development group uses Starlette's supported `httpx2` TestClient backend;
+a clean test run must not emit the legacy `httpx` deprecation warning.

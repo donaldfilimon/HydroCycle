@@ -168,6 +168,7 @@ export interface TestRunView {
   pressureTrace: PressureTracePoint[] | null;
   attachmentHashes: string[];
   simulationIds: string[];
+  measurementDatasetCount: number;
   persisted: boolean;
 }
 

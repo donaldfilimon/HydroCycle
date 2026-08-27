@@ -97,6 +97,19 @@ test("reviewed run imports, validates, persists across reload, and compares meas
   await expect(
     page.getByText(/0\.00% of initial; within 0\.5%/i),
   ).toBeVisible();
+
+  await page.getByRole("button", { name: "Summary", exact: true }).click();
+  const selectedMeasurements = page
+    .getByText("Selected Test Run measurements")
+    .locator("..");
+  await expect(selectedMeasurements).toContainText("6 datasets");
+  await expect(selectedMeasurements).toContainText("Reviewed decay run");
+  await expect(
+    page.getByText(/Global literature ledger/).locator(".."),
+  ).toContainText(/\d+ records?/);
+  await expect(
+    page.getByText(/Current model assumptions/).locator(".."),
+  ).toContainText(/\d+ records?/);
 });
 
 test("selected reviewed measurements drive backend loading, retention, and gate inputs", async ({

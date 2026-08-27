@@ -720,6 +720,45 @@ function measuredStandardUncertainty(value: unknown): number | null {
   return finiteNumber(value.standard_uncertainty);
 }
 
+const scalarMeasurementKeys = [
+  "headspace_gc_mg_l",
+  "total_h2_mg_l",
+  "retained_h2_mg_l",
+  "retention_fraction",
+  "released_h2_mg_l",
+  "unaccounted_h2_mg_l",
+  "temperature_k",
+  "pressure_pa_abs",
+  "elapsed_s",
+  "bubble_diameter_nm",
+  "number_per_ml",
+] as const;
+
+const seriesMeasurementKeys = [
+  "hydrogen_decay.csv",
+  "bubble_distribution.csv",
+  "pressure_trace.csv",
+] as const;
+
+function measurementDatasetCount(
+  measurements: ApiTestRunDocument["measurements"],
+): number {
+  const scalarCount = scalarMeasurementKeys.reduce(
+    (count, key) =>
+      count + (measuredScalar(measurements[key]) === null ? 0 : 1),
+    0,
+  );
+  const seriesCount = seriesMeasurementKeys.reduce(
+    (count, key) =>
+      count +
+      (Array.isArray(measurements[key]) && measurements[key].length > 0
+        ? 1
+        : 0),
+    0,
+  );
+  return scalarCount + seriesCount;
+}
+
 function mapHydrogenSeries(value: unknown): TestRunView["hydrogenDecaySeries"] {
   if (!Array.isArray(value)) return null;
   const points = value.flatMap((item) => {
@@ -857,6 +896,7 @@ export function mapApiTestRun(document: ApiTestRunDocument): TestRunView {
       (attachment) => attachment.sha256,
     ),
     simulationIds: document.simulation_ids,
+    measurementDatasetCount: measurementDatasetCount(measurements),
     persisted: true,
   };
 }
@@ -1709,6 +1749,7 @@ export default function App() {
       pressureTrace: null,
       attachmentHashes: [],
       simulationIds: [],
+      measurementDatasetCount: 0,
       persisted: false,
     };
     navigate("test-runs");
@@ -1856,6 +1897,7 @@ export default function App() {
       {screen === "summary" ? (
         <SummaryScreen
           simulation={simulation}
+          selectedRun={selectedRun}
           uncertaintyVisible={uncertaintyVisible}
           onToggleUncertainty={() => setUncertaintyVisible((value) => !value)}
           onOpenWorkbench={() => guardedNavigate("workbench")}

@@ -220,6 +220,7 @@ describe("HydroCycle application flows", () => {
       { diameterNm: 120, numberPerMl: 3_000_000 },
       { diameterNm: 220, numberPerMl: 800_000 },
     ]);
+    expect(view.measurementDatasetCount).toBe(2);
 
     const createPayload = testRunPayload(view);
     expect(createPayload.sample_id).toBe("SAMPLE-42");
