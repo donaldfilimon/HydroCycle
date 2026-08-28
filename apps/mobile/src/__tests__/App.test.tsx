@@ -1,7 +1,13 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react-native";
 import type { ReactNode } from "react";
 
 import App from "../../App";
+import { getTestRuns } from "../api";
 
 jest.mock("../api", () => ({
   createTestRun: jest.fn(),
@@ -19,7 +25,13 @@ jest.mock("react-native-safe-area-context", () => {
   return { SafeAreaProvider: passthrough, SafeAreaView: passthrough };
 });
 
+const mockGetTestRuns = jest.mocked(getTestRuns);
+
 describe("mobile tab state", () => {
+  beforeEach(() => {
+    mockGetTestRuns.mockClear();
+  });
+
   it("preserves Workbench edits while visiting the other screens", () => {
     render(<App />);
 
@@ -32,5 +44,16 @@ describe("mobile tab state", () => {
 
     fireEvent.press(screen.getByRole("tab", { name: "Workbench" }));
     expect(screen.getByLabelText("Speed").props.value).toBe("2400");
+  });
+
+  it("reloads Test Runs when the tab is revisited", async () => {
+    render(<App />);
+
+    fireEvent.press(screen.getByRole("tab", { name: "Test Runs" }));
+    await waitFor(() => expect(mockGetTestRuns).toHaveBeenCalledTimes(1));
+
+    fireEvent.press(screen.getByRole("tab", { name: "Summary" }));
+    fireEvent.press(screen.getByRole("tab", { name: "Test Runs" }));
+    await waitFor(() => expect(mockGetTestRuns).toHaveBeenCalledTimes(2));
   });
 });

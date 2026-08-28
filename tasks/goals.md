@@ -118,7 +118,7 @@ actual Node listener, the app-local gate probes that behavior, and the repeated
 OS audit showed only `127.0.0.1` listeners on ports 5173, 8000, and 8081.
 
 Final root `bun run check` passed with 78 model, 6 contract, 5 view-model, 23
-web, and 47 mobile tests, plus the web production build and real iOS Hermes
+web, and 48 mobile tests, plus the web production build and real iOS Hermes
 export. Physical-device and store support, Test Run editing/deletion/import,
 and additional chart parity remain explicitly deferred or out of scope; none
 requires weakening this completed simulator-first companion.

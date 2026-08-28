@@ -1,6 +1,6 @@
 import type { Screen } from "@hydrocycle/view-model";
 import { StatusBar } from "expo-status-bar";
-import { type ReactNode, useCallback, useState } from "react";
+import { type ReactNode, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
@@ -42,40 +42,17 @@ function ScreenPanel({
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("summary");
-  const [visitedScreens, setVisitedScreens] = useState<ReadonlySet<Screen>>(
-    () => new Set(["summary"]),
-  );
-
-  const selectScreen = useCallback((nextScreen: Screen) => {
-    setVisitedScreens((previous) => {
-      if (previous.has(nextScreen)) return previous;
-      const next = new Set(previous);
-      next.add(nextScreen);
-      return next;
-    });
-    setScreen(nextScreen);
-  }, []);
 
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
       <SafeAreaView style={styles.root} edges={["top", "left", "right"]}>
         <View style={styles.body}>
-          {visitedScreens.has("summary") ? (
-            <ScreenPanel active={screen === "summary"}>
-              <SummaryScreen />
-            </ScreenPanel>
-          ) : null}
-          {visitedScreens.has("workbench") ? (
-            <ScreenPanel active={screen === "workbench"}>
-              <WorkbenchScreen />
-            </ScreenPanel>
-          ) : null}
-          {visitedScreens.has("test-runs") ? (
-            <ScreenPanel active={screen === "test-runs"}>
-              <TestRunsScreen />
-            </ScreenPanel>
-          ) : null}
+          {screen === "summary" ? <SummaryScreen /> : null}
+          <ScreenPanel active={screen === "workbench"}>
+            <WorkbenchScreen />
+          </ScreenPanel>
+          {screen === "test-runs" ? <TestRunsScreen /> : null}
         </View>
 
         <View style={styles.tabBar}>
@@ -88,7 +65,7 @@ export default function App() {
                 accessibilityState={{ selected: active }}
                 accessibilityLabel={tab.label}
                 style={styles.tab}
-                onPress={() => selectScreen(tab.key)}
+                onPress={() => setScreen(tab.key)}
               >
                 <Text style={[styles.tabText, active && styles.tabTextActive]}>
                   {tab.label}

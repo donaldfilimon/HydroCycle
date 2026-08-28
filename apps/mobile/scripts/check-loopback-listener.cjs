@@ -5,7 +5,6 @@ const http = require("node:http");
 
 const {
   LOOPBACK_HOST,
-  installLoopbackListenerGuard,
   withLoopbackHost,
 } = require("./loopback-listener-guard.cjs");
 
@@ -19,7 +18,10 @@ assert.deepEqual(withLoopbackHost(["/private/tmp/metro.sock"]), [
   "/private/tmp/metro.sock",
 ]);
 
-installLoopbackListenerGuard();
+// Exercise the same configuration entry point Expo loads. This intentionally
+// does not install the guard directly: removing the Metro wiring must make the
+// repository gate fail instead of leaving a helper-only test green.
+require("../metro.config.js");
 
 const server = http.createServer();
 server.listen(0, () => {
