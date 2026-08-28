@@ -12,7 +12,11 @@ import {
 
 import { postSimulation, type ApiSimulationResult } from "../api";
 import { Badge, Card, Note, Row } from "../components/ui";
-import { formatWithUnit, humanizeFailureCode } from "../format";
+import {
+  formatWithUnit,
+  humanizeFailureCode,
+  visibleFailureCodes,
+} from "../format";
 import { theme } from "../theme";
 
 /**
@@ -171,11 +175,13 @@ export default function WorkbenchScreen() {
               3,
             )}
           />
-          {(gate.failures ?? []).map((code) => (
-            <Text key={String(code)} style={styles.failureItem}>
-              • {humanizeFailureCode(String(code))}
-            </Text>
-          ))}
+          {/* A passing gate reports the "pass" sentinel in `failures`; render it
+              and a PASSED badge grows a red "Pass" bullet underneath it. */}
+          {visibleFailureCodes(gate.failures).map((code) => (
+              <Text key={String(code)} style={styles.failureItem}>
+                • {humanizeFailureCode(String(code))}
+              </Text>
+            ))}
           <Note>
             {result?.proposed_cycle
               ? "Proposed reactive cycle available."

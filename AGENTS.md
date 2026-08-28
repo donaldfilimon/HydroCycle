@@ -7,8 +7,13 @@ fluid. Never describe water as contributing chemical energy.
 ## Repository layout
 
 - `apps/web`: React 19 + Vite 7 + strict TypeScript, managed with Bun.
+- `apps/mobile`: Expo SDK 53 + React Native client. Not a root workspace
+  member; it keeps its own lockfile because Metro and Bun resolve differently.
+- `apps/site`: fixture-only hosted preview. Outside the root gate.
 - `services/model`: Python 3.14 + FastAPI + Cantera 3.2, managed with uv.
 - `packages/contracts`: generated API contracts and canonical import templates.
+- `packages/view-model`: presentation types and demo fixtures shared by the
+  web and mobile clients.
 - `docs/design`: approved visual references. They define layout and hierarchy,
   but their illustrative numeric values are not scientific fixtures.
 

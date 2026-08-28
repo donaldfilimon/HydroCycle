@@ -20,6 +20,7 @@ import {
   formatText,
   formatWithUnit,
   humanizeFailureCode,
+  visibleFailureCodes,
 } from "../format";
 import { theme } from "../theme";
 
@@ -62,10 +63,13 @@ function Card({
  * the screen says so rather than falling back to the motored trace as if it
  * were the proposal.
  */
-function GateCard({ result }: { result: ApiSimulationResult }) {
+export function GateCard({ result }: { result: ApiSimulationResult }) {
   const gate = result.gate;
   const passed = gate.passed === true;
-  const failures = Array.isArray(gate.failures) ? gate.failures : [];
+  // A passing gate reports `failures: ["pass"]` (physics.py sets the sentinel,
+  // schemas.py enforces it), so the list is only a failure list once that code
+  // is filtered out. Without this a PASSED badge renders a red "Pass" bullet.
+  const failures = visibleFailureCodes(gate.failures);
 
   return (
     <Card title="Feasibility gate">
@@ -241,7 +245,7 @@ export default function SummaryScreen() {
     >
       <Text style={styles.title}>HydroCycle</Text>
       <Text style={styles.subtitle}>
-        Evidence-gated hydrogen combustion · 0D single zone
+        Canonical contract fixture · evidence-gated 0D single zone
       </Text>
 
       <View style={styles.statusStrip}>

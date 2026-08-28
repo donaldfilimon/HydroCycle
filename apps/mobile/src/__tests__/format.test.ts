@@ -4,6 +4,7 @@ import {
   formatText,
   formatWithUnit,
   humanizeFailureCode,
+  visibleFailureCodes,
 } from "../format";
 
 describe("invariant 3: missing measurements stay null, never zero", () => {
@@ -33,6 +34,19 @@ describe("invariant 3: missing measurements stay null, never zero", () => {
     expect(formatText("   ")).toBe(ABSENT);
     expect(formatText(null)).toBe(ABSENT);
     expect(formatText("gri30.yaml")).toBe("gri30.yaml");
+  });
+});
+
+describe("visibleFailureCodes", () => {
+  it("suppresses the API pass sentinel", () => {
+    expect(visibleFailureCodes(["pass"])).toEqual([]);
+  });
+
+  it("preserves real failure codes", () => {
+    expect(visibleFailureCodes(["insufficient_h2", "preheat_deficit"])).toEqual([
+      "insufficient_h2",
+      "preheat_deficit",
+    ]);
   });
 });
 

@@ -12,23 +12,27 @@ commands, architecture, and the workflow traps.
 
 ## Commands
 
-Setup (Bun 1.4, Python 3.14, `uv`):
+Setup (Bun 1.4, Python 3.14, `uv`) — `bun run setup` does both halves with the
+lockfile checks CI uses:
 
 ```bash
-bun install
-uv sync --project services/model --frozen
+bun run setup   # bun install --frozen-lockfile + uv lock --check + uv sync --frozen
 ```
+
+That does **not** install `apps/mobile`, which has its own lockfile (see below).
 
 | Task | Command |
 | --- | --- |
 | Run both dev servers | `bun run dev` (web `127.0.0.1:5173`, API `127.0.0.1:8000`; either process exiting kills the other) |
-| Full gate | `bun run check` |
+| Full gate | `bun run check` — model → contract drift → contracts → view-model → web → mobile |
 | Python only | `bun run check:model` (ruff format + ruff + strict mypy + pytest) |
 | Web only | `bun run check:web` (prettier + eslint `--max-warnings 0` + `tsc -b` + vitest + vite build) |
+| Mobile only | `bun run check:mobile` (typecheck + eslint + jest + a real Expo bundle export) |
 | Contract drift | `bun run contracts:check` |
 | Regenerate contracts | `bun run contracts` |
 | Browser acceptance | `bun run test:e2e` |
 | Refresh fidelity captures | `bun run --cwd apps/web visual:capture` |
+| Static fixture-only build | `bun run build:pages` (`VITE_STATIC_DEMO=true`) |
 
 Single tests:
 
@@ -37,8 +41,12 @@ Single tests:
 cd services/model && uv run --frozen pytest tests/test_physics.py -k retention
 cd services/model && uv run --frozen pytest -m cantera        # Cantera-marked tests
 
-# Web component tests
+# Web / shared-package component tests (vitest)
 bun run --cwd apps/web test src/test/App.test.tsx
+bun run --cwd packages/view-model test tests/fixtures.test.ts
+
+# Mobile tests are jest, not vitest, and run from the app directory
+cd apps/mobile && bun run test src/__tests__/contracts.test.ts
 
 # One Playwright project (desktop 1536x1024 / tablet 1024x768 / mobile Pixel 7)
 bun run --cwd apps/web test:e2e --project=chromium-desktop
@@ -65,8 +73,10 @@ the app's schema builder). The running service deliberately serves no `/docs`,
 ## Architecture
 
 The Python service is the single source of scientific truth. Types flow one
-direction: `services/model` schemas → generated OpenAPI → typed browser client
-→ `apps/web`. The web app never re-derives physics.
+direction: `services/model` schemas → generated OpenAPI → `packages/contracts`
+typed client → `packages/view-model` presentation types → `apps/web` and
+`apps/mobile`. `apps/site` consumes `packages/contracts` directly and does not
+use view-model. No client re-derives physics.
 
 **`services/model/src/hydrocycle/`** — `physics.py` (~1.7k lines) is the staged
 pipeline and the file most changes touch:
@@ -92,16 +102,39 @@ write; `exports.py` produces canonical JSON, reviewed CSV, and the CFD-boundary
 document; `test_run_contracts.py` holds the Test Run / measurement documents;
 `orm.py` + `alembic/versions` own persistence.
 
+**`packages/view-model/`** (`@hydrocycle/view-model`) — the presentation types
+(`domain.ts`) and deterministic demo fixtures (`fixtures.ts`) that web and
+mobile share. These used to live in `apps/web/src/`; anything still importing
+`../fixtures` or `./domain` from the web app is stale.
+
 **`apps/web/src/`** — no router and no state library. `App.tsx` (~2k lines)
 owns all state and passes it into the three screens; navigation is a `?view=`
 query param plus `popstate`. The UI is fixture-first: it renders
-`makeSimulationFixture(...)` from `fixtures.ts` immediately, then
-`mergeApiResult(fallback, raw)` overlays live API values field by field, so
-adding a result field means extending both `domain.ts` view types and the
-mapper. Persisted runs from `GET /api/v1/test-runs` are prepended to
-`demoRuns`; demo/synthetic runs are deliberately excluded from measurement
-counts. Vite proxies `/api` to `127.0.0.1:8000`, which is why
-`createHydroCycleClient()` defaults to an empty base URL.
+`makeSimulationFixture(...)` from `@hydrocycle/view-model` immediately, then
+`mergeApiResult(fallback, raw)` — which stayed local to `App.tsx` — overlays
+live API values field by field. So adding a result field means editing three
+places: the view type in `packages/view-model/src/domain.ts`, its fixture value
+in `fixtures.ts`, and the mapper in `App.tsx`. Persisted runs from
+`GET /api/v1/test-runs` are prepended to `demoRuns`; demo/synthetic runs are
+deliberately excluded from measurement counts. Vite proxies `/api` to
+`127.0.0.1:8000`, which is why `createHydroCycleClient()` defaults to an empty
+base URL.
+
+**`apps/mobile/`** (Expo SDK 53, React Native 0.79) — deliberately **not** a
+root workspace member: Metro resolves modules differently from Bun's workspace
+hoister, so it keeps its own `bun.lock` and `node_modules`. Root `bun install`
+does not touch it; `scripts/check-mobile.sh` installs into the app directory
+first. That gate ends with a real `expo export` because **typecheck passing does
+not prove the app bundles** — a cross-package import can satisfy TypeScript and
+still fail Metro resolution. Jest maps `@hydrocycle/contracts` and
+`@hydrocycle/view-model` straight to their source via `moduleNameMapper`.
+`EXPO_NO_TELEMETRY=1` is set everywhere Expo runs, per invariant 7.
+
+**`apps/site/`** — a Next.js/`vinext` fixture-only hosted preview (deployed to
+Sites; evidence in `docs/deployment/`). It is outside both the root `workspaces`
+array and `scripts/check.sh`, so **`bun run check` does not cover changes here**
+and it has its own `node_modules` with a symlink to `packages/contracts`. Do not
+report a green gate as evidence for a site change.
 
 `docs/design/*.png` are authoritative for layout, hierarchy, and interaction
 only — their numbers, citations, and source names are not model inputs.

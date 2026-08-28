@@ -3,7 +3,9 @@
 ## Outcome
 
 HydroCycle's fixture-only web preview is publicly available at
-<https://hydrocycle-simulator.underswitch.chatgpt.site/>.
+<https://hydrocycle-simulator.und
+
+rswitch.chatgpt.site/>.
 
 The hosted surface is an exploration and communication artifact. It exposes
 the Summary, Workbench, and Test Runs user interfaces with deterministic,

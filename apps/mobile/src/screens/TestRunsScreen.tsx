@@ -13,10 +13,17 @@ import { Card, Note, Row } from "../components/ui";
 import { formatText } from "../format";
 import { theme } from "../theme";
 
-function statusTone(status: string): string {
-  if (status === "reviewed") return theme.color.pass;
-  if (status === "needs_review") return theme.color.warn;
-  return theme.color.textMuted;
+/**
+ * Mirrors the web client's StatusIcon mapping so the two clients agree on what
+ * a run's state looks like. The enum is `draft | needs_review | valid |
+ * invalid` (contracts: TestRunStatus) — there is no "reviewed" state, and
+ * collapsing `valid` and `invalid` into one muted tone hides the distinction
+ * that matters most when reviewing evidence.
+ */
+export function statusTone(status: string): string {
+  if (status === "valid") return theme.color.pass;
+  if (status === "invalid") return theme.color.fail;
+  return theme.color.warn;
 }
 
 function formatTimestamp(value: string | null | undefined): string {

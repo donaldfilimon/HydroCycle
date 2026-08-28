@@ -85,13 +85,14 @@ Lesson worth keeping: a green gate plus a successful bundle proved the app
 *runs*, not that it renders *correctly*, and the one path never exercised is
 where both defects lived.
 
-## Slice 3b — converge Summary and Workbench requests (open decision)
+## Slice 3b — distinguish Summary and Workbench requests — DONE
 Mobile Summary posts the raw `defaultSimulationInput` fixture; Workbench posts
 `simulationRequest(inputs)`. They differ in seed, rpm, compression ratio, and
 retention rate, so the two screens can show different results for what a user
-reasonably reads as "the default case". Converging them means deciding whether
-Summary is a fixture preview (keep as-is) or a live default-parameters view
-(switch to the shared mapper). Needs Donald's call, not a silent change.
+reasonably reads as "the default case". Summary now identifies itself as the
+canonical contract fixture; Workbench remains the parameterized view-model
+request. Keeping both preserves the approved fixture-first overview without
+pretending its inputs are the Workbench defaults.
 
 ## Slice 4 — Test Runs write path (not started)
 Create/patch/delete/import stay on web deliberately: V1 is data-conservative

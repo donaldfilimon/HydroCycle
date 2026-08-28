@@ -39,3 +39,10 @@ export function humanizeFailureCode(code: string): string {
   if (spaced === "") return ABSENT;
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
+
+/** The API uses `pass` as a success sentinel inside the failures array. */
+export function visibleFailureCodes(
+  failures: readonly unknown[] | null | undefined,
+): string[] {
+  return (failures ?? []).map(String).filter((code) => code !== "pass");
+}
