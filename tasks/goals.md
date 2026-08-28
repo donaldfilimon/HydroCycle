@@ -13,7 +13,7 @@ status: done
 
 ## Improve massively and turn into Expo React Native app
 status: in_progress
-- Captured verbatim from `/goal improve massively and turn into expo react native app`. Recorded as intent only — no implementation started, no architecture decision made.
+- Captured verbatim from `/goal improve massively and turn into expo react native app`.
 
 ### Scope resolved 2026-08-27 (`/goal continue`)
 Donald restated the goal and then issued `/goal continue` after being shown the
@@ -43,14 +43,41 @@ exercised against a live service — the default fixture fails the gate with
 invariant 1 behaving correctly rather than a bug.
 
 **Goal stays `in_progress`.** Slice 1 is one screen, not the whole app:
-Workbench and Test Runs do not exist on mobile yet (slice 3), the web view
-model is still not shared (slice 2), and physical-device support remains
-blocked on hard invariant 7 and unresolved. Nothing here is a "turn the app
-into React Native" completion claim.
-- Current architecture per `AGENTS.md`/`CLAUDE.md`: `apps/web` is React 19 + Vite 7 + strict TypeScript on Bun, talking to `services/model` (Python 3.14 + FastAPI + Cantera 3.2, uv-managed) bound to `127.0.0.1` only, no telemetry/cloud sync. There is no Expo/React Native surface today.
-- Open questions before implementation:
-  - **127.0.0.1 binding vs. mobile client.** The model service's hard invariant is loopback-only binding with no cloud sync. Vite's dev proxy makes same-machine web access work; an Expo app (especially on a physical device or app-store build) cannot reach a loopback-bound service the same way. Does this goal imply relaxing that invariant, running the model service differently for mobile, or keeping mobile as a same-machine/simulator-only client?
-  - **Additive vs. replacement scope.** Is this a new `apps/mobile` alongside the existing `apps/web`, or a full replacement of the Vite web app with Expo/React Native? Neither `AGENTS.md` nor `README` currently documents a mobile target either way.
-  - **"Local-only, no telemetry" under app-store distribution.** The project's local-only, privacy-first posture doesn't obviously survive being shipped through the App Store/Play Store distribution model (code signing, store review, potential store-side analytics). Needs an explicit decision.
-  - **"Improve massively" has no concrete acceptance criteria.** No specific features, metrics, or scope were named. Needs to be broken into concrete, checkable slices (in `tasks/todo.md`) before any work starts, per the goal-ledger contract's "green ≠ done" rule.
-  - Does a React Native rewrite conflict with any of the seven hard invariants (single-zone 0D with no CFD rendering, hardware read-only V1, reproducibility metadata, nulls stay null, etc.)? Preliminary read: no direct conflict, but the loopback-binding and no-telemetry invariants are the ones most in tension with a mobile/store distribution model and need explicit resolution first.
+Workbench and Test Runs do not exist on mobile yet, and physical-device support
+remains blocked on hard invariant 7 and unresolved. Nothing here is a "turn the
+app into React Native" completion claim.
+
+### Outcome — slice 2 implemented 2026-08-27
+The portable domain types and deterministic presentation fixtures now live in
+`packages/view-model`. Web consumes the package through Bun workspaces; the
+lockfile-isolated Expo app resolves the same source through synchronized
+TypeScript, Metro, and Jest aliases. Mobile Summary is now fixture-first and
+labels that immediate fallback as synthetic before live API results replace it.
+The goal remains `in_progress`: Workbench and Test Runs parity is Slice 3, and
+physical-device support remains outside the approved loopback-only scope.
+
+### Outcome — slice 3 shipped 2026-08-27 (`49f70e6`)
+`apps/mobile` now has all three screens the web client has — Summary,
+Workbench, Test Runs — over a shared tab bar keyed on the shared `Screen`
+type. `simulationRequest` also moved into `packages/view-model`, so both
+clients submit byte-identical requests instead of keeping drifting copies of
+the evidence-basis rules (when a user-entered total counts as `measured`
+versus `user_assumption`, and when it stays null).
+
+Root `bun run check` green: 78 model, 6 contract, 5 view-model, 23 web, 28
+mobile, plus an iOS Hermes bundle. Both new screens were exercised against a
+live service: the Workbench request round-trips its edited speed (2400 rpm)
+and compression ratio (14) into the model's `input` echo, and the gate fails
+with no proposed cycle exactly as invariant 1 requires.
+
+**Still `in_progress`, deliberately:**
+- Test Runs was only observed against an **empty** database. Populated run
+  cards have never rendered against real data.
+- Test Runs is **read-only** on mobile; create/patch/delete/import stay on
+  web (slice 4).
+- Mobile renders **no charts** — scalars and gate status only.
+- Physical-device and app-store distribution remain **blocked on hard
+  invariant 7** and unresolved.
+
+The app runs in a simulator against a loopback service. That is not the same
+claim as "HydroCycle is now an Expo app", and this entry does not make it.
