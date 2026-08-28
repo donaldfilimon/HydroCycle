@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "HydroCycle",
+    "slug": "hydrocycle-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "hydrocycle",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "backgroundColor": "#0b1220",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "dev.hydrocycle.mobile"
+    },
+    "android": {
+      "package": "dev.hydrocycle.mobile",
+      "edgeToEdgeEnabled": true
+    }
+  }
+}

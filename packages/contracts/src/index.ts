@@ -1,4 +1,9 @@
 export { createHydroCycleClient, type HydroCycleClient } from "./client";
+export {
+  defaultSimulationInput,
+  measuredTotalSimulationInput,
+  waterInjectionSimulationInput,
+} from "./fixtures";
 export type { components, operations, paths, webhooks } from "./api.generated";
 export {
   CANONICAL_UNITS,

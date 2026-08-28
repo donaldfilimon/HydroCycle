@@ -1,8 +1,41 @@
 # Goals
 
 ## Improve massively and turn into Expo React Native app
-status: todo
+status: in_progress
 - Captured verbatim from `/goal improve massively and turn into expo react native app`. Recorded as intent only — no implementation started, no architecture decision made.
+
+### Scope resolved 2026-08-27 (`/goal continue`)
+Donald restated the goal and then issued `/goal continue` after being shown the
+additive/simulator-only design, so the open questions below are resolved as
+follows. Recorded here because these decisions bind future slices:
+
+- **Additive, not a replacement.** New `apps/mobile` (Expo) alongside
+  `apps/web`. The Vite web app and its `docs/fidelity` capture suite are
+  untouched. A react-native-web unification is explicitly *not* in scope.
+- **Simulator/emulator only; invariant 7 is NOT relaxed.** `services/model`
+  keeps binding `127.0.0.1`. iOS Simulator shares host loopback directly;
+  the Android emulator reaches host loopback via `10.0.2.2`. Both terminate
+  on the same machine, so loopback-only holds. Physical-device and app-store
+  distribution are **out of scope** and remain unresolved — shipping to a
+  real device would require relaxing invariant 7 and is a separate decision.
+- **No telemetry.** Expo tooling phones home by default, so `EXPO_NO_TELEMETRY=1`
+  is set in the app's own scripts, and EAS / `expo-updates` are not used.
+- **"Improve massively" is scoped to the mobile client** plus the structural
+  cleanups it forces. Broader improvement work needs its own goal.
+
+### Outcome — slice 1 shipped 2026-08-27 (`a571b6e`)
+`apps/mobile` exists and runs against the local service. Root `bun run check`
+is green end to end: 78 model tests, 6 contract, 27 web, 19 mobile, plus an
+iOS Hermes bundle (605 modules). The Summary screen's exact request was also
+exercised against a live service — the default fixture fails the gate with
+`insufficient_h2` / `preheat_deficit` and returns no proposed cycle, which is
+invariant 1 behaving correctly rather than a bug.
+
+**Goal stays `in_progress`.** Slice 1 is one screen, not the whole app:
+Workbench and Test Runs do not exist on mobile yet (slice 3), the web view
+model is still not shared (slice 2), and physical-device support remains
+blocked on hard invariant 7 and unresolved. Nothing here is a "turn the app
+into React Native" completion claim.
 - Current architecture per `AGENTS.md`/`CLAUDE.md`: `apps/web` is React 19 + Vite 7 + strict TypeScript on Bun, talking to `services/model` (Python 3.14 + FastAPI + Cantera 3.2, uv-managed) bound to `127.0.0.1` only, no telemetry/cloud sync. There is no Expo/React Native surface today.
 - Open questions before implementation:
   - **127.0.0.1 binding vs. mobile client.** The model service's hard invariant is loopback-only binding with no cloud sync. Vite's dev proxy makes same-machine web access work; an Expo app (especially on a physical device or app-store build) cannot reach a loopback-bound service the same way. Does this goal imply relaxing that invariant, running the model service differently for mobile, or keeping mobile as a same-machine/simulator-only client?
