@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "packageManager": "bun@1.4.0",
   "workspaces": [
-    "apps/*",
+    "apps/web",
     "packages/*"
   ],
   "scripts": {
@@ -14,6 +14,7 @@
     "build:pages": "VITE_STATIC_DEMO=true bun run --cwd apps/web build",
     "check": "bash scripts/check.sh",
     "check:web": "bun run --cwd apps/web check",
+    "check:mobile": "bash scripts/check-mobile.sh",
     "check:model": "bash scripts/check-model.sh",
     "test": "bun run test:model && bun run test:contracts && bun run test:web",
     "test:model": "uv run --project services/model --frozen pytest",
