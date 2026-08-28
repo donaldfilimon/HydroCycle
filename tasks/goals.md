@@ -1,5 +1,16 @@
 # Goals
 
+## Publish HydroCycle hosted fixture preview
+status: done
+- Published the public Sites preview at
+  <https://hydrocycle-simulator.underswitch.chatgpt.site/> and verified Summary,
+  Workbench, Test Runs, the deterministic fixture interaction, desktop/mobile
+  layout, HTTP 200 availability, and zero browser warnings or errors.
+- The hosted surface remains explicitly fixture-only: Python/Cantera execution,
+  SQLite persistence, file import, and every hardware-control path remain local
+  or unavailable. Full evidence is in
+  `docs/deployment/2026-08-27-sites-production.md`.
+
 ## Improve massively and turn into Expo React Native app
 status: in_progress
 - Captured verbatim from `/goal improve massively and turn into expo react native app`. Recorded as intent only — no implementation started, no architecture decision made.
