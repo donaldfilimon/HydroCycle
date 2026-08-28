@@ -4,3 +4,4 @@ export {
   makeRetentionTrace,
   makeSimulationFixture,
 } from "./fixtures";
+export { simulationRequest } from "./simulation-request";

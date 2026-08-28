@@ -8,6 +8,7 @@ import {
 
 export type ApiSimulationInput = components["schemas"]["SimulationInput"];
 export type ApiSimulationResult = components["schemas"]["SimulationResult"];
+export type ApiTestRunDocument = components["schemas"]["TestRunDocument"];
 
 /**
  * Unlike `apps/web`, there is no dev-server proxy here, so the client is given
@@ -37,6 +38,22 @@ async function withTimeout<T>(
 export async function getHealth(): Promise<Record<string, unknown>> {
   return withTimeout(HEALTH_TIMEOUT_MS, async (signal) => {
     const { data, error, response } = await client.GET("/api/v1/health", {
+      signal,
+    });
+    if (!data) throw new Error(errorMessage(error, response));
+    return data;
+  });
+}
+
+/**
+ * V1 is read-only with respect to test runs on mobile: this lists persisted
+ * runs, and there is no create/patch/delete/import counterpart here. Writes
+ * stay on the web client until they can be reviewed on a small screen without
+ * making destructive edits easy to trigger by accident.
+ */
+export async function getTestRuns(): Promise<ApiTestRunDocument[]> {
+  return withTimeout(HEALTH_TIMEOUT_MS * 4, async (signal) => {
+    const { data, error, response } = await client.GET("/api/v1/test-runs", {
       signal,
     });
     if (!data) throw new Error(errorMessage(error, response));

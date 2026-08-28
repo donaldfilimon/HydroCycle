@@ -1,8 +1,5 @@
 import { defaultSimulationInput } from "@hydrocycle/contracts";
-import {
-  DEFAULT_INPUTS,
-  makeSimulationFixture,
-} from "@hydrocycle/view-model";
+import { DEFAULT_INPUTS, makeSimulationFixture } from "@hydrocycle/view-model";
 
 /**
  * Pins the `@hydrocycle/contracts` source alias, which is declared in three
