@@ -59,10 +59,19 @@ physical-device support remains outside the approved loopback-only scope.
 ### Outcome — slice 3 shipped 2026-08-27 (`49f70e6`)
 `apps/mobile` now has all three screens the web client has — Summary,
 Workbench, Test Runs — over a shared tab bar keyed on the shared `Screen`
-type. `simulationRequest` also moved into `packages/view-model`, so both
-clients submit byte-identical requests instead of keeping drifting copies of
-the evidence-basis rules (when a user-entered total counts as `measured`
-versus `user_assumption`, and when it stays null).
+type. `simulationRequest` also moved into `packages/view-model`, so the
+evidence-basis rules (when a user-entered total counts as `measured` versus
+`user_assumption`, and when it stays null) exist in one place instead of two.
+
+**Correction (2026-08-27, found by a parity audit):** an earlier draft of this
+entry claimed "both clients submit byte-identical requests". That was
+overclaimed and is now retracted. It holds for **Workbench only**, which posts
+`simulationRequest(inputs)`. Mobile **Summary** posts the raw
+`defaultSimulationInput` contracts fixture instead, which differs in seed,
+rpm, compression ratio, and retention rate — so the two *mobile* screens
+disagree with each other, not merely with web. Converging them is a real
+design decision (Summary is a fixture-first overview, Workbench is
+parameterized), so it is left open rather than silently changed.
 
 Root `bun run check` green: 78 model, 6 contract, 5 view-model, 23 web, 28
 mobile, plus an iOS Hermes bundle. Both new screens were exercised against a

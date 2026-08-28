@@ -67,6 +67,32 @@ what was actually observed. Populated run cards have never been rendered
 against real data — only their types are checked. Worth a look before anyone
 calls Test Runs proven.
 
+### Two defects this gap actually hid (found 2026-08-27 by a parity audit)
+Both shipped in `49f70e6`, both passed all 28 mobile tests and the bundle
+export, and neither was type-detectable. They are the concrete cost of
+verifying only the gate-failing path and an empty runs table:
+
+1. **Red "Pass" bullet under a green PASSED badge.** `physics.py:702` sets
+   `failures = [FailureCode.PASS]` when the gate *passes*. Web filters that
+   sentinel (`App.tsx:164-167`, `failure !== "pass"`); mobile rendered it
+   through the failure style. Invisible on the failing path.
+2. **`valid` and `invalid` looked identical.** `statusTone` in
+   `TestRunsScreen.tsx` tested for `"reviewed"`, which is not in the enum —
+   `TestRunStatus` is `draft|needs_review|valid|invalid` — so both real
+   terminal states fell through to muted grey. Web renders them green/red.
+
+Lesson worth keeping: a green gate plus a successful bundle proved the app
+*runs*, not that it renders *correctly*, and the one path never exercised is
+where both defects lived.
+
+## Slice 3b — converge Summary and Workbench requests (open decision)
+Mobile Summary posts the raw `defaultSimulationInput` fixture; Workbench posts
+`simulationRequest(inputs)`. They differ in seed, rpm, compression ratio, and
+retention rate, so the two screens can show different results for what a user
+reasonably reads as "the default case". Converging them means deciding whether
+Summary is a fixture preview (keep as-is) or a live default-parameters view
+(switch to the shared mapper). Needs Donald's call, not a silent change.
+
 ## Slice 4 — Test Runs write path (not started)
 Create/patch/delete/import stay on web deliberately: V1 is data-conservative
 and destructive edits should not be one mis-tap away. Import additionally
