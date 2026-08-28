@@ -94,13 +94,22 @@ canonical contract fixture; Workbench remains the parameterized view-model
 request. Keeping both preserves the approved fixture-first overview without
 pretending its inputs are the Workbench defaults.
 
-## Slice 4 — Test Runs write path (not started)
-Create/patch/delete/import stay on web deliberately: V1 is data-conservative
-and destructive edits should not be one mis-tap away. Import additionally
-needs `File`/`FormData`/`URL` polyfills under React Native.
+## Slice 4a — additive Test Run draft creation — DONE
+- [x] Mobile can create an empty non-synthetic draft through the typed API.
+- [x] The returned persisted document is prepended without inventing any
+      measurement values; all measurements remain null until reviewed data is
+      entered on the web client.
+- [x] Component coverage exercises the real populated-card path and valid /
+      invalid status distinction.
+
+## Slice 4b — Test Run editing, deletion, and native file import (blocked)
+Patch and delete need a small-screen editor, dirty-state protection, validation,
+and explicit destructive confirmation. Import needs native document selection,
+bounded byte reads, and local file error handling. Keep these on web until that
+complete review surface exists; do not ship one-tap partial writes.
 
 ## Out of scope / unresolved
 - Physical device + app-store distribution. Requires relaxing hard invariant 7
   (`127.0.0.1` binding). Needs an explicit decision from Donald; do not assume.
-- Charts. The web client renders cycle traces; mobile shows scalars and gate
-  status only. Invariant 4 still forbids any CFD-style visual.
+- Chart parity beyond pressure and temperature. Mobile now renders homogeneous
+  scalar 0D traces; heat terms, P–V, and uncertainty bands remain open.

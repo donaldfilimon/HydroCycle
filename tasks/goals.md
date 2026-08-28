@@ -80,13 +80,25 @@ and compression ratio (14) into the model's `input` echo, and the gate fails
 with no proposed cycle exactly as invariant 1 requires.
 
 **Still `in_progress`, deliberately:**
-- Test Runs was only observed against an **empty** database. Populated run
-  cards have never rendered against real data.
-- Test Runs is **read-only** on mobile; create/patch/delete/import stay on
-  web (slice 4).
-- Mobile renders **no charts** — scalars and gate status only.
+- Test Runs was only observed against an **empty** live database. Populated run
+  cards now have component coverage, but have not been exercised against real
+  persisted measurements.
+- Mobile can create additive empty drafts. Editing, validation, deletion, and
+  native file import stay on web until their complete review and confirmation
+  flows exist.
+- Mobile renders pressure and temperature as homogeneous scalar 0D traces;
+  heat terms, P–V, and uncertainty bands remain open.
 - Physical-device and app-store distribution remain **blocked on hard
   invariant 7** and unresolved.
 
 The app runs in a simulator against a loopback service. That is not the same
 claim as "HydroCycle is now an Expo app", and this entry does not make it.
+
+### Outcome — chart and safe-write follow-up 2026-08-27
+Workbench now renders accessible pressure and temperature traces for the
+motored baseline and, only when present, the proposed cycle. The charts are
+explicitly scalar single-zone 0D views, not spatial or CFD output. Test Runs can
+create an empty persisted draft but cannot edit or delete data on mobile. Root
+`bun run check` passed with 78 model, 6 contract, 5 view-model, 23 web, and 39
+mobile tests, plus the iOS Hermes export. Draft creation has component/API
+contract coverage but has not yet been exercised against a live database.

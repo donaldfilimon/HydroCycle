@@ -27,6 +27,14 @@ export function statusTone(status: string): string {
   return theme.color.warn;
 }
 
+export function hasRecordedMeasurements(run: ApiTestRunDocument): boolean {
+  return Object.values(run.measurements).some((value) =>
+    Array.isArray(value)
+      ? value.length > 0
+      : value !== null && value !== undefined,
+  );
+}
+
 function formatTimestamp(value: string | null | undefined): string {
   if (!value) return formatText(value);
   const parsed = new Date(value);
@@ -38,10 +46,11 @@ function formatTimestamp(value: string | null | undefined): string {
 export default function TestRunsScreen() {
   const [runs, setRuns] = useState<ApiTestRunDocument[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
 
   const load = useCallback(async () => {
-    setBusy(true);
+    setLoading(true);
     setError(null);
     try {
       setRuns(await getTestRuns());
@@ -49,12 +58,12 @@ export default function TestRunsScreen() {
       setError(cause instanceof Error ? cause.message : String(cause));
       setRuns(null);
     } finally {
-      setBusy(false);
+      setLoading(false);
     }
   }, []);
 
   const createDraft = useCallback(async () => {
-    setBusy(true);
+    setCreating(true);
     setError(null);
     try {
       const created = await createTestRun({
@@ -68,7 +77,7 @@ export default function TestRunsScreen() {
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
-      setBusy(false);
+      setCreating(false);
     }
   }, []);
 
@@ -78,20 +87,33 @@ export default function TestRunsScreen() {
 
   // Demo/synthetic runs are excluded from the measurement count, matching the
   // web client — a bundled fixture is not evidence of a measurement.
-  const measured = (runs ?? []).filter((run) => !run.is_demo_synthetic);
+  const measured = (runs ?? []).filter(
+    (run) => !run.is_demo_synthetic && hasRecordedMeasurements(run),
+  );
+  const syntheticCount = (runs ?? []).filter(
+    (run) => run.is_demo_synthetic,
+  ).length;
+  const unmeasuredCount =
+    (runs?.length ?? 0) - measured.length - syntheticCount;
+  const busy = loading || creating;
 
   return (
     <ScrollView
       style={styles.screen}
       contentContainerStyle={styles.content}
       refreshControl={
-        <RefreshControl refreshing={busy} onRefresh={() => void load()} />
+        <RefreshControl
+          refreshing={loading}
+          onRefresh={() => {
+            if (!creating) void load();
+          }}
+        />
       }
     >
       <Text style={styles.title}>Test Runs</Text>
       <Text style={styles.subtitle}>
         {runs
-          ? `${measured.length} measured · ${runs.length - measured.length} synthetic`
+          ? `${measured.length} measured · ${unmeasuredCount} unmeasured · ${syntheticCount} synthetic`
           : "Loading persisted runs…"}
       </Text>
 
@@ -104,7 +126,7 @@ export default function TestRunsScreen() {
         <Text style={styles.createButtonText}>Create draft</Text>
       </Pressable>
 
-      {busy && !runs ? (
+      {loading && !runs ? (
         <ActivityIndicator color={theme.color.accent} style={styles.spinner} />
       ) : null}
 

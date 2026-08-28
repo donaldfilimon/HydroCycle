@@ -50,15 +50,26 @@ export function TraceChart({
   color?: string;
 }) {
   const points = chartPoints(x, values);
-  const finiteValues = values.filter(Number.isFinite);
-  const minimum = finiteValues.length > 0 ? Math.min(...finiteValues) : null;
-  const maximum = finiteValues.length > 0 ? Math.max(...finiteValues) : null;
+  const plottedValues = x.flatMap((xValue, index) => {
+    const value = values[index];
+    return value !== undefined &&
+      Number.isFinite(xValue) &&
+      Number.isFinite(value)
+      ? [value]
+      : [];
+  });
+  const minimum = points ? Math.min(...plottedValues) : null;
+  const maximum = points ? Math.max(...plottedValues) : null;
 
   return (
     <View
       style={styles.container}
       accessible
-      accessibilityLabel={`${title}. Range ${formatNumber(minimum, 1)} to ${formatNumber(maximum, 1)} ${unit}.`}
+      accessibilityLabel={
+        points
+          ? `${title}. Range ${formatNumber(minimum, 1)} to ${formatNumber(maximum, 1)} ${unit}.`
+          : `${title}. Trace unavailable.`
+      }
     >
       <Text style={styles.title}>{title}</Text>
       {points ? (
@@ -96,12 +107,14 @@ export function TraceChart({
       ) : (
         <Text style={styles.empty}>Trace unavailable</Text>
       )}
-      <View style={styles.legend}>
-        <Text style={styles.range}>{formatNumber(minimum, 1)} min</Text>
-        <Text style={styles.range}>
-          {formatNumber(maximum, 1)} max · {unit}
-        </Text>
-      </View>
+      {points ? (
+        <View style={styles.legend}>
+          <Text style={styles.range}>{formatNumber(minimum, 1)} min</Text>
+          <Text style={styles.range}>
+            {formatNumber(maximum, 1)} max · {unit}
+          </Text>
+        </View>
+      ) : null}
     </View>
   );
 }
