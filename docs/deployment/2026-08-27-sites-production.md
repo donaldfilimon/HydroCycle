@@ -14,16 +14,14 @@ The UI labels those boundaries directly.
 ## Source and hosting state
 
 - Sites reported the project active and public with the production URL above.
-- The latest saved Sites version was version 4, sourced from commit `75f535d`.
-- The Site-facing source under `apps/site` and `apps/web` is unchanged between
-  `75f535d` and the audited repository head `94d3404`; intervening changes are
-  mobile-client, design-handoff, workspace-lock, and documentation work.
-- Sites exposes a current production URL and latest saved version number, but
-  its site metadata response does not bind the live URL to a version ID. This
-  report therefore records those as separate provider facts rather than
-  asserting an unavailable live-version mapping.
-- A direct request to the production URL returned HTTP 200 and remained on the
-  canonical HTTPS URL.
+- Sites version 5 was saved from pushed commit `528c917` and its production
+  deployment completed successfully at the canonical URL above.
+- Version 5 replaces version 4 after an independent production check found a
+  missing favicon and a provider-specific `GitHub Pages` status label. The new
+  source adds explicit icon assets and uses provider-neutral hosted-preview
+  wording.
+- Direct requests to the production root, `/favicon.svg`, and `/favicon.ico`
+  returned HTTP 200.
 
 ## Live browser acceptance
 
@@ -40,7 +38,9 @@ Workbench, and Test Runs.
   import persistence unavailable, and exposed no hardware command affordance.
 - `Load demo fixture` completed in the browser and reported that no model
   service computation was performed.
-- Browser console inspection reported zero warnings and zero errors.
+- A fresh browser load after the version 5 deployment reported zero console
+  warnings and zero errors, linked `/favicon.svg`, and displayed `Hosted
+  preview: static fixtures only`.
 - At 1536x1024, the three screens retained the hierarchy of the approved images
   in `docs/design` with the additional hosted-fixture disclosure.
 - At 390x844, Summary, Workbench, and Test Runs each had a document scroll
@@ -48,15 +48,14 @@ Workbench, and Test Runs.
   was present. The stacked layouts matched the checked implementation captures
   in `docs/fidelity/implementation`.
 
-No blocking runtime or visual defect was found. This was a targeted production
-acceptance pass, not a claim that every browser, operating system, or assistive
-technology combination was retested against the hosted origin.
+No blocking runtime or visual defect remains in the checked production surface.
+This was a targeted production acceptance pass, not a claim that every browser,
+operating system, or assistive technology combination was retested against the
+hosted origin.
 
 ## Repository and CI evidence
 
-The application state covered by the full gate was `94d3404`. Before this
-report was committed, `main` gained only Playwright-log ignore cleanup and
-merge-history reconciliation; no application source changed after the gate.
+The final published source and gated repository revision was `528c917`.
 
 Local verification:
 
@@ -66,21 +65,22 @@ Local verification:
 - Generated OpenAPI, TypeScript route types, and schema fixtures were
   deterministic and current.
 - Contracts: 6 tests passed, plus formatting and strict type checking.
-- Web: 27 tests passed, plus formatting, ESLint, strict type checking, and the
+- Shared view model: 5 tests passed, plus formatting and strict type checking.
+- Web: 23 tests passed, plus formatting, ESLint, strict type checking, and the
   Vite production build.
-- Mobile: 21 Jest tests passed, plus type checking, ESLint, and the mobile
+- Mobile: 22 Jest tests passed, plus type checking, ESLint, and the mobile
   bundle check.
 
 Hosted CI verification:
 
 - GitHub Actions run
-  [33128883520](https://github.com/donaldfilimon/HydroCycle/actions/runs/33128883520)
-  passed the full gate and all 17 Playwright scenarios across desktop, tablet,
-  and mobile projects.
+  [33130124525](https://github.com/donaldfilimon/HydroCycle/actions/runs/33130124525)
+  passed at exact published revision `528c917`, including the full gate and all
+  17 Playwright scenarios across desktop, tablet, and mobile projects.
 - The Playwright artifact was uploaded by that run.
-- The immediately preceding CI failure was a frozen root-lockfile mismatch,
-  not an application-test failure. Commit `94d3404` refreshed the lock after
-  the workspace split; the replacement run above passed from a clean Linux
+- An earlier CI failure was a frozen root-lockfile mismatch, not an
+  application-test failure. Commit `94d3404` refreshed the lock after the
+  workspace split; the final exact-revision run above passed from a clean Linux
   checkout.
 
 ## Acceptance boundary
