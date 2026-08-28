@@ -12,6 +12,7 @@ import {
 
 import { postSimulation, type ApiSimulationResult } from "../api";
 import { Badge, Card, Note, Row } from "../components/ui";
+import { TraceChart } from "../components/TraceChart";
 import {
   formatWithUnit,
   humanizeFailureCode,
@@ -178,15 +179,58 @@ export default function WorkbenchScreen() {
           {/* A passing gate reports the "pass" sentinel in `failures`; render it
               and a PASSED badge grows a red "Pass" bullet underneath it. */}
           {visibleFailureCodes(gate.failures).map((code) => (
-              <Text key={String(code)} style={styles.failureItem}>
-                • {humanizeFailureCode(String(code))}
-              </Text>
-            ))}
+            <Text key={String(code)} style={styles.failureItem}>
+              • {humanizeFailureCode(String(code))}
+            </Text>
+          ))}
           <Note>
             {result?.proposed_cycle
               ? "Proposed reactive cycle available."
               : "No proposed reactive cycle — motored baseline only."}
           </Note>
+        </Card>
+      ) : null}
+
+      {result ? (
+        <Card
+          title="Homogeneous cycle traces"
+          subtitle="Scalar 0D state versus crank angle — not CFD"
+        >
+          <TraceChart
+            title="Motored baseline pressure"
+            x={result.motored_baseline.crank_angle_deg}
+            values={result.motored_baseline.pressure_pa.map(
+              (pressure) => pressure / 100_000,
+            )}
+            unit="bar"
+          />
+          <TraceChart
+            title="Motored baseline temperature"
+            x={result.motored_baseline.crank_angle_deg}
+            values={result.motored_baseline.temperature_k}
+            unit="K"
+            color={theme.color.warn}
+          />
+          {result.proposed_cycle ? (
+            <>
+              <TraceChart
+                title="Proposed cycle pressure"
+                x={result.proposed_cycle.crank_angle_deg}
+                values={result.proposed_cycle.pressure_pa.map(
+                  (pressure) => pressure / 100_000,
+                )}
+                unit="bar"
+                color={theme.color.pass}
+              />
+              <TraceChart
+                title="Proposed cycle temperature"
+                x={result.proposed_cycle.crank_angle_deg}
+                values={result.proposed_cycle.temperature_k}
+                unit="K"
+                color={theme.color.pass}
+              />
+            </>
+          ) : null}
         </Card>
       ) : null}
     </ScrollView>

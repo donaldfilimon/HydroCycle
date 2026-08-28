@@ -1,19 +1,26 @@
-import { render, screen, waitFor } from "@testing-library/react-native";
+import {
+  render,
+  screen,
+  userEvent,
+  waitFor,
+} from "@testing-library/react-native";
 
-import { getTestRuns, type ApiTestRunDocument } from "../api";
+import { createTestRun, getTestRuns, type ApiTestRunDocument } from "../api";
 import TestRunsScreen, { statusTone } from "../screens/TestRunsScreen";
 import { theme } from "../theme";
 
 jest.mock("../api", () => ({
+  createTestRun: jest.fn(),
   getTestRuns: jest.fn(),
 }));
 
 const getTestRunsMock = jest.mocked(getTestRuns);
+const createTestRunMock = jest.mocked(createTestRun);
 
 function run(
   id: string,
   name: string,
-  status: "valid" | "invalid",
+  status: "draft" | "valid" | "invalid",
 ): ApiTestRunDocument {
   return {
     id,
@@ -30,6 +37,7 @@ function run(
 describe("TestRunsScreen", () => {
   beforeEach(() => {
     getTestRunsMock.mockReset();
+    createTestRunMock.mockReset();
   });
 
   it("renders populated valid and invalid runs distinctly", async () => {
@@ -47,5 +55,22 @@ describe("TestRunsScreen", () => {
     expect(screen.getByText("2 measured · 0 synthetic")).toBeTruthy();
     expect(statusTone("valid")).toBe(theme.color.pass);
     expect(statusTone("invalid")).toBe(theme.color.fail);
+  });
+
+  it("creates an additive empty draft and prepends the returned document", async () => {
+    const user = userEvent.setup();
+    getTestRunsMock.mockResolvedValue([]);
+    createTestRunMock.mockResolvedValue(
+      run("draft-1", "Mobile draft", "draft"),
+    );
+
+    render(<TestRunsScreen />);
+    await screen.findByText("No persisted runs");
+    await user.press(screen.getByRole("button", { name: "Create draft" }));
+
+    await screen.findByText("Mobile draft");
+    expect(createTestRunMock).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "draft", is_demo_synthetic: false }),
+    );
   });
 });

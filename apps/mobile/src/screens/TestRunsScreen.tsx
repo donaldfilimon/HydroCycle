@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -8,7 +9,7 @@ import {
   View,
 } from "react-native";
 
-import { getTestRuns, type ApiTestRunDocument } from "../api";
+import { createTestRun, getTestRuns, type ApiTestRunDocument } from "../api";
 import { Card, Note, Row } from "../components/ui";
 import { formatText } from "../format";
 import { theme } from "../theme";
@@ -52,6 +53,25 @@ export default function TestRunsScreen() {
     }
   }, []);
 
+  const createDraft = useCallback(async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const created = await createTestRun({
+        name: `Mobile draft ${new Date().toISOString().slice(0, 16).replace("T", " ")}`,
+        status: "draft",
+        is_demo_synthetic: false,
+        notes:
+          "Created on mobile; add reviewed measurements before validation.",
+      });
+      setRuns((previous) => [created, ...(previous ?? [])]);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
   useEffect(() => {
     void load();
   }, [load]);
@@ -74,6 +94,15 @@ export default function TestRunsScreen() {
           ? `${measured.length} measured · ${runs.length - measured.length} synthetic`
           : "Loading persisted runs…"}
       </Text>
+
+      <Pressable
+        accessibilityRole="button"
+        style={[styles.createButton, busy && styles.createButtonDisabled]}
+        onPress={() => void createDraft()}
+        disabled={busy}
+      >
+        <Text style={styles.createButtonText}>Create draft</Text>
+      </Pressable>
 
       {busy && !runs ? (
         <ActivityIndicator color={theme.color.accent} style={styles.spinner} />
@@ -123,8 +152,9 @@ export default function TestRunsScreen() {
       ))}
 
       <Note>
-        Read-only on mobile: creating, editing, importing, and deleting runs
-        stay on the web client.
+        Mobile creates empty drafts only. Editing, validation, importing, and
+        deletion stay on the web client until their review and confirmation
+        flows are implemented here.
       </Note>
     </ScrollView>
   );
@@ -153,4 +183,14 @@ const styles = StyleSheet.create({
   statusText: { color: theme.color.textMuted, fontSize: 12 },
   spinner: { marginTop: theme.space.lg },
   errorText: { color: theme.color.fail, fontSize: 12 },
+  createButton: {
+    alignSelf: "flex-start",
+    backgroundColor: theme.color.accent,
+    borderRadius: theme.radius.md,
+    marginTop: theme.space.md,
+    paddingHorizontal: theme.space.md,
+    paddingVertical: theme.space.sm + 2,
+  },
+  createButtonDisabled: { opacity: 0.6 },
+  createButtonText: { color: theme.color.background, fontWeight: "700" },
 });

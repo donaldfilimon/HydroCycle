@@ -9,6 +9,7 @@ import {
 export type ApiSimulationInput = components["schemas"]["SimulationInput"];
 export type ApiSimulationResult = components["schemas"]["SimulationResult"];
 export type ApiTestRunDocument = components["schemas"]["TestRunDocument"];
+export type ApiTestRunCreate = components["schemas"]["TestRunCreate"];
 
 /**
  * Unlike `apps/web`, there is no dev-server proxy here, so the client is given
@@ -54,6 +55,19 @@ export async function getHealth(): Promise<Record<string, unknown>> {
 export async function getTestRuns(): Promise<ApiTestRunDocument[]> {
   return withTimeout(HEALTH_TIMEOUT_MS * 4, async (signal) => {
     const { data, error, response } = await client.GET("/api/v1/test-runs", {
+      signal,
+    });
+    if (!data) throw new Error(errorMessage(error, response));
+    return data;
+  });
+}
+
+export async function createTestRun(
+  request: ApiTestRunCreate,
+): Promise<ApiTestRunDocument> {
+  return withTimeout(SIMULATION_TIMEOUT_MS, async (signal) => {
+    const { data, error, response } = await client.POST("/api/v1/test-runs", {
+      body: request,
       signal,
     });
     if (!data) throw new Error(errorMessage(error, response));

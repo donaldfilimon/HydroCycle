@@ -43,7 +43,9 @@ describe("GateCard failure bullets", () => {
   });
 
   it("drops only the sentinel, never a genuine code beside it", () => {
-    render(<GateCard result={gateResult(false, ["pass", "preheat_deficit"])} />);
+    render(
+      <GateCard result={gateResult(false, ["pass", "preheat_deficit"])} />,
+    );
 
     expect(screen.getByText(/Preheat/i)).toBeTruthy();
     expect(screen.queryByText(/•\s*Pass$/)).toBeNull();

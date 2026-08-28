@@ -43,10 +43,9 @@ describe("visibleFailureCodes", () => {
   });
 
   it("preserves real failure codes", () => {
-    expect(visibleFailureCodes(["insufficient_h2", "preheat_deficit"])).toEqual([
-      "insufficient_h2",
-      "preheat_deficit",
-    ]);
+    expect(visibleFailureCodes(["insufficient_h2", "preheat_deficit"])).toEqual(
+      ["insufficient_h2", "preheat_deficit"],
+    );
   });
 });
 
