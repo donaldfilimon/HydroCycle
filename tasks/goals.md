@@ -22,6 +22,20 @@ follows. Recorded here because these decisions bind future slices:
   is set in the app's own scripts, and EAS / `expo-updates` are not used.
 - **"Improve massively" is scoped to the mobile client** plus the structural
   cleanups it forces. Broader improvement work needs its own goal.
+
+### Outcome — slice 1 shipped 2026-08-27 (`a571b6e`)
+`apps/mobile` exists and runs against the local service. Root `bun run check`
+is green end to end: 78 model tests, 6 contract, 27 web, 19 mobile, plus an
+iOS Hermes bundle (605 modules). The Summary screen's exact request was also
+exercised against a live service — the default fixture fails the gate with
+`insufficient_h2` / `preheat_deficit` and returns no proposed cycle, which is
+invariant 1 behaving correctly rather than a bug.
+
+**Goal stays `in_progress`.** Slice 1 is one screen, not the whole app:
+Workbench and Test Runs do not exist on mobile yet (slice 3), the web view
+model is still not shared (slice 2), and physical-device support remains
+blocked on hard invariant 7 and unresolved. Nothing here is a "turn the app
+into React Native" completion claim.
 - Current architecture per `AGENTS.md`/`CLAUDE.md`: `apps/web` is React 19 + Vite 7 + strict TypeScript on Bun, talking to `services/model` (Python 3.14 + FastAPI + Cantera 3.2, uv-managed) bound to `127.0.0.1` only, no telemetry/cloud sync. There is no Expo/React Native surface today.
 - Open questions before implementation:
   - **127.0.0.1 binding vs. mobile client.** The model service's hard invariant is loopback-only binding with no cloud sync. Vite's dev proxy makes same-machine web access work; an Expo app (especially on a physical device or app-store build) cannot reach a loopback-bound service the same way. Does this goal imply relaxing that invariant, running the model service differently for mobile, or keeping mobile as a same-machine/simulator-only client?
