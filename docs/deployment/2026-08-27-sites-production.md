@@ -43,10 +43,10 @@ Workbench, and Test Runs.
 - Browser console inspection reported zero warnings and zero errors.
 - At 1536x1024, the three screens retained the hierarchy of the approved images
   in `docs/design` with the additional hosted-fixture disclosure.
-- At 390x844, Summary, Workbench, and Test Runs each had `scrollWidth ==
-  clientWidth == 390`; no page-level horizontal overflow was present. The
-  stacked layouts matched the checked implementation captures in
-  `docs/fidelity/implementation`.
+- At 390x844, Summary, Workbench, and Test Runs each had a document scroll
+  width equal to the 390-pixel client width; no page-level horizontal overflow
+  was present. The stacked layouts matched the checked implementation captures
+  in `docs/fidelity/implementation`.
 
 No blocking runtime or visual defect was found. This was a targeted production
 acceptance pass, not a claim that every browser, operating system, or assistive
@@ -54,8 +54,9 @@ technology combination was retested against the hosted origin.
 
 ## Repository and CI evidence
 
-The audited canonical state was clean `main` at `94d3404`, synchronized with
-`origin/main`.
+The application state covered by the full gate was `94d3404`. Before this
+report was committed, `main` gained only Playwright-log ignore cleanup and
+merge-history reconciliation; no application source changed after the gate.
 
 Local verification:
 
