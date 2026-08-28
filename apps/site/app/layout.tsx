@@ -36,6 +36,9 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title,
     description,
+    icons: {
+      icon: "/favicon.svg",
+    },
     openGraph: {
       type: "website",
       title,

@@ -1898,7 +1898,7 @@ export default function App({ staticDemo = STATIC_DEMO }: AppProps = {}) {
   }
 
   const apiLabel = useMemo(() => {
-    if (staticDemo) return "GitHub Pages: static fixtures only";
+    if (staticDemo) return "Hosted preview: static fixtures only";
     if (!health) return "Local model service: offline / checking";
     const status = health.status;
     const service = health.service;

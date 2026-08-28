@@ -127,8 +127,8 @@ export function AppShell({
       {staticDemo ? (
         <div className="demo-strip" role="note">
           Static fixture preview. No model service, persistence, or measured
-          data is available on GitHub Pages. Run HydroCycle locally for computed
-          results.
+          data is available in this hosted preview. Run HydroCycle locally for
+          computed results.
         </div>
       ) : null}
 
