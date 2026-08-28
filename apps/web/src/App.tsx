@@ -24,9 +24,12 @@ import type {
   SimulationView,
   TestRunView,
   WorkbenchInputs,
-} from "./domain";
-import { DEFAULT_INPUTS } from "./domain";
-import { demoRuns, makeSimulationFixture } from "./fixtures";
+} from "@hydrocycle/view-model";
+import {
+  DEFAULT_INPUTS,
+  demoRuns,
+  makeSimulationFixture,
+} from "@hydrocycle/view-model";
 import { SummaryScreen } from "./screens/SummaryScreen";
 import { TestRunsScreen } from "./screens/TestRunsScreen";
 import { WorkbenchScreen } from "./screens/WorkbenchScreen";

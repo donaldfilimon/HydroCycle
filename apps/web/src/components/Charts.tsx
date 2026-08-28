@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from "react";
 
-import type { TracePoint } from "../domain";
+import type { TracePoint } from "@hydrocycle/view-model";
 
 export interface ChartSeries {
   label: string;

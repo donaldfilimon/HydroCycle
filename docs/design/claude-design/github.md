@@ -23,6 +23,6 @@ apps/web tree: 0e523488da15d3b978e46d2d31c049619c4c783f
 
 | Artifact | Repo files |
 | --- | --- |
-| `HydroCycle - Summary.dc.html` | `apps/web/src/screens/SummaryScreen.tsx`, `apps/web/src/components/{AppShell,Brand,GateStatus,CylinderSchematic,Charts}.tsx`, `apps/web/src/fixtures.ts`, `apps/web/src/styles.css` |
+| `HydroCycle - Summary.dc.html` | `apps/web/src/screens/SummaryScreen.tsx`, `apps/web/src/components/{AppShell,Brand,GateStatus,CylinderSchematic,Charts}.tsx`, `packages/view-model/src/fixtures.ts`, `apps/web/src/styles.css` |
 | _(not built)_ Workbench | `apps/web/src/screens/WorkbenchScreen.tsx`, `apps/web/src/components/{Charts,CylinderSchematic,GateStatus,FormField}.tsx`, `apps/web/src/styles.css` |
 | _(not built)_ Test Runs | `apps/web/src/screens/TestRunsScreen.tsx`, `apps/web/src/components/AppShell.tsx`, `apps/web/src/styles.css` |

@@ -1,0 +1,26 @@
+{
+  "name": "@hydrocycle/view-model",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit --pretty false",
+    "test": "vitest run",
+    "check": "bun run format:check && bun run typecheck && bun run test"
+  },
+  "dependencies": {
+    "@hydrocycle/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

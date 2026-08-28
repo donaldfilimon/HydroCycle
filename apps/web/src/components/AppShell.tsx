@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
-import type { Screen } from "../domain";
+import type { Screen } from "@hydrocycle/view-model";
 import { Brand } from "./Brand";
 
 const navItems: { screen: Screen; label: string }[] = [

@@ -12,7 +12,7 @@ import {
   Waves,
 } from "lucide-react";
 
-import type { SimulationView, TestRunView } from "../domain";
+import type { SimulationView, TestRunView } from "@hydrocycle/view-model";
 import { GateStatus } from "../components/GateStatus";
 import { SensitivityBars } from "../components/Charts";
 import { CylinderSchematic } from "../components/CylinderSchematic";

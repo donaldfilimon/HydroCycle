@@ -1,4 +1,8 @@
 import { defaultSimulationInput } from "@hydrocycle/contracts";
+import {
+  DEFAULT_INPUTS,
+  makeSimulationFixture,
+} from "@hydrocycle/view-model";
 
 /**
  * Pins the `@hydrocycle/contracts` source alias, which is declared in three
@@ -17,5 +21,14 @@ describe("contracts source alias", () => {
     const input = defaultSimulationInput as unknown as Record<string, unknown>;
     expect(Object.keys(input).length).toBeGreaterThan(0);
     expect(input).toHaveProperty("bubble_population");
+  });
+});
+
+describe("view-model source alias", () => {
+  it("preserves the failed-gate fixture through the package entry point", () => {
+    const fixture = makeSimulationFixture("literature", DEFAULT_INPUTS);
+    expect(fixture.gate.passed).toBe(false);
+    expect(fixture.proposedCycle).toBeNull();
+    expect(fixture.motoredBaseline.pressureBar.length).toBeGreaterThan(20);
   });
 });

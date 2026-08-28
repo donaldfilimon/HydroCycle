@@ -1,7 +1,7 @@
 # HydroCycle Expo mobile client — design
 
 Date: 2026-08-27
-Status: approved scope, slice 1 in progress
+Status: approved scope, slices 1-2 implemented
 
 ## Problem
 
@@ -61,7 +61,7 @@ so `apps/mobile` is *not* hoisted into the root install. Metro resolves
 modules differently from Bun's workspace hoister, and the `mlai` monorepo on
 this machine already hit this: its root declares only `packages/*`, and each
 app keeps its own lockfile. `apps/mobile` follows that precedent and consumes
-contracts via `file:../../packages/contracts`.
+contracts and the shared view model through explicit source aliases.
 
 **API base URL.** `createHydroCycleClient(baseUrl)` already accepts an origin
 (the web app passes the empty default and relies on Vite's `/api` proxy).

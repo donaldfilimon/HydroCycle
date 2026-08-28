@@ -1,6 +1,6 @@
 import { Check, CircleX, TriangleAlert } from "lucide-react";
 
-import type { GateView } from "../domain";
+import type { GateView } from "@hydrocycle/view-model";
 
 interface GateStatusProps {
   gate: GateView;

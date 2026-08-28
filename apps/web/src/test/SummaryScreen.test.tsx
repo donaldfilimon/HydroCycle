@@ -1,8 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_INPUTS, type TestRunView } from "../domain";
-import { demoRuns, makeSimulationFixture } from "../fixtures";
+import {
+  DEFAULT_INPUTS,
+  demoRuns,
+  makeSimulationFixture,
+  type TestRunView,
+} from "@hydrocycle/view-model";
 import { SummaryScreen } from "../screens/SummaryScreen";
 
 const simulation = makeSimulationFixture("literature", DEFAULT_INPUTS);

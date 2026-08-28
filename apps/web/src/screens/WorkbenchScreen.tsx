@@ -27,7 +27,11 @@ import {
 import { LineChart, type ChartSeries } from "../components/Charts";
 import { CylinderSchematic } from "../components/CylinderSchematic";
 import { NumberField } from "../components/FormField";
-import type { SimulationView, TestRunView, WorkbenchInputs } from "../domain";
+import type {
+  SimulationView,
+  TestRunView,
+  WorkbenchInputs,
+} from "@hydrocycle/view-model";
 
 interface WorkbenchScreenProps {
   simulation: SimulationView;

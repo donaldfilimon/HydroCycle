@@ -50,7 +50,7 @@ function makeCycle(reactive: boolean): CycleView {
   );
 
   return {
-    crankAngle: degrees,
+    crankAngle: [...degrees],
     volumeCm3,
     pressureBar,
     temperatureK,
@@ -229,7 +229,7 @@ export function makeSimulationFixture(
         direction: "positive",
       },
     ],
-    evidence,
+    evidence: evidence.map((item) => ({ ...item })),
     diagnostics: [
       "Frontend fixture is deterministic and clearly synthetic.",
       "Run the local model service for authoritative Cantera-backed results.",

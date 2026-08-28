@@ -25,8 +25,8 @@ import type {
   TestRunMeasurementUncertainty,
   TestRunStatus,
   TestRunView,
-} from "../domain";
-import { makeRetentionTrace } from "../fixtures";
+} from "@hydrocycle/view-model";
+import { makeRetentionTrace } from "@hydrocycle/view-model";
 
 interface TestRunsScreenProps {
   runs: TestRunView[];

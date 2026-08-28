@@ -10,6 +10,7 @@ import {
 } from "react-native";
 
 import { defaultSimulationInput } from "@hydrocycle/contracts";
+import { DEFAULT_INPUTS, makeSimulationFixture } from "@hydrocycle/view-model";
 
 import { getHealth, postSimulation, type ApiSimulationResult } from "../api";
 import { API_BASE_URL } from "../config";
@@ -26,6 +27,8 @@ type ServiceState =
   | { kind: "checking" }
   | { kind: "online" }
   | { kind: "offline"; reason: string };
+
+const localFixture = makeSimulationFixture("literature", DEFAULT_INPUTS);
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -168,6 +171,39 @@ function ReproducibilityCard({ result }: { result: ApiSimulationResult }) {
   );
 }
 
+function LocalFixtureCard() {
+  return (
+    <Card
+      title="Deterministic local fixture"
+      subtitle="Synthetic preview, not a measurement"
+    >
+      <View style={[styles.badge, { backgroundColor: theme.color.fail }]}>
+        <Text style={styles.badgeText}>FAILED</Text>
+      </View>
+      <Row
+        label="H2 available"
+        value={formatWithUnit(
+          localFixture.gate.hydrogenAvailableMg,
+          "mg/cycle",
+          3,
+        )}
+      />
+      <Row
+        label="H2 required"
+        value={formatWithUnit(
+          localFixture.gate.hydrogenRequiredMg,
+          "mg/cycle",
+          3,
+        )}
+      />
+      <Text style={styles.note}>
+        No proposed reactive cycle — motored baseline only. Live API values
+        replace this preview when the local model service responds.
+      </Text>
+    </Card>
+  );
+}
+
 export default function SummaryScreen() {
   const [service, setService] = useState<ServiceState>({ kind: "checking" });
   const [result, setResult] = useState<ApiSimulationResult | null>(null);
@@ -245,6 +281,8 @@ export default function SummaryScreen() {
       {busy && !result ? (
         <ActivityIndicator color={theme.color.accent} style={styles.spinner} />
       ) : null}
+
+      {!result ? <LocalFixtureCard /> : null}
 
       {result ? (
         <>

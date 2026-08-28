@@ -21,7 +21,8 @@
       "<rootDir>/node_modules"
     ],
     "moduleNameMapper": {
-      "^@hydrocycle/contracts$": "<rootDir>/../../packages/contracts/src/index.ts"
+      "^@hydrocycle/contracts$": "<rootDir>/../../packages/contracts/src/index.ts",
+      "^@hydrocycle/view-model$": "<rootDir>/../../packages/view-model/src/index.ts"
     }
   },
   "dependencies": {

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_INPUTS } from "../domain";
-import { makeSimulationFixture } from "../fixtures";
+import { DEFAULT_INPUTS, makeSimulationFixture } from "../src";
 
 describe("frontend deterministic fixtures", () => {
   it("keeps the literature comparison gate failed and reactive trace null", () => {
@@ -39,5 +38,15 @@ describe("frontend deterministic fixtures", () => {
     const second = makeSimulationFixture("literature", DEFAULT_INPUTS);
     expect(first).toEqual(second);
     expect(first.resultHash).toBe(second.resultHash);
+  });
+
+  it("does not share mutable fixture arrays between results", () => {
+    const first = makeSimulationFixture("literature", DEFAULT_INPUTS);
+    first.motoredBaseline.crankAngle[0] = 999;
+    first.evidence[0]!.title = "mutated";
+
+    const second = makeSimulationFixture("literature", DEFAULT_INPUTS);
+    expect(second.motoredBaseline.crankAngle[0]).toBe(-180);
+    expect(second.evidence[0]?.title).not.toBe("mutated");
   });
 });

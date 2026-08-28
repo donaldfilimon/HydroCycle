@@ -14,6 +14,9 @@
     "paths": {
       "@hydrocycle/contracts": [
         "../../packages/contracts/src/index.ts"
+      ],
+      "@hydrocycle/view-model": [
+        "../../packages/view-model/src/index.ts"
       ]
     }
   },
