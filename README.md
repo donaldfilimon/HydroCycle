@@ -76,8 +76,11 @@ The companion provides Summary, Workbench, and Test Runs views over the same
 generated contracts and local FastAPI/Cantera service. iOS Simulator shares
 the host loopback interface, so the API remains bound to
 `http://127.0.0.1:8000`; the Expo development server is also forced to
-localhost rather than Expo's LAN default. The app does not use EAS,
-`expo-updates`, telemetry, cloud sync, or hardware-control endpoints.
+localhost rather than Expo's LAN default. Because Expo SDK 53's `--localhost`
+option changes the advertised URL without narrowing the underlying Node
+listener, the Metro configuration also guards hostless TCP listen calls and
+forces them to `127.0.0.1`. The app does not use EAS, `expo-updates`, telemetry,
+cloud sync, or hardware-control endpoints.
 
 Physical-device, TestFlight, and App Store support are intentionally out of
 scope. A physical device cannot reach a host service bound to loopback, and
@@ -100,7 +103,9 @@ OpenAPI and generated-contract drift, contract and shared-view-model tests,
 web formatting and linting, strict TypeScript, component tests, and the web
 production build. It also verifies the isolated mobile lockfile, runs mobile
 Expo-version compatibility, TypeScript, ESLint, and Jest checks, and exports a
-real iOS Hermes bundle so Metro resolution is part of the repository gate.
+real iOS Hermes bundle so Metro resolution is part of the repository gate. A
+listener regression probe also verifies that a hostless Expo/Metro TCP server
+opens on IPv4 loopback rather than a wildcard interface.
 
 Run the isolated browser acceptance suite separately:
 

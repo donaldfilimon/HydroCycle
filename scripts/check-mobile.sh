@@ -22,9 +22,9 @@ printf 'Verifying apps/mobile dependencies...\n'
 bun install --frozen-lockfile
 CI=1 bunx expo install --check
 
-bun run typecheck
-bun run lint
-bun run test
+# The app-local check includes the loopback-listener regression probe in
+# addition to TypeScript, ESLint, and Jest.
+bun run check
 
 # Typecheck alone does NOT prove the app runs: TypeScript and Metro resolve
 # modules differently, and a cross-package import can type-check cleanly while

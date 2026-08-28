@@ -12,7 +12,7 @@ status: done
   `docs/deployment/2026-08-27-sites-production.md`.
 
 ## Improve massively and turn into Expo React Native app
-status: in_progress
+status: done
 - Captured verbatim from `/goal improve massively and turn into expo react native app`.
 
 ### Scope resolved 2026-08-27 (`/goal continue`)
@@ -102,3 +102,23 @@ create an empty persisted draft but cannot edit or delete data on mobile. Root
 `bun run check` passed with 78 model, 6 contract, 5 view-model, 23 web, and 39
 mobile tests, plus the iOS Hermes export. Draft creation has component/API
 contract coverage but has not yet been exercised against a live database.
+
+### Outcome — simulator acceptance and goal closure 2026-08-28
+The additive companion is now exercised end to end in an iPhone 17 Pro Max
+simulator against the real loopback FastAPI/Cantera service. Summary rendered
+the canonical failed-gate fixture as motored-only; Workbench round-tripped a
+14:1 compression ratio and 2400 rpm and preserved the edit and result across
+tab changes; Test Runs created and rendered an empty persisted draft from an
+isolated acceptance database without replacing any null measurement with zero.
+Native captures and the acceptance ledger are in `docs/fidelity/mobile`.
+
+The live socket audit found that Expo SDK 53 advertised localhost while Metro
+still listened on an IPv6 wildcard. The Metro configuration now guards the
+actual Node listener, the app-local gate probes that behavior, and the repeated
+OS audit showed only `127.0.0.1` listeners on ports 5173, 8000, and 8081.
+
+Final root `bun run check` passed with 78 model, 6 contract, 5 view-model, 23
+web, and 47 mobile tests, plus the web production build and real iOS Hermes
+export. Physical-device and store support, Test Run editing/deletion/import,
+and additional chart parity remain explicitly deferred or out of scope; none
+requires weakening this completed simulator-first companion.

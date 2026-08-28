@@ -51,8 +51,9 @@ This is why `check-mobile.sh` exports a bundle: the green gate was lying.
       An unparseable field leaves the committed value untouched rather than
       coercing to `0`, so invariant 3 governs what is *sent*, not only shown.
 - [x] `simulationRequest` moved into `packages/view-model`, so both clients
-      submit byte-identical requests and cannot drift on the evidence-basis
-      rules (when a user-entered total is `measured` vs `user_assumption`).
+      share the Workbench evidence-basis rules (when a user-entered total is
+      `measured` vs `user_assumption`). Summary deliberately retains the raw
+      canonical contract fixture documented in Slice 3b.
 - [x] Test Runs screen — read-only list, synthetic runs excluded from the
       measured count.
 
@@ -62,10 +63,9 @@ This is why `check-mobile.sh` exports a bundle: the green gate was lying.
   with no proposed cycle — invariant 1 correct.
 - Test Runs: `GET /api/v1/test-runs` returns HTTP 200.
 
-**Known gap:** that database had zero persisted runs, so the empty state is
-what was actually observed. Populated run cards have never been rendered
-against real data — only their types are checked. Worth a look before anyone
-calls Test Runs proven.
+**Resolved 2026-08-28:** simulator acceptance created an empty persisted draft
+in an isolated live database, rendered the populated native card, and read it
+back through the API with null operator/sample fields and no simulations.
 
 ### Two defects this gap actually hid (found 2026-08-27 by a parity audit)
 Both shipped in `49f70e6`, both passed all 28 mobile tests and the bundle
@@ -102,11 +102,24 @@ pretending its inputs are the Workbench defaults.
 - [x] Component coverage exercises the real populated-card path and valid /
       invalid status distinction.
 
-## Slice 4b — Test Run editing, deletion, and native file import (blocked)
+## Slice 4b — Test Run editing, deletion, and native file import (deferred)
 Patch and delete need a small-screen editor, dirty-state protection, validation,
 and explicit destructive confirmation. Import needs native document selection,
 bounded byte reads, and local file error handling. Keep these on web until that
 complete review surface exists; do not ship one-tap partial writes.
+
+## Slice 5 — native simulator acceptance and loopback enforcement — DONE
+- [x] Summary, Workbench, and populated Test Runs rendered in iOS Simulator
+      against the real FastAPI/Cantera service and an isolated database.
+- [x] Failed Summary and Workbench gates withheld proposed cycles and displayed
+      only motored homogeneous 0D traces.
+- [x] Workbench edits and results survive tab changes after a screen has been
+      visited; component coverage locks that behavior.
+- [x] Expo/Metro's actual TCP listener is forced to `127.0.0.1`, not merely
+      advertised as localhost. The app-local check probes the guard and the
+      live socket table was audited after restart.
+- [x] Native 1320x2868 captures and the acceptance ledger are stored under
+      `docs/fidelity/mobile`.
 
 ## Out of scope / unresolved
 - Physical device + app-store distribution. Requires relaxing hard invariant 7

@@ -32,8 +32,12 @@ documented invariant for a demo, which this project's own guidance forbids.
 
 Expo's CLI also emits telemetry by default and its development server defaults
 to advertising a LAN origin. `EXPO_NO_TELEMETRY=1` and `expo start --localhost`
-are set in the app's scripts. EAS Build / `expo-updates` are not used, because
-they imply a cloud round-trip that invariant 7 rules out.
+are set in the app's scripts. Expo SDK 53 does not apply that host choice to
+the underlying Metro socket, so `metro.config.js` additionally installs a
+listener guard that supplies `127.0.0.1` whenever Node receives a TCP listen
+call without a host. The root gate probes that guard, and simulator acceptance
+also audits the live OS socket table. EAS Build / `expo-updates` are not used,
+because they imply a cloud round-trip that invariant 7 rules out.
 
 ## Why additive, not a replacement
 
@@ -88,10 +92,11 @@ as if it were measured.
 ## Testing
 
 `check:mobile` verifies the app-local frozen lockfile and Expo dependency
-compatibility, runs typecheck, lint, and unit/component tests, then exports a
-real iOS Hermes bundle. It joins `scripts/check.sh`, so the mobile app is
-covered by the same root `bun run check` gate as everything else. The slice is
-not done when the app boots; it is done when the root gate is green.
+compatibility, probes actual hostless-listener behavior, runs typecheck, lint,
+and unit/component tests, then exports a real iOS Hermes bundle. It joins
+`scripts/check.sh`, so the mobile app is covered by the same root
+`bun run check` gate as everything else. The slice is not done when the app
+boots; it is done when the root gate is green.
 
 ## Implemented mobile flow
 

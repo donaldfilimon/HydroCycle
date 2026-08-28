@@ -7,10 +7,11 @@
     "start": "EXPO_NO_TELEMETRY=1 expo start --localhost",
     "ios": "EXPO_NO_TELEMETRY=1 expo start --localhost --ios",
     "android": "EXPO_NO_TELEMETRY=1 expo start --localhost --android",
+    "check:loopback": "node ./scripts/check-loopback-listener.cjs",
     "typecheck": "tsc --noEmit --pretty false",
     "lint": "eslint . --max-warnings 0",
     "test": "EXPO_NO_TELEMETRY=1 jest --runInBand",
-    "check": "bun run typecheck && bun run lint && bun run test"
+    "check": "bun run check:loopback && bun run typecheck && bun run lint && bun run test"
   },
   "jest": {
     "preset": "jest-expo",

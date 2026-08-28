@@ -11,6 +11,14 @@
 const path = require("node:path");
 
 const { getDefaultConfig } = require("expo/metro-config");
+const {
+  installLoopbackListenerGuard,
+} = require("./scripts/loopback-listener-guard.cjs");
+
+// `expo start --localhost` controls the URL it advertises, but Expo SDK 53
+// still calls `listen(port, undefined)` and therefore opens Metro on every
+// interface. Guard the actual Node listener as well as the displayed URL.
+installLoopbackListenerGuard();
 
 const projectRoot = __dirname;
 const monorepoRoot = path.resolve(projectRoot, "../..");
