@@ -34,6 +34,7 @@ data/attachments/*
 # QA scratch
 tmp/
 qa/
+.playwright-mcp/
 
 # Isolated continuation worktrees
 .worktrees/
