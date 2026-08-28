@@ -9,5 +9,6 @@ bash scripts/check-model.sh
 bash scripts/check-contracts.sh
 bun run --cwd packages/contracts check
 bun run check:web
+bash scripts/check-mobile.sh
 
 printf 'HydroCycle full gate passed.\n'
