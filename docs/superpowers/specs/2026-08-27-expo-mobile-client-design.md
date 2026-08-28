@@ -1,7 +1,7 @@
 # HydroCycle Expo mobile client — design
 
 Date: 2026-08-27
-Status: approved scope, slices 1-2 implemented
+Status: implemented; simulator-only distribution boundary retained
 
 ## Problem
 
@@ -30,9 +30,10 @@ keeps binding `127.0.0.1`. Physical-device support is deliberately deferred
 rather than solved by quietly widening the bind address — that would trade a
 documented invariant for a demo, which this project's own guidance forbids.
 
-Expo's CLI also emits telemetry by default. `EXPO_NO_TELEMETRY=1` is set in
-the app's scripts, and EAS Build / `expo-updates` are not used, because both
-imply a cloud round-trip that invariant 7 rules out.
+Expo's CLI also emits telemetry by default and its development server defaults
+to advertising a LAN origin. `EXPO_NO_TELEMETRY=1` and `expo start --localhost`
+are set in the app's scripts. EAS Build / `expo-updates` are not used, because
+they imply a cloud round-trip that invariant 7 rules out.
 
 ## Why additive, not a replacement
 
@@ -76,26 +77,42 @@ as if it were measured.
 
 | Invariant | How this design holds it |
 | --- | --- |
-| 1. Failed gate -> motored baseline only | Server-side; mobile renders `reactive === null` as absent, never synthesizes a curve |
+| 1. Failed gate -> motored baseline only | Server-side and at the mobile render boundary; a failed gate with an inconsistent non-null reactive trace is still rendered as motored-only |
 | 2. Measured H2 replaces derived | Server-side; mobile displays, does not compute |
 | 3. Nulls stay null | Mobile renders `null` as an explicit em-dash, never `0` |
 | 4. Single-zone 0D, no CFD visuals | No flame-front, vector-field, or contour rendering. Scalars, traces, gate status only |
 | 5. Hardware read-only | Read + simulate endpoints only; no actuator/command calls |
 | 6. Reproducibility metadata | Rendered from the persisted result, not regenerated client-side |
-| 7. `127.0.0.1`, no telemetry | Simulator/emulator only; `EXPO_NO_TELEMETRY=1`; no EAS, no expo-updates |
+| 7. `127.0.0.1`, no telemetry | Simulator/emulator only; API and Expo development server stay on loopback; `EXPO_NO_TELEMETRY=1`; no EAS, no expo-updates |
 
 ## Testing
 
-`check:mobile` (typecheck + lint + unit tests) joins `scripts/check.sh`, so
-the mobile app is covered by the same root `bun run check` gate as everything
-else. The slice is not done when the app boots; it is done when the root gate
-is green.
+`check:mobile` verifies the app-local frozen lockfile and Expo dependency
+compatibility, runs typecheck, lint, and unit/component tests, then exports a
+real iOS Hermes bundle. It joins `scripts/check.sh`, so the mobile app is
+covered by the same root `bun run check` gate as everything else. The slice is
+not done when the app boots; it is done when the root gate is green.
 
-## Deferred
+## Implemented mobile flow
 
-- Shared view model extraction (`domain.ts` / `fixtures.ts` are already
-  DOM-free and portable) — see `tasks/todo.md` slice 2.
-- Workbench and Test Runs screens; Test Runs needs `File`/`FormData`/`URL`
-  polyfills under React Native.
-- Physical device and store distribution — blocked on invariant 7, needs an
-  explicit decision.
+- Summary runs the canonical generated-contract fixture, then presents the
+  feasibility conclusion, hydrogen-loading basis, and reproducibility
+  metadata. Its offline state remains an explicitly synthetic preview.
+- Workbench maps a focused small-screen input subset through the shared
+  `simulationRequest` function and displays homogeneous scalar 0D pressure and
+  temperature traces. A failed gate never displays a proposed trace.
+- Test Runs lists persisted local records, distinguishes measured,
+  unmeasured, and synthetic entries, and can add an empty draft without
+  inventing measurements. Editing, validation, deletion, and native file
+  import remain on the web client until complete small-screen review flows
+  exist.
+
+## Deferred and out of scope
+
+- Physical-device and store distribution are blocked on invariant 7 and need
+  an explicit future decision. They are not part of this implementation.
+- Test Run editing, deletion, and native file import are deferred; partial
+  write flows would weaken validation and destructive-action protections.
+- Heat-term, P-V, and uncertainty-band chart parity are optional future mobile
+  depth. The implemented pressure and temperature traces remain single-zone
+  scalar views, never spatial or CFD output.

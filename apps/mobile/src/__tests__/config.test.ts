@@ -1,4 +1,5 @@
 import { API_PORT, resolveApiBaseUrl } from "../config";
+import mobilePackage from "../../package.json";
 
 /**
  * `AGENTS.md` hard invariant 7: the model service binds 127.0.0.1 with no
@@ -28,4 +29,13 @@ describe("invariant 7: the API origin is always host loopback", () => {
     const url = resolveApiBaseUrl("ios");
     expect(url).not.toMatch(/https?:\/\/(?!127\.0\.0\.1|10\.0\.2\.2)/);
   });
+
+  it.each(["start", "ios", "android"] as const)(
+    "pins the %s Metro command to localhost",
+    (script) => {
+      expect(mobilePackage.scripts[script]).toContain("expo start --localhost");
+      expect(mobilePackage.scripts[script]).not.toContain("--lan");
+      expect(mobilePackage.scripts[script]).not.toContain("--tunnel");
+    },
+  );
 });

@@ -4,7 +4,9 @@ set -euo pipefail
 # `apps/mobile` is deliberately NOT a root workspace member: Metro resolves
 # modules differently from Bun's workspace hoister, so the app keeps its own
 # lockfile and node_modules (the same split `mlai` uses for its Expo app).
-# That means this gate installs into the app directory before checking it.
+# That means this gate verifies and installs the app-local lockfile before
+# checking it. This stays unconditional: an existing node_modules directory
+# must not let a stale dependency graph bypass frozen-lockfile verification.
 #
 # EXPO_NO_TELEMETRY is set because AGENTS.md hard invariant 7 forbids
 # telemetry, and the Expo CLI reports usage by default.
@@ -16,10 +18,9 @@ export EXPO_NO_TELEMETRY=1
 
 cd "$MOBILE_DIRECTORY"
 
-if [[ ! -d node_modules ]]; then
-  printf 'Installing apps/mobile dependencies...\n'
-  bun install --frozen-lockfile
-fi
+printf 'Verifying apps/mobile dependencies...\n'
+bun install --frozen-lockfile
+CI=1 bunx expo install --check
 
 bun run typecheck
 bun run lint

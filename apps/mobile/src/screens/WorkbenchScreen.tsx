@@ -18,6 +18,7 @@ import {
   humanizeFailureCode,
   visibleFailureCodes,
 } from "../format";
+import { proposedCycleForDisplay } from "../result-semantics";
 import { theme } from "../theme";
 
 /**
@@ -91,6 +92,7 @@ export default function WorkbenchScreen() {
   }, []);
 
   const gate = result?.gate;
+  const proposedCycle = result ? proposedCycleForDisplay(result) : null;
 
   return (
     <ScrollView
@@ -184,7 +186,7 @@ export default function WorkbenchScreen() {
             </Text>
           ))}
           <Note>
-            {result?.proposed_cycle
+            {proposedCycle
               ? "Proposed reactive cycle available."
               : "No proposed reactive cycle — motored baseline only."}
           </Note>
@@ -211,12 +213,12 @@ export default function WorkbenchScreen() {
             unit="K"
             color={theme.color.warn}
           />
-          {result.proposed_cycle ? (
+          {proposedCycle ? (
             <>
               <TraceChart
                 title="Proposed cycle pressure"
-                x={result.proposed_cycle.crank_angle_deg}
-                values={result.proposed_cycle.pressure_pa.map(
+                x={proposedCycle.crank_angle_deg}
+                values={proposedCycle.pressure_pa.map(
                   (pressure) => pressure / 100_000,
                 )}
                 unit="bar"
@@ -224,8 +226,8 @@ export default function WorkbenchScreen() {
               />
               <TraceChart
                 title="Proposed cycle temperature"
-                x={result.proposed_cycle.crank_angle_deg}
-                values={result.proposed_cycle.temperature_k}
+                x={proposedCycle.crank_angle_deg}
+                values={proposedCycle.temperature_k}
                 unit="K"
                 color={theme.color.pass}
               />

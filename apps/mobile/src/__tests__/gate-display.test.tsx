@@ -14,7 +14,11 @@ type ApiSimulationResult = components["schemas"]["SimulationResult"];
  * on success and live verification had only ever exercised the failing path.
  */
 
-function gateResult(passed: boolean, failures: string[]): ApiSimulationResult {
+function gateResult(
+  passed: boolean,
+  failures: string[],
+  proposedCycle: ApiSimulationResult["proposed_cycle"] = null,
+): ApiSimulationResult {
   return {
     gate: {
       passed,
@@ -23,7 +27,7 @@ function gateResult(passed: boolean, failures: string[]): ApiSimulationResult {
       hydrogen_required: { value: 1, unit: "mg/cycle" },
       hydrogen_mass_margin_mg_per_cycle: 0,
     },
-    proposed_cycle: null,
+    proposed_cycle: proposedCycle,
   } as unknown as ApiSimulationResult;
 }
 
@@ -57,5 +61,22 @@ describe("GateCard failure bullets", () => {
     expect(
       screen.getByText(/No proposed reactive cycle — motored baseline only\./),
     ).toBeTruthy();
+  });
+
+  it("withholds an inconsistent proposed cycle when the gate failed", () => {
+    render(
+      <GateCard
+        result={gateResult(
+          false,
+          ["insufficient_h2"],
+          {} as ApiSimulationResult["motored_baseline"],
+        )}
+      />,
+    );
+
+    expect(
+      screen.getByText(/No proposed reactive cycle — motored baseline only\./),
+    ).toBeTruthy();
+    expect(screen.queryByText("Proposed reactive cycle available.")).toBeNull();
   });
 });

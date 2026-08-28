@@ -22,6 +22,7 @@ import {
   humanizeFailureCode,
   visibleFailureCodes,
 } from "../format";
+import { proposedCycleForDisplay } from "../result-semantics";
 import { theme } from "../theme";
 
 type ServiceState =
@@ -66,6 +67,7 @@ function Card({
 export function GateCard({ result }: { result: ApiSimulationResult }) {
   const gate = result.gate;
   const passed = gate.passed === true;
+  const proposedCycle = proposedCycleForDisplay(result);
   // A passing gate reports `failures: ["pass"]` (physics.py sets the sentinel,
   // schemas.py enforces it), so the list is only a failure list once that code
   // is filtered out. Without this a PASSED badge renders a red "Pass" bullet.
@@ -110,7 +112,7 @@ export function GateCard({ result }: { result: ApiSimulationResult }) {
       ) : null}
 
       <Text style={styles.note}>
-        {result.proposed_cycle
+        {proposedCycle
           ? "Proposed reactive cycle available."
           : "No proposed reactive cycle — motored baseline only."}
       </Text>

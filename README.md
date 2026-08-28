@@ -33,10 +33,14 @@ case, engine certification, or a control system.
 ## Runtime
 
 - `apps/web`: React 19, strict TypeScript, Vite 7, Bun 1.4
+- `apps/mobile`: Expo SDK 53, React Native 0.79, React 19, and an isolated Bun
+  lockfile for iOS Simulator first
 - `services/model`: Python 3.14, FastAPI, Pydantic 2, Cantera 3.2, NumPy,
   SciPy, SQLAlchemy 2, and Alembic, managed by `uv`
 - `packages/contracts`: generated OpenAPI TypeScript client, unit metadata,
   import templates, and deterministic schema fixtures
+- `packages/view-model`: shared presentation types, fixtures, and request
+  mapping used by both clients
 - `data`: ignored local SQLite state and bounded, application-owned imports
 
 The backend and frontend development servers bind only to `127.0.0.1`. There
@@ -57,6 +61,28 @@ The web application opens at <http://127.0.0.1:5173>; the API is available at
 <http://127.0.0.1:8000>. `bun run dev` runs both processes and shuts the other
 one down if either exits.
 
+### Run the Expo companion in iOS Simulator
+
+Keep `bun run dev` running on the host, then install and start the separately
+locked mobile app in another terminal:
+
+```bash
+cd apps/mobile
+bun install --frozen-lockfile
+bun run ios
+```
+
+The companion provides Summary, Workbench, and Test Runs views over the same
+generated contracts and local FastAPI/Cantera service. iOS Simulator shares
+the host loopback interface, so the API remains bound to
+`http://127.0.0.1:8000`; the Expo development server is also forced to
+localhost rather than Expo's LAN default. The app does not use EAS,
+`expo-updates`, telemetry, cloud sync, or hardware-control endpoints.
+
+Physical-device, TestFlight, and App Store support are intentionally out of
+scope. A physical device cannot reach a host service bound to loopback, and
+this repository does not widen the binding merely to enable distribution.
+
 Optional environment variables are documented in `.env.example`. Export them
 in the shell before starting the service; the repository does not implicitly
 load environment files.
@@ -70,8 +96,11 @@ bun run check
 ```
 
 It checks Python formatting and linting, strict mypy, the model/API test suite,
-OpenAPI and generated-contract drift, contract tests, frontend formatting and
-linting, strict TypeScript, component tests, and the production build.
+OpenAPI and generated-contract drift, contract and shared-view-model tests,
+web formatting and linting, strict TypeScript, component tests, and the web
+production build. It also verifies the isolated mobile lockfile, runs mobile
+Expo-version compatibility, TypeScript, ESLint, and Jest checks, and exports a
+real iOS Hermes bundle so Metro resolution is part of the repository gate.
 
 Run the isolated browser acceptance suite separately:
 

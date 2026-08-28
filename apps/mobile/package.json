@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "main": "index.ts",
   "scripts": {
-    "start": "EXPO_NO_TELEMETRY=1 expo start",
-    "ios": "EXPO_NO_TELEMETRY=1 expo start --ios",
-    "android": "EXPO_NO_TELEMETRY=1 expo start --android",
+    "start": "EXPO_NO_TELEMETRY=1 expo start --localhost",
+    "ios": "EXPO_NO_TELEMETRY=1 expo start --localhost --ios",
+    "android": "EXPO_NO_TELEMETRY=1 expo start --localhost --android",
     "typecheck": "tsc --noEmit --pretty false",
     "lint": "eslint . --max-warnings 0",
     "test": "EXPO_NO_TELEMETRY=1 jest --runInBand",
@@ -30,7 +30,7 @@
     "expo-status-bar": "~2.2.3",
     "openapi-fetch": "^0.14.0",
     "react": "19.0.0",
-    "react-native": "0.79.2",
+    "react-native": "0.79.6",
     "react-native-safe-area-context": "5.4.0",
     "react-native-svg": "15.11.2"
   },
