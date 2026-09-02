@@ -3,7 +3,7 @@ import { useId } from "react";
 interface CylinderSchematicProps {
   angleDeg: number;
   temperatureK: number;
-  hydrogenMg: number;
+  hydrogenMg: number | null;
   liquidWaterMg: number;
   vaporWaterMg: number;
   reducedMotion: boolean;
@@ -113,7 +113,9 @@ export function CylinderSchematic({
             H₂ inventory
           </text>
           <text x="397" y="274">
-            {hydrogenMg.toPrecision(3)} mg/cycle
+            {hydrogenMg === null
+              ? "Unavailable"
+              : `${hydrogenMg.toPrecision(3)} mg/cycle`}
           </text>
           <text x="397" y="310">
             H₂O(l) {liquidWaterMg.toFixed(0)} mg

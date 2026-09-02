@@ -1,0 +1,26 @@
+HydroCycle Android accessibility acceptance
+Date: 2026-08-28
+AVD: gama_api36_arm64
+Android: 16 / API 36
+Expo Go: 2.33.22
+
+settings get system font_scale
+1.5
+
+dumpsys accessibility
+touchExplorationEnabled=true
+Bound services: TalkBack
+feedbackType: spoken, haptic, audible
+Enabled service: com.google.android.marvin.talkback/.TalkBackService
+
+uiautomator observations
+- Summary tab: content-desc="Summary", selected=true, clickable=true
+- Workbench tab: content-desc="Workbench", selected=false, clickable=true
+- Test Runs tab: content-desc="Test Runs", selected=false, clickable=true
+- Keyboard accessibility navigation focused the button with
+  content-desc="Re-run simulation".
+- Failed-gate text exposed "No proposed reactive cycle — motored baseline only."
+
+This is a concise retained record of the manual emulator session. The automated
+smoke harness independently requires HydroCycle to appear in Android's native
+accessibility tree; it does not capture or grade spoken audio.

@@ -253,6 +253,32 @@ def test_partial_edit_and_export_preserve_unedited_provenance(
     assert [item["title"] for item in document["evidence"]] == ["Imported evidence sentinel"]
 
 
+def test_patch_rejects_a_stale_expected_update_timestamp(
+    api_client: tuple[TestClient, FastAPI, Path],
+) -> None:
+    client, _application, _attachments = api_client
+    created = create_run(client)
+    first = client.patch(
+        f"/api/v1/test-runs/{created['id']}",
+        json={"expected_updated_at": created["updated_at"], "notes": "first edit"},
+    )
+    assert first.status_code == 200, first.text
+
+    stale = client.patch(
+        f"/api/v1/test-runs/{created['id']}",
+        json={"expected_updated_at": created["updated_at"], "notes": "stale edit"},
+    )
+    assert stale.status_code == 409
+    assert "changed since it was loaded" in stale.json()["detail"]
+
+    missing_precondition = client.patch(
+        f"/api/v1/test-runs/{created['id']}",
+        json={"measurements": created["measurements"]},
+    )
+    assert missing_precondition.status_code == 428
+    assert "expected_updated_at" in missing_precondition.json()["detail"]
+
+
 def test_typed_scalar_measurement_round_trip_preserves_full_uncertainty(
     api_client: tuple[TestClient, FastAPI, Path],
 ) -> None:
@@ -538,14 +564,20 @@ def test_evidence_requires_complete_provenance_and_owned_local_reference(
     foreign_reference = evidence_payload(url=None, local_attachment=attachment_id)
     rejected = client.patch(
         f"/api/v1/test-runs/{other['id']}",
-        json={"evidence": [foreign_reference]},
+        json={
+            "expected_updated_at": other["updated_at"],
+            "evidence": [foreign_reference],
+        },
     )
     assert rejected.status_code == 422
     assert "owned by this test run" in rejected.json()["detail"]
 
     accepted = client.patch(
         f"/api/v1/test-runs/{owner['id']}",
-        json={"evidence": [foreign_reference]},
+        json={
+            "expected_updated_at": imported.json()["test_run"]["updated_at"],
+            "evidence": [foreign_reference],
+        },
     )
     assert accepted.status_code == 200, accepted.text
     assert accepted.json()["evidence"][0]["local_attachment"] == attachment_id
@@ -629,6 +661,7 @@ def test_canonical_json_export_round_trip_preserves_content_hash(
     reviewed = client.patch(
         f"/api/v1/test-runs/{original['id']}",
         json={
+            "expected_updated_at": source_import.json()["test_run"]["updated_at"],
             "status": "valid",
             "evidence": [
                 {
@@ -969,6 +1002,9 @@ def test_persisted_simulation_comparison_is_typed_deterministic_and_exported(
     legacy_patch = client.patch(
         f"/api/v1/test-runs/{mixed_run['id']}",
         json={
+            "expected_updated_at": client.get(f"/api/v1/test-runs/{mixed_run['id']}").json()[
+                "updated_at"
+            ],
             "comparisons": {
                 "items": [
                     {
@@ -1007,7 +1043,7 @@ def test_persisted_simulation_comparison_is_typed_deterministic_and_exported(
                         "unit": "mg/L",
                     },
                 ]
-            }
+            },
         },
     )
     assert legacy_patch.status_code == 200, legacy_patch.text

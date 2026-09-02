@@ -437,6 +437,7 @@ export function makeRetentionTrace(run: TestRunView): {
     run.totalH2MgL === null ||
     run.retainedH2MgL === null ||
     run.elapsedS === null ||
+    run.elapsedS <= 0 ||
     run.totalH2MgL <= 0 ||
     run.retainedH2MgL <= 0 ||
     run.retainedH2MgL > run.totalH2MgL
@@ -446,10 +447,14 @@ export function makeRetentionTrace(run: TestRunView): {
   const initial = run.totalH2MgL;
   const retained = run.retainedH2MgL;
   const duration = run.elapsedS;
-  const tau = duration / Math.max(0.1, -Math.log(retained / initial));
+  const decay = -Math.log(retained / initial);
   const modeled = Array.from({ length: 31 }, (_, index) => {
     const x = (duration * index) / 30;
-    return { x, value: initial * Math.exp(-x / tau) };
+    return {
+      x,
+      value:
+        decay === 0 ? initial : initial * Math.exp((-x * decay) / duration),
+    };
   });
   return { measured, modeled };
 }

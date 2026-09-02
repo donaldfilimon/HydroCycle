@@ -190,7 +190,7 @@ test("imported bubble bins feed derived loading only as uncertain diagnostics", 
   ).toBeVisible();
   await page.getByRole("button", { name: "Workbench", exact: true }).click();
   await expect(
-    page.getByRole("region", { name: /active measurement source/i }),
+    page.getByRole("region", { name: /active diagnostic source/i }),
   ).toContainText("Bubble diagnostic run");
   await page.getByRole("button", { name: /re-run gate/i }).click();
   await expect(

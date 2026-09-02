@@ -8,12 +8,7 @@ import {
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import App, {
-  mapApiTestRun,
-  testRunPatchPayload,
-  testRunPayload,
-} from "../App";
-import type { ApiTestRunDocument } from "../api";
+import App from "../App";
 
 describe("HydroCycle application flows", () => {
   beforeEach(() => {
@@ -150,118 +145,6 @@ describe("HydroCycle application flows", () => {
       expect(screen.getByText(/run was not persisted/i)).toBeInTheDocument(),
     );
     expect(screen.getByText(/unsaved changes/i)).toBeInTheDocument();
-  });
-
-  it("round-trips test-run identity and provenance without PATCH erasure", () => {
-    const document: ApiTestRunDocument = {
-      id: "run-provenance-1",
-      name: "Imported provenance run",
-      status: "draft",
-      operator: "Operator One",
-      sample_id: "SAMPLE-42",
-      notes: "Preserve this review note",
-      is_demo_synthetic: false,
-      provenance: {
-        source: "canonical JSON import",
-        method: "headspace GC method",
-        ui_origin: "import endpoint",
-        import_sha256: "a".repeat(64),
-        source_test_run_id: "source-run-7",
-        is_demo_synthetic: false,
-      },
-      measurements: {
-        total_h2_mg_l: {
-          value: 2.1,
-          unit: "mg/L",
-          standard_uncertainty: 0.08,
-          distribution: "normal",
-          source_id: "CAL-IDENTITY",
-          basis: "measured",
-        },
-        "bubble_distribution.csv": [
-          { diameter_nm: 120, number_per_mL: 3_000_000 },
-          { diameter_nm: 220, number_per_mL: 800_000 },
-        ],
-      },
-      calibration_references: [
-        {
-          id: "CAL-IDENTITY",
-          instrument: "GC fixture",
-          method: "method text distinct from identity",
-          applies_to: [],
-          notes: "Preserve calibration metadata",
-        },
-        {
-          id: "CAL-SECONDARY",
-          instrument: "temperature fixture",
-          method: "secondary method",
-          applies_to: [],
-        },
-      ],
-      comparisons: {
-        items: [
-          {
-            id: "comparison-1",
-            kind: "retention",
-            label: "Measured/model comparison",
-            measured_value: 0.7,
-            modeled_value: 0.68,
-            unit: "fraction",
-          },
-        ],
-      },
-      attachments: [],
-      simulation_ids: ["b".repeat(64)],
-      evidence: [
-        {
-          id: "evidence-1",
-          created_at: "2026-08-24T12:00:00Z",
-          kind: "measured",
-          title: "Local headspace result",
-          author_or_publisher: "HydroCycle fixture",
-          publication_date: "2026-08-24",
-          url: "https://example.com/method",
-          method: "headspace GC",
-          value_or_range: "2.1",
-          unit: "mg/L",
-          uncertainty: "0.08 mg/L standard uncertainty",
-          applicability_note: "Applies to sample SAMPLE-42 only.",
-        },
-      ],
-      created_at: "2026-08-24T12:00:00Z",
-      updated_at: "2026-08-24T12:30:00Z",
-    };
-
-    const view = mapApiTestRun(document);
-    expect(view.sampleId).toBe("SAMPLE-42");
-    expect(view.calibrationReference).toBe("CAL-IDENTITY");
-    expect(view.provenance.import_sha256).toBe("a".repeat(64));
-    expect(view.calibrationReferences).toHaveLength(2);
-    expect(view.comparisons.items).toHaveLength(1);
-    expect(view.testRunEvidence).toHaveLength(1);
-    expect(view.bubbleDistribution).toEqual([
-      { diameterNm: 120, numberPerMl: 3_000_000 },
-      { diameterNm: 220, numberPerMl: 800_000 },
-    ]);
-    expect(view.measurementDatasetCount).toBe(2);
-
-    const createPayload = testRunPayload(view);
-    expect(createPayload.sample_id).toBe("SAMPLE-42");
-    expect(createPayload.calibration_references?.[0]?.id).toBe("CAL-IDENTITY");
-    expect(createPayload.calibration_references).toHaveLength(2);
-    expect(createPayload.provenance?.import_sha256).toBe("a".repeat(64));
-    expect(createPayload.provenance?.source_test_run_id).toBe("source-run-7");
-    expect(createPayload.comparisons?.items).toHaveLength(1);
-    expect(createPayload.evidence).toHaveLength(1);
-    expect(
-      createPayload.measurements?.["bubble_distribution.csv"],
-    ).toHaveLength(2);
-
-    const patchPayload = testRunPatchPayload(view);
-    expect(patchPayload.sample_id).toBe("SAMPLE-42");
-    expect(patchPayload.provenance?.source).toBe("canonical JSON import");
-    expect(patchPayload).not.toHaveProperty("comparisons");
-    expect(patchPayload).not.toHaveProperty("evidence");
   });
 
   it("exposes the read-only future DAQ boundary with no command control", async () => {

@@ -5,6 +5,29 @@ import type { TestRunView, WorkbenchInputs } from "./domain";
 type ApiSimulationInput = components["schemas"]["SimulationInput"];
 
 /**
+ * Returns whether a selected run may supply validated measurement evidence or
+ * a narrowly bounded, non-authoritative bubble diagnostic to a request.
+ */
+export function mayContributeMeasurementEvidence(
+  fixture: WorkbenchInputs["fixture"],
+  run: TestRunView | null,
+): run is TestRunView {
+  return Boolean(
+    fixture === "literature" &&
+    run?.persisted &&
+    !run.synthetic &&
+    ((run.status === "valid" &&
+      (run.totalH2MgL !== null ||
+        run.hydrogenDecaySeries?.length ||
+        run.bubbleDistribution?.length)) ||
+      (run.status === "needs_review" &&
+        run.totalH2MgL === null &&
+        !run.hydrogenDecaySeries?.length &&
+        Boolean(run.bubbleDistribution?.length))),
+  );
+}
+
+/**
  * Maps the workbench's view-level inputs onto the API request body.
  *
  * This is pure mapping with no DOM dependency, and it lives here rather than
@@ -300,6 +323,32 @@ export function simulationRequest(
     sourceRun.calibrationReference ??
     sourceRun.provenance.import_sha256 ??
     `test-run:${sourceRun.id}`;
+  if (sourceRun.status === "needs_review") {
+    const diagnosticBins = sourceRun.bubbleDistribution ?? [];
+    request.bubble_population = {
+      ...request.bubble_population,
+      bins: diagnosticBins.map((point) => ({
+        diameter_nm: quantity(
+          point.diameterNm,
+          "nm",
+          "user_assumption",
+          point.diameterNm * 0.2,
+          `${sourceId}:bubble-bin-uncertainty-assumption`,
+          "lognormal",
+        ),
+        number_per_ml: quantity(
+          point.numberPerMl,
+          "1/mL",
+          "user_assumption",
+          point.numberPerMl * 0.5,
+          `${sourceId}:bubble-bin-uncertainty-assumption`,
+          "lognormal",
+        ),
+      })),
+      method: `${sourceRun.method ?? "selected Test Run bubble-distribution import"}; unvalidated bin values treated as explicit 20% diameter and 50% count uncertainty assumptions; diagnostic only, not measured evidence or total-H₂ authority`,
+    };
+    return request;
+  }
   const firstPointIsAuthoritativeTotal =
     firstDecayPoint !== undefined &&
     measuredTotal === firstDecayPoint.totalH2MgL &&

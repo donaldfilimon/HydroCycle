@@ -34,7 +34,7 @@ case, engine certification, or a control system.
 
 - `apps/web`: React 19, strict TypeScript, Vite 7, Bun 1.4
 - `apps/mobile`: Expo SDK 53, React Native 0.79, React 19, and an isolated Bun
-  lockfile for iOS Simulator first
+  lockfile for iOS Simulator and Android emulator workflows
 - `services/model`: Python 3.14, FastAPI, Pydantic 2, Cantera 3.2, NumPy,
   SciPy, SQLAlchemy 2, and Alembic, managed by `uv`
 - `packages/contracts`: generated OpenAPI TypeScript client, unit metadata,
@@ -61,7 +61,7 @@ The web application opens at <http://127.0.0.1:5173>; the API is available at
 <http://127.0.0.1:8000>. `bun run dev` runs both processes and shuts the other
 one down if either exits.
 
-### Run the Expo companion in iOS Simulator
+### Run the Expo companion in a simulator
 
 Keep `bun run dev` running on the host, then install and start the separately
 locked mobile app in another terminal:
@@ -81,6 +81,20 @@ option changes the advertised URL without narrowing the underlying Node
 listener, the Metro configuration also guards hostless TCP listen calls and
 forces them to `127.0.0.1`. The app does not use EAS, `expo-updates`, telemetry,
 cloud sync, or hardware-control endpoints.
+
+Mobile Test Runs can edit persisted non-synthetic drafts, explicitly request
+server validation, and import canonical `test_run.json`,
+`hydrocycle_test_run.json`, `hydrogen_decay.csv`, `bubble_distribution.csv`,
+or `pressure_trace.csv` documents from the native picker. Unsaved edits guard
+tab and run-selection changes. Imported cache copies are verified against the
+2 MiB limit before native upload; external source files are never deleted.
+Deleting a run requires an explicit native confirmation and removes only local
+database references and HydroCycle-owned attachment copies.
+
+For Android, start an emulator with Expo Go installed and run `bun run android`
+from `apps/mobile`. The emulator reaches the same host-loopback service through
+Android's reserved `10.0.2.2` alias; the service and Metro listeners remain
+bound exclusively to `127.0.0.1` on the host.
 
 Physical-device, TestFlight, and App Store support are intentionally out of
 scope. A physical device cannot reach a host service bound to loopback, and
@@ -103,9 +117,10 @@ OpenAPI and generated-contract drift, contract and shared-view-model tests,
 web formatting and linting, strict TypeScript, component tests, and the web
 production build. It also verifies the isolated mobile lockfile, runs mobile
 Expo-version compatibility, TypeScript, ESLint, and Jest checks, and exports a
-real iOS Hermes bundle so Metro resolution is part of the repository gate. A
-listener regression probe also verifies that a hostless Expo/Metro TCP server
-opens on IPv4 loopback rather than a wildcard interface.
+real Hermes bundle for both iOS and Android so Metro resolution on each claimed
+simulator platform is part of the repository gate. A listener regression probe
+also verifies that a hostless Expo/Metro TCP server opens on IPv4 loopback
+rather than a wildcard interface.
 
 Run the isolated browser acceptance suite separately:
 

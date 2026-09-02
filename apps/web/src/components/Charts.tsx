@@ -1,13 +1,14 @@
 import { useId, useMemo, useState } from "react";
 
-import type { TracePoint } from "@hydrocycle/view-model";
+import type {
+  ChartSeries as SharedChartSeries,
+  TracePoint,
+} from "@hydrocycle/view-model";
 
-export interface ChartSeries {
-  label: string;
+export type ChartSeries = Omit<SharedChartSeries, "id"> & {
+  id?: SharedChartSeries["id"];
   color: string;
-  points: TracePoint[];
-  dashed?: boolean;
-}
+};
 
 interface LineChartProps {
   title: string;
@@ -272,7 +273,7 @@ export function LineChart({
               .map((point) => `${sx(point.x)},${sy(point.value)}`)
               .join(" ");
             return (
-              <g key={item.label}>
+              <g key={item.id ?? item.label}>
                 {band ? (
                   <polygon points={band} fill={`url(#${titleId}-band)`} />
                 ) : null}
@@ -300,7 +301,7 @@ export function LineChart({
                 const point = interpolate(item.points, cursor);
                 return point ? (
                   <circle
-                    key={item.label}
+                    key={item.id ?? item.label}
                     cx={sx(point.x)}
                     cy={sy(point.value)}
                     r="3.7"
@@ -324,7 +325,7 @@ export function LineChart({
                   ];
                 return point ? (
                   <circle
-                    key={`${item.label}-indexed-cursor`}
+                    key={`${item.id ?? item.label}-indexed-cursor`}
                     className="chart-index-cursor"
                     cx={sx(point.x)}
                     cy={sy(point.value)}
@@ -358,7 +359,7 @@ export function LineChart({
       )}
       <ul className="chart-legend" aria-label="Chart legend">
         {series.map((item) => (
-          <li key={item.label}>
+          <li key={item.id ?? item.label}>
             <span style={{ background: item.color }} /> {item.label}
           </li>
         ))}

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_INPUTS, makeSimulationFixture } from "../src";
+import {
+  DEFAULT_INPUTS,
+  demoRuns,
+  makeRetentionTrace,
+  makeSimulationFixture,
+} from "../src";
 
 describe("frontend deterministic fixtures", () => {
   it("keeps the literature comparison gate failed and reactive trace null", () => {
@@ -48,5 +53,16 @@ describe("frontend deterministic fixtures", () => {
     const second = makeSimulationFixture("literature", DEFAULT_INPUTS);
     expect(second.motoredBaseline.crankAngle[0]).toBe(-180);
     expect(second.evidence[0]?.title).not.toBe("mutated");
+  });
+
+  it("fits high-retention endpoints without imposing artificial decay", () => {
+    const trace = makeRetentionTrace({
+      ...demoRuns[0]!,
+      totalH2MgL: 10,
+      retainedH2MgL: 9.9,
+      elapsedS: 10,
+    });
+
+    expect(trace.modeled.at(-1)?.value).toBeCloseTo(9.9, 12);
   });
 });

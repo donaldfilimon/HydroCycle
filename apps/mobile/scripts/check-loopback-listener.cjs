@@ -10,8 +10,12 @@ const {
 
 assert.deepEqual(withLoopbackHost([8081]), [8081, LOOPBACK_HOST]);
 assert.deepEqual(withLoopbackHost([8081, 511]), [8081, LOOPBACK_HOST, 511]);
-assert.deepEqual(withLoopbackHost([8081, "::1"]), [8081, "::1"]);
+assert.deepEqual(withLoopbackHost([8081, "::1"]), [8081, LOOPBACK_HOST]);
+assert.deepEqual(withLoopbackHost([8081, "0.0.0.0"]), [8081, LOOPBACK_HOST]);
 assert.deepEqual(withLoopbackHost([{ port: 8081, host: null }]), [
+  { port: 8081, host: LOOPBACK_HOST },
+]);
+assert.deepEqual(withLoopbackHost([{ port: 8081, host: "::" }]), [
   { port: 8081, host: LOOPBACK_HOST },
 ]);
 assert.deepEqual(withLoopbackHost(["/private/tmp/metro.sock"]), [

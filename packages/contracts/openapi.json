@@ -2582,6 +2582,18 @@
             ],
             "title": "Evidence"
           },
+          "expected_updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Updated At"
+          },
           "is_demo_synthetic": {
             "anyOf": [
               {

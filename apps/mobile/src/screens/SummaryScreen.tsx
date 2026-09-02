@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -10,7 +10,12 @@ import {
 } from "react-native";
 
 import { defaultSimulationInput } from "@hydrocycle/contracts";
-import { DEFAULT_INPUTS, makeSimulationFixture } from "@hydrocycle/view-model";
+import {
+  DEFAULT_INPUTS,
+  makeSimulationFixture,
+  proposedCycleForDisplay,
+  type TestRunView,
+} from "@hydrocycle/view-model";
 
 import { getHealth, postSimulation, type ApiSimulationResult } from "../api";
 import { API_BASE_URL } from "../config";
@@ -22,7 +27,7 @@ import {
   humanizeFailureCode,
   visibleFailureCodes,
 } from "../format";
-import { proposedCycleForDisplay } from "../result-semantics";
+import type { SimulationSession } from "../session";
 import { theme } from "../theme";
 
 type ServiceState =
@@ -210,32 +215,73 @@ function LocalFixtureCard() {
   );
 }
 
-export default function SummaryScreen() {
+interface SummaryScreenProps {
+  session: SimulationSession | null;
+  selectedRun: TestRunView | null;
+  onSessionChange: (session: SimulationSession | null) => void;
+}
+
+export default function SummaryScreen({
+  session,
+  selectedRun,
+  onSessionChange,
+}: SummaryScreenProps) {
+  const result = session?.result ?? null;
   const [service, setService] = useState<ServiceState>({ kind: "checking" });
-  const [result, setResult] = useState<ApiSimulationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const requestRef = useRef<AbortController | null>(null);
+  const requestGenerationRef = useRef(0);
 
-  const load = useCallback(async () => {
-    setBusy(true);
-    setError(null);
-    try {
-      await getHealth();
-      setService({ kind: "online" });
-      const next = await postSimulation(defaultSimulationInput);
-      setResult(next);
-    } catch (cause) {
-      const reason = cause instanceof Error ? cause.message : String(cause);
-      setService({ kind: "offline", reason });
-      setError(reason);
-    } finally {
-      setBusy(false);
-    }
-  }, []);
+  const load = useCallback(
+    async (runSimulation = true) => {
+      requestRef.current?.abort();
+      const controller = new AbortController();
+      requestRef.current = controller;
+      const generation = ++requestGenerationRef.current;
+      setBusy(true);
+      setError(null);
+      try {
+        await getHealth(controller.signal);
+        if (controller.signal.aborted) return;
+        setService({ kind: "online" });
+        if (!runSimulation) return;
+        const next = await postSimulation(
+          defaultSimulationInput,
+          undefined,
+          controller.signal,
+        );
+        if (
+          controller.signal.aborted ||
+          generation !== requestGenerationRef.current
+        ) {
+          return;
+        }
+        onSessionChange({
+          result: next,
+          source: "canonical_fixture",
+          linkedTestRunId: null,
+          inputs: null,
+        });
+      } catch (cause) {
+        if (controller.signal.aborted) return;
+        const reason = cause instanceof Error ? cause.message : String(cause);
+        setService({ kind: "offline", reason });
+        setError(reason);
+      } finally {
+        if (generation === requestGenerationRef.current) {
+          requestRef.current = null;
+          setBusy(false);
+        }
+      }
+    },
+    [onSessionChange],
+  );
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    void load(!result);
+    return () => requestRef.current?.abort();
+  }, [load, result]);
 
   return (
     <ScrollView
@@ -247,7 +293,9 @@ export default function SummaryScreen() {
     >
       <Text style={styles.title}>HydroCycle</Text>
       <Text style={styles.subtitle}>
-        Canonical contract fixture · evidence-gated 0D single zone
+        {session?.source === "workbench"
+          ? "Current Workbench evaluation · evidence-gated 0D single zone"
+          : "Canonical contract fixture · evidence-gated 0D single zone"}
       </Text>
 
       <View style={styles.statusStrip}>
@@ -273,6 +321,32 @@ export default function SummaryScreen() {
         </Text>
       </View>
 
+      {selectedRun?.persisted ? (
+        <Card title="Selected persisted Test Run">
+          <Row label="Run" value={selectedRun.name} />
+          <Row label="Status" value={selectedRun.status.replace("_", " ")} />
+          <Row label="Sample" value={formatText(selectedRun.sampleId)} />
+          <Row
+            label="Current session link"
+            value={
+              session?.linkedTestRunId === selectedRun.id
+                ? formatText(session.result.result_id)
+                : "Not linked to the current result"
+            }
+          />
+        </Card>
+      ) : null}
+
+      {session?.linkedTestRunId &&
+      session.linkedTestRunId !== selectedRun?.id ? (
+        <Card title="Stale Test Run link">
+          <Text style={styles.note}>
+            This result remains linked to a previously selected Test Run. It is
+            not relabeled as evidence from the current selection.
+          </Text>
+        </Card>
+      ) : null}
+
       {service.kind === "offline" ? (
         <Card title="Cannot reach the model service">
           <Text style={styles.note}>
@@ -281,6 +355,15 @@ export default function SummaryScreen() {
             reachable from a physical device.
           </Text>
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        </Card>
+      ) : null}
+
+      {service.kind === "offline" && result ? (
+        <Card title="Cached result — service status stale">
+          <Text style={styles.note}>
+            The result below is retained for inspection, but the local service
+            is currently unreachable and its status is not current.
+          </Text>
         </Card>
       ) : null}
 
@@ -301,7 +384,7 @@ export default function SummaryScreen() {
       <Pressable
         accessibilityRole="button"
         style={styles.button}
-        onPress={() => void load()}
+        onPress={() => void load(true)}
         disabled={busy}
       >
         <Text style={styles.buttonText}>

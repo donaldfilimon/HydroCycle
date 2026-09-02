@@ -26,6 +26,10 @@ interface SummaryScreenProps {
 }
 
 const format = new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 });
+const formatQuantity = (value: number | null, unit: string) =>
+  value === null ? "Unavailable" : `${format.format(value)} ${unit}`;
+const formatBurden = (value: number | null, unit: string) =>
+  value === null ? "Unavailable" : `−${format.format(value)} ${unit}`;
 
 function Metric({
   label,
@@ -57,20 +61,30 @@ export function SummaryScreen({
   onToggleUncertainty,
   onOpenWorkbench,
 }: SummaryScreenProps) {
-  const energyKjL = (simulation.loading.initialTotalMgL * 120) / 1_000;
-  const carrierVolumeL = Math.max(
-    1e-9,
-    simulation.sampleVolumeMlPerCycle / 1_000,
-  );
+  const energyKjL =
+    simulation.loading.initialTotalMgL === null
+      ? null
+      : (simulation.loading.initialTotalMgL * 120) / 1_000;
+  const carrierVolumeL =
+    simulation.sampleVolumeMlPerCycle === null
+      ? null
+      : Math.max(1e-9, simulation.sampleVolumeMlPerCycle / 1_000);
   const waterBurdenKjL =
-    simulation.gate.energyTerms.vaporizationJ / carrierVolumeL / 1_000;
+    carrierVolumeL === null
+      ? null
+      : simulation.gate.energyTerms.vaporizationJ / carrierVolumeL / 1_000;
   const sensibleHeatingKjL =
-    simulation.gate.energyTerms.sensibleHeatingJ / carrierVolumeL / 1_000;
+    carrierVolumeL === null
+      ? null
+      : simulation.gate.energyTerms.sensibleHeatingJ / carrierVolumeL / 1_000;
   const waterInjectionScenario =
     simulation.scenario === "hydrogen_fuel_with_water_injection";
   const requiredRatio =
-    simulation.gate.hydrogenRequiredMg /
-    Math.max(1e-12, simulation.gate.hydrogenAvailableMg);
+    simulation.gate.hydrogenRequiredMg === null ||
+    simulation.gate.hydrogenAvailableMg === null
+      ? null
+      : simulation.gate.hydrogenRequiredMg /
+        Math.max(1e-12, simulation.gate.hydrogenAvailableMg);
   const interval = simulation.loading.intervalMgL;
   const summaryCycle = simulation.proposedCycle ?? simulation.motoredBaseline;
   const summaryCycleIndex = summaryCycle.crankAngle.reduce(
@@ -88,7 +102,7 @@ export function SummaryScreen({
     selectedRun !== null &&
     selectedRun.persisted &&
     !selectedRun.synthetic &&
-    (selectedRun.status === "needs_review" || selectedRun.status === "valid");
+    selectedRun.status === "valid";
   const selectedMeasurementCount = selectedRunEligible
     ? selectedRun.measurementDatasetCount
     : 0;
@@ -124,9 +138,12 @@ export function SummaryScreen({
                       ? "Derived total H₂ reference"
                       : "Measured total H₂"
                 }
-                value={`${format.format(simulation.loading.initialTotalMgL)} mg H₂/L`}
+                value={formatQuantity(
+                  simulation.loading.initialTotalMgL,
+                  "mg H₂/L",
+                )}
                 interval={
-                  uncertaintyVisible
+                  uncertaintyVisible && interval
                     ? `[${format.format(interval.low)} – ${format.format(interval.high)}]`
                     : undefined
                 }
@@ -145,7 +162,7 @@ export function SummaryScreen({
                 value={
                   waterInjectionScenario
                     ? `${format.format(simulation.gate.energyTerms.hydrogenChemicalJ)} J/cycle`
-                    : `${format.format(energyKjL)} kJ/L`
+                    : formatQuantity(energyKjL, "kJ/L")
                 }
                 interval={
                   uncertaintyVisible ? "≈120 MJ/kg H₂ basis" : undefined
@@ -162,9 +179,9 @@ export function SummaryScreen({
                     ? "Water-injection phase load"
                     : "Carrier liquid-to-vapor burden"
                 }
-                value={`${format.format(waterBurdenKjL)} kJ/L`}
+                value={formatQuantity(waterBurdenKjL, "kJ/L")}
                 interval={
-                  uncertaintyVisible
+                  uncertaintyVisible && sensibleHeatingKjL !== null
                     ? `${format.format(sensibleHeatingKjL)} kJ/L sensible heating in this case`
                     : undefined
                 }
@@ -180,7 +197,9 @@ export function SummaryScreen({
                 <em>
                   {simulation.gate.passed
                     ? "Reactive trace available"
-                    : `Required/available H₂ ratio ≈ ${format.format(requiredRatio)}`}
+                    : requiredRatio === null
+                      ? "Required/available H₂ ratio unavailable"
+                      : `Required/available H₂ ratio ≈ ${format.format(requiredRatio)}`}
                 </em>
               </div>
             </div>
@@ -232,11 +251,18 @@ export function SummaryScreen({
                   <strong>
                     {waterInjectionScenario
                       ? `${format.format(simulation.gate.energyTerms.hydrogenChemicalJ)} J/cycle`
-                      : `${format.format(energyKjL)} kJ/L`}
+                      : formatQuantity(energyKjL, "kJ/L")}
                   </strong>
                   <i
                     style={{
-                      height: `${Math.max(18, Math.min(80, 18 + Math.log10(energyKjL + 1) * 22))}px`,
+                      height: `${
+                        energyKjL === null
+                          ? 18
+                          : Math.max(
+                              18,
+                              Math.min(80, 18 + Math.log10(energyKjL + 1) * 22),
+                            )
+                      }px`,
                     }}
                   />
                 </div>
@@ -247,7 +273,7 @@ export function SummaryScreen({
                       ? "Injected-water heating"
                       : "Carrier water heating"}
                   </span>
-                  <strong>−{format.format(sensibleHeatingKjL)} kJ/L</strong>
+                  <strong>{formatBurden(sensibleHeatingKjL, "kJ/L")}</strong>
                   <i />
                 </div>
                 <ArrowRight className="energy-flow__arrow" aria-hidden="true" />
@@ -257,7 +283,7 @@ export function SummaryScreen({
                       ? "Water phase load"
                       : "Upstream vaporization"}
                   </span>
-                  <strong>−{format.format(waterBurdenKjL)} kJ/L</strong>
+                  <strong>{formatBurden(waterBurdenKjL, "kJ/L")}</strong>
                   <i />
                 </div>
                 <ArrowRight className="energy-flow__arrow" aria-hidden="true" />

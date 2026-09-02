@@ -975,6 +975,8 @@ export interface components {
             comparisons?: components["schemas"]["ComparisonCollection"] | null;
             /** Evidence */
             evidence?: components["schemas"]["EvidenceInput"][] | null;
+            /** Expected Updated At */
+            expected_updated_at?: string | null;
             /** Is Demo Synthetic */
             is_demo_synthetic?: boolean | null;
             measurements?: components["schemas"]["TestRunMeasurements"] | null;

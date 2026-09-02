@@ -1,6 +1,14 @@
-import { DEFAULT_INPUTS, simulationRequest } from "@hydrocycle/view-model";
-import type { WorkbenchInputs } from "@hydrocycle/view-model";
-import { useCallback, useState } from "react";
+import {
+  DEFAULT_INPUTS,
+  makeSimulationFixture,
+  mapApiSimulationResult,
+  mayContributeMeasurementEvidence,
+  proposedCycleForDisplay,
+  simulationChartSeries,
+  simulationRequest,
+} from "@hydrocycle/view-model";
+import type { TestRunView, WorkbenchInputs } from "@hydrocycle/view-model";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -10,7 +18,7 @@ import {
   View,
 } from "react-native";
 
-import { postSimulation, type ApiSimulationResult } from "../api";
+import { postSimulation } from "../api";
 import { Badge, Card, Note, Row } from "../components/ui";
 import { TraceChart } from "../components/TraceChart";
 import {
@@ -18,7 +26,7 @@ import {
   humanizeFailureCode,
   visibleFailureCodes,
 } from "../format";
-import { proposedCycleForDisplay } from "../result-semantics";
+import type { SimulationSession } from "../session";
 import { theme } from "../theme";
 
 /**
@@ -45,40 +53,112 @@ const FIELDS = [
 
 type FieldKey = (typeof FIELDS)[number]["key"];
 
-export default function WorkbenchScreen() {
+function chartSeriesForResult(
+  result: NonNullable<SimulationSession>["result"],
+  inputs: WorkbenchInputs,
+) {
+  try {
+    return simulationChartSeries(
+      mapApiSimulationResult(
+        makeSimulationFixture(inputs.fixture, inputs),
+        result,
+      ),
+    );
+  } catch {
+    return null;
+  }
+}
+
+interface WorkbenchScreenProps {
+  selectedRun: TestRunView | null;
+  session: SimulationSession | null;
+  onSessionChange: (session: SimulationSession | null) => void;
+  onSimulationLinked: (runId: string, resultId: string) => void;
+}
+
+export default function WorkbenchScreen({
+  selectedRun,
+  session,
+  onSessionChange,
+  onSimulationLinked,
+}: WorkbenchScreenProps) {
+  const result = session?.source === "workbench" ? session.result : null;
   const [inputs, setInputs] = useState<WorkbenchInputs>(DEFAULT_INPUTS);
   const [draft, setDraft] = useState<Record<string, string>>(() =>
     Object.fromEntries(
       FIELDS.map((field) => [field.key, String(DEFAULT_INPUTS[field.key])]),
     ),
   );
-  const [result, setResult] = useState<ApiSimulationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const requestRef = useRef<AbortController | null>(null);
+  const requestGenerationRef = useRef(0);
+  const selectedRunIdRef = useRef(selectedRun?.id ?? null);
+  selectedRunIdRef.current = selectedRun?.id ?? null;
 
-  const commit = useCallback((key: FieldKey, text: string) => {
-    setDraft((previous) => ({ ...previous, [key]: text }));
-    const parsed = Number(text);
-    // An unparseable entry leaves the committed input untouched rather than
-    // silently becoming 0 — invariant 3 applies to what we send, not just to
-    // what we display.
-    if (text.trim() !== "" && Number.isFinite(parsed)) {
-      setInputs((previous) => ({ ...previous, [key]: parsed }));
-    }
-  }, []);
+  useEffect(() => () => requestRef.current?.abort(), []);
+
+  const commit = useCallback(
+    (key: FieldKey, text: string) => {
+      if (busy) return;
+      setDraft((previous) => ({ ...previous, [key]: text }));
+      const parsed = Number(text);
+      // An unparseable entry leaves the committed input untouched rather than
+      // silently becoming 0 — invariant 3 applies to what we send, not just to
+      // what we display.
+      if (text.trim() !== "" && Number.isFinite(parsed)) {
+        setInputs((previous) => ({ ...previous, [key]: parsed }));
+      }
+    },
+    [busy],
+  );
 
   const run = useCallback(async () => {
+    requestRef.current?.abort();
+    const controller = new AbortController();
+    requestRef.current = controller;
+    const generation = ++requestGenerationRef.current;
     setBusy(true);
     setError(null);
     try {
-      setResult(await postSimulation(simulationRequest(inputs)));
+      const measurementRun = mayContributeMeasurementEvidence(
+        inputs.fixture,
+        selectedRun,
+      )
+        ? selectedRun
+        : null;
+      const linkedRun = selectedRun?.persisted ? selectedRun : null;
+      const persistence = linkedRun ? { testRunId: linkedRun.id } : undefined;
+      const next = await postSimulation(
+        simulationRequest(inputs, measurementRun),
+        persistence,
+        controller.signal,
+      );
+      if (
+        controller.signal.aborted ||
+        generation !== requestGenerationRef.current
+      ) {
+        return;
+      }
+      onSessionChange({
+        result: next,
+        source: "workbench",
+        linkedTestRunId: linkedRun?.id ?? null,
+        inputs: { ...inputs },
+      });
+      if (linkedRun && selectedRunIdRef.current === linkedRun.id) {
+        onSimulationLinked(linkedRun.id, next.result_id);
+      }
     } catch (cause) {
+      if (controller.signal.aborted) return;
       setError(cause instanceof Error ? cause.message : String(cause));
-      setResult(null);
     } finally {
-      setBusy(false);
+      if (generation === requestGenerationRef.current) {
+        requestRef.current = null;
+        setBusy(false);
+      }
     }
-  }, [inputs]);
+  }, [inputs, onSessionChange, onSimulationLinked, selectedRun]);
 
   const reset = useCallback(() => {
     setInputs(DEFAULT_INPUTS);
@@ -87,12 +167,15 @@ export default function WorkbenchScreen() {
         FIELDS.map((field) => [field.key, String(DEFAULT_INPUTS[field.key])]),
       ),
     );
-    setResult(null);
+    if (session?.source === "workbench") onSessionChange(null);
     setError(null);
-  }, []);
+  }, [onSessionChange, session?.source]);
 
   const gate = result?.gate;
   const proposedCycle = result ? proposedCycleForDisplay(result) : null;
+  const chartSeries = result
+    ? chartSeriesForResult(result, session?.inputs ?? inputs)
+    : null;
 
   return (
     <ScrollView
@@ -105,6 +188,32 @@ export default function WorkbenchScreen() {
         Single-zone 0D · the model service computes every result
       </Text>
 
+      {session?.source === "canonical_fixture" ? (
+        <Note>
+          Summary currently holds the canonical fixture result. Run this
+          Workbench to replace it with an evaluation of the inputs below.
+        </Note>
+      ) : null}
+
+      <Card title="Selected Test Run">
+        <Row label="Run" value={selectedRun?.name ?? "—"} />
+        <Row
+          label="Measurement evidence"
+          value={
+            mayContributeMeasurementEvidence(inputs.fixture, selectedRun)
+              ? selectedRun?.status === "valid"
+                ? "Eligible validated evidence"
+                : "Unreviewed bubble diagnostic assumptions"
+              : "Not used"
+          }
+        />
+        <Note>
+          {selectedRun?.persisted
+            ? "The successful evaluation will be linked to this persisted run."
+            : "Select a persisted run in Test Runs to link an evaluation."}
+        </Note>
+      </Card>
+
       <Card title="Inputs" subtitle="Unlisted parameters keep their defaults">
         {FIELDS.map((field) => (
           <View key={field.key} style={styles.field}>
@@ -114,6 +223,7 @@ export default function WorkbenchScreen() {
             </Text>
             <TextInput
               style={styles.input}
+              editable={!busy}
               value={draft[field.key] ?? ""}
               onChangeText={(text) => commit(field.key, text)}
               keyboardType="numbers-and-punctuation"
@@ -193,46 +303,77 @@ export default function WorkbenchScreen() {
         </Card>
       ) : null}
 
-      {result ? (
+      {chartSeries ? (
         <Card
-          title="Homogeneous cycle traces"
-          subtitle="Scalar 0D state versus crank angle — not CFD"
+          title="Decision-relevant cycle views"
+          subtitle="Homogeneous single-zone 0D evidence — not spatial or CFD output"
         >
           <TraceChart
-            title="Motored baseline pressure"
-            x={result.motored_baseline.crank_angle_deg}
-            values={result.motored_baseline.pressure_pa.map(
-              (pressure) => pressure / 100_000,
-            )}
-            unit="bar"
+            title="Pressure comparison"
+            description="Scalar pressure versus crank angle; shaded regions are reported 95% uncertainty, not spatial variation"
+            series={chartSeries.pressure}
+            xUnit="crank-angle degrees"
+            yUnit="bar"
           />
           <TraceChart
-            title="Motored baseline temperature"
-            x={result.motored_baseline.crank_angle_deg}
-            values={result.motored_baseline.temperature_k}
-            unit="K"
-            color={theme.color.warn}
+            title="Temperature comparison"
+            description="Scalar temperature versus crank angle; shaded regions are reported 95% uncertainty, not a temperature field"
+            series={chartSeries.temperature}
+            xUnit="crank-angle degrees"
+            yUnit="K"
           />
-          {proposedCycle ? (
-            <>
-              <TraceChart
-                title="Proposed cycle pressure"
-                x={proposedCycle.crank_angle_deg}
-                values={proposedCycle.pressure_pa.map(
-                  (pressure) => pressure / 100_000,
-                )}
-                unit="bar"
-                color={theme.color.pass}
+          <Note>
+            {chartSeries.pressure.some((series) =>
+              series.points.some(
+                (point) => point.low !== undefined && point.high !== undefined,
+              ),
+            )
+              ? "Available 95% uncertainty intervals are shaded."
+              : "Uncertainty bands are unavailable; none are inferred from scalar inputs."}
+          </Note>
+          <TraceChart
+            title="Heat terms"
+            series={chartSeries.heat}
+            xUnit="crank-angle degrees"
+            yUnit="J/degree"
+          />
+          <TraceChart
+            title="Pressure-volume path"
+            description="Homogeneous single-zone 0D thermodynamic loop; not a cylinder map or CFD field"
+            series={chartSeries.pv}
+            xUnit="cm³"
+            yUnit="bar"
+          />
+        </Card>
+      ) : null}
+
+      {result && !chartSeries ? (
+        <Card title="Cycle views unavailable">
+          <Note>
+            The response did not contain complete aligned cycle arrays. Missing
+            values are not plotted as zero.
+          </Note>
+        </Card>
+      ) : null}
+
+      {chartSeries ? (
+        <Card
+          title="Sensitivity"
+          subtitle="Normalized one-at-a-time influence — not a confidence score"
+        >
+          {chartSeries.sensitivities.length > 0 ? (
+            chartSeries.sensitivities.map((series) => (
+              <Row
+                key={series.id}
+                label={series.label}
+                value={series.points[1]!.value.toFixed(2)}
               />
-              <TraceChart
-                title="Proposed cycle temperature"
-                x={proposedCycle.crank_angle_deg}
-                values={proposedCycle.temperature_k}
-                unit="K"
-                color={theme.color.pass}
-              />
-            </>
-          ) : null}
+            ))
+          ) : (
+            <Note>
+              Sensitivity data unavailable; zero influence is not assumed.
+            </Note>
+          )}
         </Card>
       ) : null}
     </ScrollView>

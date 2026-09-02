@@ -7,6 +7,7 @@ import os
 import platform
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
+from datetime import UTC
 from pathlib import Path
 from typing import Annotated, Any, cast
 from uuid import uuid4
@@ -16,7 +17,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from starlette.datastructures import UploadFile
@@ -767,6 +768,46 @@ def create_app(
     ) -> dict[str, Any]:
         record = _get_test_run_or_404(session, test_run_id)
         supplied = payload.model_fields_set
+        replacement_fields = {
+            "measurements",
+            "calibration_references",
+            "comparisons",
+            "evidence",
+            "provenance",
+            "is_demo_synthetic",
+        }
+        if replacement_fields & supplied and payload.expected_updated_at is None:
+            raise HTTPException(
+                status_code=status.HTTP_428_PRECONDITION_REQUIRED,
+                detail="Evidence-ledger replacement requires expected_updated_at",
+            )
+        if payload.expected_updated_at is not None:
+            record_updated_at = record.updated_at
+            if record_updated_at.tzinfo is None:
+                record_updated_at = record_updated_at.replace(tzinfo=UTC)
+            if record_updated_at != payload.expected_updated_at.astimezone(UTC):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Test Run changed since it was loaded; refresh and retry the edit",
+                )
+            claimed_at = utc_now()
+            claim = session.execute(
+                update(TestRunRecord)
+                .where(
+                    TestRunRecord.id == test_run_id,
+                    TestRunRecord.updated_at == record.updated_at,
+                )
+                .values(updated_at=claimed_at)
+                .returning(TestRunRecord.id),
+                execution_options={"synchronize_session": False},
+            )
+            if claim.scalar_one_or_none() is None:
+                session.rollback()
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Test Run changed since it was loaded; refresh and retry the edit",
+                )
+            record.updated_at = claimed_at
         required_fields = {
             "name",
             "status",

@@ -458,6 +458,7 @@ class TestRunCreate(TestRunContract):
 
 
 class TestRunPatch(TestRunContract):
+    expected_updated_at: datetime | None = None
     name: str | None = Field(default=None, min_length=1, max_length=200)
     status: TestRunStatus | None = None
     operator: str | None = Field(default=None, max_length=200)

@@ -84,7 +84,14 @@ export async function patchTestRun(
   return data;
 }
 
-export async function deleteTestRun(id: string): Promise<void> {
+export interface DeleteTestRunResult {
+  deleted: boolean;
+  testRunId: string;
+  ownedAttachmentsRemoved: number;
+  ownedAttachmentCleanupFailures: number;
+}
+
+export async function deleteTestRun(id: string): Promise<DeleteTestRunResult> {
   const { data, error, response } = await client.DELETE(
     "/api/v1/test-runs/{test_run_id}",
     {
@@ -95,6 +102,18 @@ export async function deleteTestRun(id: string): Promise<void> {
     },
   );
   if (!data) throw new Error(errorMessage(error, response));
+  return {
+    deleted: data.deleted === true,
+    testRunId: typeof data.test_run_id === "string" ? data.test_run_id : id,
+    ownedAttachmentsRemoved:
+      typeof data.owned_attachments_removed === "number"
+        ? data.owned_attachments_removed
+        : 0,
+    ownedAttachmentCleanupFailures:
+      typeof data.owned_attachment_cleanup_failures === "number"
+        ? data.owned_attachment_cleanup_failures
+        : 0,
+  };
 }
 
 export async function importTestRun(

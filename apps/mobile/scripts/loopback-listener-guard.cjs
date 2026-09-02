@@ -6,22 +6,20 @@ const LOOPBACK_HOST = "127.0.0.1";
 const INSTALL_MARK = Symbol.for("hydrocycle.loopback-listener-guard");
 
 /**
- * Add an explicit loopback host to TCP listen calls that omitted one.
- * Unix-domain sockets and calls with an existing host remain unchanged.
+ * Force every TCP listener onto the explicit IPv4 loopback address.
+ * Unix-domain sockets remain unchanged.
  */
 function withLoopbackHost(args) {
   if (typeof args[0] === "number") {
-    if (typeof args[1] !== "string") {
-      return [args[0], LOOPBACK_HOST, ...args.slice(1)];
-    }
-    return args;
+    return typeof args[1] === "string"
+      ? [args[0], LOOPBACK_HOST, ...args.slice(2)]
+      : [args[0], LOOPBACK_HOST, ...args.slice(1)];
   }
 
   if (
     args[0] !== null &&
     typeof args[0] === "object" &&
-    Object.prototype.hasOwnProperty.call(args[0], "port") &&
-    (args[0].host === undefined || args[0].host === null)
+    Object.prototype.hasOwnProperty.call(args[0], "port")
   ) {
     return [{ ...args[0], host: LOOPBACK_HOST }, ...args.slice(1)];
   }

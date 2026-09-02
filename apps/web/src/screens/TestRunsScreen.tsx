@@ -1102,9 +1102,12 @@ export function TestRunsScreen({
                   </span>
                   <span>
                     Total H₂{" "}
-                    {linkedSimulation.loading.initialTotalMgL.toFixed(3)}
+                    {linkedSimulation.loading.initialTotalMgL?.toFixed(3) ??
+                      "unavailable"}
                     {" mg/L · retained "}
-                    {linkedSimulation.loading.retainedMgL.toFixed(3)} mg/L
+                    {linkedSimulation.loading.retainedMgL?.toFixed(3) ??
+                      "unavailable"}{" "}
+                    mg/L
                   </span>
                   <small>
                     Result {linkedSimulation.resultHash.slice(0, 12)}…;

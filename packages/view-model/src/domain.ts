@@ -48,8 +48,8 @@ export interface EnergyTerms {
 export interface GateView {
   passed: boolean;
   failures: GateFailure[];
-  hydrogenAvailableMg: number;
-  hydrogenRequiredMg: number;
+  hydrogenAvailableMg: number | null;
+  hydrogenRequiredMg: number | null;
   hydrogenMarginMg: number;
   energyMarginJ: number;
   energyTerms: EnergyTerms;
@@ -59,14 +59,14 @@ export interface GateView {
 
 export interface LoadingView {
   mode: "measured_total" | "derived";
-  dissolvedMgL: number;
-  bubbleContainedMgL: number;
-  initialTotalMgL: number;
-  retainedMgL: number;
-  releasedMgL: number;
-  unaccountedMgL: number;
-  retentionFraction: number;
-  intervalMgL: Interval;
+  dissolvedMgL: number | null;
+  bubbleContainedMgL: number | null;
+  initialTotalMgL: number | null;
+  retainedMgL: number | null;
+  releasedMgL: number | null;
+  unaccountedMgL: number | null;
+  retentionFraction: number | null;
+  intervalMgL: Interval | null;
 }
 
 export interface CycleView {
@@ -91,8 +91,8 @@ export interface CycleView {
   energyConservationResidualFraction: number;
   indicatedWorkJ: number;
   imepBar: number;
-  upperBoundEfficiency: number;
-  adiabaticTemperatureK: number;
+  upperBoundEfficiency: number | null;
+  adiabaticTemperatureK: number | null;
   thermalNoxRisk: "low" | "moderate" | "high" | "not_applicable";
 }
 
@@ -108,7 +108,7 @@ export interface SimulationView {
   label: string;
   scenario: Scenario;
   measuredTotalMgL: number | null;
-  sampleVolumeMlPerCycle: number;
+  sampleVolumeMlPerCycle: number | null;
   loading: LoadingView;
   gate: GateView;
   motoredBaseline: CycleView;
@@ -170,6 +170,8 @@ export interface TestRunView {
   simulationIds: string[];
   measurementDatasetCount: number;
   persisted: boolean;
+  /** Original typed ledger retained so edits do not erase unsupported evidence. */
+  sourceMeasurements?: components["schemas"]["TestRunMeasurements"];
 }
 
 export interface HydrogenDecayPoint {

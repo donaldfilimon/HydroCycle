@@ -15,6 +15,14 @@ REPOSITORY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MOBILE_DIRECTORY="$REPOSITORY_ROOT/apps/mobile"
 
 export EXPO_NO_TELEMETRY=1
+EXPORT_DIRECTORIES=()
+
+cleanup() {
+  for directory in "${EXPORT_DIRECTORIES[@]}"; do
+    rm -rf "$directory"
+  done
+}
+trap cleanup EXIT INT TERM
 
 cd "$MOBILE_DIRECTORY"
 
@@ -28,9 +36,14 @@ bun run check
 
 # Typecheck alone does NOT prove the app runs: TypeScript and Metro resolve
 # modules differently, and a cross-package import can type-check cleanly while
-# failing to bundle. Exporting a real Hermes bundle is the check that catches
-# that, so it stays in the gate.
-CI=1 bunx expo export --platform ios --output-dir .expo-export-check >/dev/null
-rm -rf .expo-export-check
+# failing to bundle. Exporting real Hermes bundles is the check that catches
+# that, so both claimed simulator platforms stay in the gate.
+for platform in ios android; do
+  output_directory=".expo-export-check-$platform"
+  EXPORT_DIRECTORIES+=("$output_directory")
+  CI=1 bunx expo export \
+    --platform "$platform" \
+    --output-dir "$output_directory" >/dev/null
+done
 
 printf 'HydroCycle mobile checks passed.\n'

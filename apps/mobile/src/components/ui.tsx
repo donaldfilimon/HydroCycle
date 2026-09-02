@@ -60,15 +60,24 @@ export const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     paddingVertical: theme.space.xs + 2,
   },
-  rowLabel: { color: theme.color.textMuted, fontSize: 14, flexShrink: 1 },
+  rowLabel: {
+    color: theme.color.textMuted,
+    flexBasis: "38%",
+    flexGrow: 0,
+    flexShrink: 0,
+    fontSize: 14,
+  },
   rowValue: {
     color: theme.color.text,
+    flex: 1,
+    flexShrink: 1,
     fontSize: 14,
     fontVariant: ["tabular-nums"],
     marginLeft: theme.space.md,
+    textAlign: "right",
   },
   card: {
     backgroundColor: theme.color.surface,

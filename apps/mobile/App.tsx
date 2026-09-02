@@ -1,12 +1,13 @@
-import type { Screen } from "@hydrocycle/view-model";
+import type { Screen, TestRunView } from "@hydrocycle/view-model";
 import { StatusBar } from "expo-status-bar";
-import { type ReactNode, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { type ReactNode, useCallback, useState } from "react";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import SummaryScreen from "./src/screens/SummaryScreen";
 import TestRunsScreen from "./src/screens/TestRunsScreen";
 import WorkbenchScreen from "./src/screens/WorkbenchScreen";
+import type { SimulationSession } from "./src/session";
 import { theme } from "./src/theme";
 
 /**
@@ -42,17 +43,81 @@ function ScreenPanel({
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("summary");
+  const [session, setSession] = useState<SimulationSession | null>(null);
+  const [selectedRun, setSelectedRun] = useState<TestRunView | null>(null);
+  const [testRunsDirty, setTestRunsDirty] = useState(false);
+  const [testRunsBusy, setTestRunsBusy] = useState(false);
+
+  const linkSimulation = useCallback((runId: string, resultId: string) => {
+    setSelectedRun((current) =>
+      current?.id === runId
+        ? {
+            ...current,
+            simulationIds: current.simulationIds.includes(resultId)
+              ? current.simulationIds
+              : [...current.simulationIds, resultId],
+          }
+        : current,
+    );
+  }, []);
+
+  const navigate = (next: Screen) => {
+    if (screen === "test-runs" && next !== "test-runs" && testRunsBusy) {
+      Alert.alert(
+        "Test Run operation in progress",
+        "Wait for the server-authoritative response before leaving this screen.",
+      );
+      return;
+    }
+    if (screen !== "test-runs" || next === "test-runs" || !testRunsDirty) {
+      setScreen(next);
+      return;
+    }
+    Alert.alert("Discard Test Run edits?", "Unsaved changes will be lost.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Discard",
+        style: "destructive",
+        onPress: () => {
+          setTestRunsDirty(false);
+          setScreen(next);
+        },
+      },
+    ]);
+  };
 
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
-      <SafeAreaView style={styles.root} edges={["top", "left", "right"]}>
+      <SafeAreaView
+        testID="app-safe-area"
+        style={styles.root}
+        edges={["top", "left", "right", "bottom"]}
+      >
         <View style={styles.body}>
-          {screen === "summary" ? <SummaryScreen /> : null}
+          {screen === "summary" ? (
+            <SummaryScreen
+              session={session}
+              selectedRun={selectedRun}
+              onSessionChange={setSession}
+            />
+          ) : null}
           <ScreenPanel active={screen === "workbench"}>
-            <WorkbenchScreen />
+            <WorkbenchScreen
+              session={session}
+              selectedRun={selectedRun}
+              onSessionChange={setSession}
+              onSimulationLinked={linkSimulation}
+            />
           </ScreenPanel>
-          {screen === "test-runs" ? <TestRunsScreen /> : null}
+          {screen === "test-runs" ? (
+            <TestRunsScreen
+              selectedRun={selectedRun}
+              onSelectedRunChange={setSelectedRun}
+              onDirtyChange={setTestRunsDirty}
+              onBusyChange={setTestRunsBusy}
+            />
+          ) : null}
         </View>
 
         <View style={styles.tabBar}>
@@ -65,7 +130,7 @@ export default function App() {
                 accessibilityState={{ selected: active }}
                 accessibilityLabel={tab.label}
                 style={styles.tab}
-                onPress={() => setScreen(tab.key)}
+                onPress={() => navigate(tab.key)}
               >
                 <Text style={[styles.tabText, active && styles.tabTextActive]}>
                   {tab.label}

@@ -1,5 +1,7 @@
-import type { ApiSimulationResult } from "../api";
-import { proposedCycleForDisplay } from "../result-semantics";
+import {
+  proposedCycleForDisplay,
+  type ApiSimulationResult,
+} from "@hydrocycle/view-model";
 
 function result(
   passed: boolean,

@@ -27,7 +27,9 @@ import {
 import { LineChart, type ChartSeries } from "../components/Charts";
 import { CylinderSchematic } from "../components/CylinderSchematic";
 import { NumberField } from "../components/FormField";
+import { simulationChartSeries } from "@hydrocycle/view-model";
 import type {
+  ChartSeries as SharedChartSeries,
   SimulationView,
   TestRunView,
   WorkbenchInputs,
@@ -40,6 +42,7 @@ interface WorkbenchScreenProps {
   cursorDeg: number;
   reducedMotion: boolean;
   staticDemo: boolean;
+  busy: boolean;
   onCursorChange: (value: number) => void;
   onReducedMotionChange: (value: boolean) => void;
   onInputChange: (
@@ -69,26 +72,23 @@ function nearestIndex(values: number[], target: number) {
   return index;
 }
 
-function seriesFrom(
-  x: number[],
-  y: number[],
-  label: string,
-  color: string,
-  dashed = false,
-  lower?: number[] | null,
-  upper?: number[] | null,
-): ChartSeries {
-  return {
-    label,
-    color,
-    dashed,
-    points: x.map((value, index) => ({
-      x: value,
-      value: y[index] ?? 0,
-      ...(lower?.[index] !== undefined ? { low: lower[index] } : {}),
-      ...(upper?.[index] !== undefined ? { high: upper[index] } : {}),
-    })),
-  };
+const chartSeriesColors: Record<string, string> = {
+  "pressure-motored": "#a8bbc8",
+  "pressure-proposed": "#25c9ed",
+  "temperature-motored": "#a8bbc8",
+  "temperature-proposed": "#f6b73c",
+  "heat-combustion": "#ff4e62",
+  "heat-wall": "#ffad3c",
+  "heat-phase-change": "#3acfee",
+  "pv-motored": "#a8bbc8",
+  "pv-proposed": "#25c9ed",
+};
+
+function withRendererColors(series: SharedChartSeries[]): ChartSeries[] {
+  return series.flatMap((item) => {
+    const color = chartSeriesColors[item.id];
+    return color === undefined ? [] : [{ ...item, color }];
+  });
 }
 
 function EvidenceCard({
@@ -139,6 +139,7 @@ export function WorkbenchScreen({
   cursorDeg,
   reducedMotion,
   staticDemo,
+  busy,
   onCursorChange,
   onReducedMotionChange,
   onInputChange,
@@ -239,92 +240,14 @@ export function WorkbenchScreen({
   }, [drawerMode, evidenceOpen]);
 
   const chartSeries = useMemo(() => {
-    const baseline = simulation.motoredBaseline;
-    const proposed = simulation.proposedCycle;
+    const sharedSeries = simulationChartSeries(simulation);
     return {
-      pressure: [
-        seriesFrom(
-          baseline.crankAngle,
-          baseline.pressureBar,
-          "Motored baseline",
-          "#a8bbc8",
-          true,
-          baseline.pressureLower95Bar,
-          baseline.pressureUpper95Bar,
-        ),
-        ...(proposed
-          ? [
-              seriesFrom(
-                proposed.crankAngle,
-                proposed.pressureBar,
-                "Proposed 0D cycle",
-                "#25c9ed",
-                false,
-                proposed.pressureLower95Bar,
-                proposed.pressureUpper95Bar,
-              ),
-            ]
-          : []),
-      ],
-      temperature: [
-        seriesFrom(
-          baseline.crankAngle,
-          baseline.temperatureK,
-          "Motored baseline",
-          "#a8bbc8",
-          true,
-          baseline.temperatureLower95K,
-          baseline.temperatureUpper95K,
-        ),
-        ...(proposed
-          ? [
-              seriesFrom(
-                proposed.crankAngle,
-                proposed.temperatureK,
-                "Proposed 0D cycle",
-                "#f6b73c",
-                false,
-                proposed.temperatureLower95K,
-                proposed.temperatureUpper95K,
-              ),
-            ]
-          : []),
-      ],
-      heat: [
-        seriesFrom(
-          cycle.crankAngle,
-          cycle.heatReleaseJDeg,
-          "Combustion heat",
-          "#ff4e62",
-        ),
-        seriesFrom(
-          cycle.crankAngle,
-          cycle.wallHeatJDeg,
-          "Wall heat",
-          "#ffad3c",
-        ),
-        seriesFrom(
-          cycle.crankAngle,
-          cycle.vaporizationJDeg,
-          "Phase change",
-          "#3acfee",
-        ),
-      ],
-      pv: [
-        {
-          label: simulation.proposedCycle
-            ? "Proposed 0D cycle"
-            : "Motored baseline",
-          color: simulation.proposedCycle ? "#25c9ed" : "#a8bbc8",
-          dashed: !simulation.proposedCycle,
-          points: cycle.volumeCm3.map((x, pointIndex) => ({
-            x,
-            value: cycle.pressureBar[pointIndex] ?? 0,
-          })),
-        },
-      ],
+      pressure: withRendererColors(sharedSeries.pressure),
+      temperature: withRendererColors(sharedSeries.temperature),
+      heat: withRendererColors(sharedSeries.heat),
+      pv: withRendererColors(sharedSeries.pv),
     };
-  }, [cycle, simulation.motoredBaseline, simulation.proposedCycle]);
+  }, [simulation]);
 
   function updateNumber(key: keyof WorkbenchInputs, value: number | null) {
     onInputChange(key, value);
@@ -380,9 +303,15 @@ export function WorkbenchScreen({
         </div>
         <div className="gate-ribbon__metric">
           <span>Hydrogen available</span>
-          <strong>{availableH2.toPrecision(4)} mg/cycle</strong>
+          <strong>
+            {availableH2 === null
+              ? "Unavailable"
+              : `${availableH2.toPrecision(4)} mg/cycle`}
+          </strong>
           <small>
-            Required: {simulation.gate.hydrogenRequiredMg.toFixed(2)} mg/cycle
+            Required:{" "}
+            {simulation.gate.hydrogenRequiredMg?.toFixed(2) ?? "unavailable"}
+            {simulation.gate.hydrogenRequiredMg === null ? "" : " mg/cycle"}
           </small>
         </div>
         <div className="gate-ribbon__metric">
@@ -428,7 +357,11 @@ export function WorkbenchScreen({
       {measurementRun ? (
         <section
           className="measurement-source-banner"
-          aria-label="Active measurement source"
+          aria-label={
+            measurementRun.status === "valid"
+              ? "Active measurement source"
+              : "Active diagnostic source"
+          }
         >
           <strong>Selected Test Run overlay active</strong>
           <span>
@@ -438,10 +371,9 @@ export function WorkbenchScreen({
               : ""}
           </span>
           <small>
-            Available total H₂, decay-series, sample-state, and bubble-bin data
-            replace their corresponding literature inputs. Bubble bins remain a
-            non-authoritative diagnostic with visibly assumed uncertainty;
-            engine and carrier-delivery controls remain explicit assumptions.
+            {measurementRun.status === "valid"
+              ? "Available total H₂, decay-series, sample-state, and bubble-bin data replace their corresponding literature inputs. Bubble bins remain a non-authoritative diagnostic with visibly assumed uncertainty; engine and carrier-delivery controls remain explicit assumptions."
+              : "Only imported bubble-bin values are used, and only as non-authoritative user assumptions with explicit 20% diameter and 50% count uncertainty. Unvalidated loading, retention, and sample-state values do not enter the request."}
           </small>
         </section>
       ) : null}
@@ -808,9 +740,14 @@ export function WorkbenchScreen({
             className="button button--primary parameter-run"
             type="button"
             onClick={onRun}
+            disabled={busy}
           >
             <Play size={15} fill="currentColor" />
-            {staticDemo ? "Load demo fixture" : "Re-run gate"}
+            {busy
+              ? "Evaluating…"
+              : staticDemo
+                ? "Load demo fixture"
+                : "Re-run gate"}
           </button>
         </aside>
 
@@ -870,7 +807,11 @@ export function WorkbenchScreen({
                 </div>
                 <div>
                   <dt>H₂ available</dt>
-                  <dd>{availableH2.toPrecision(4)} mg</dd>
+                  <dd>
+                    {availableH2 === null
+                      ? "Unavailable"
+                      : `${availableH2.toPrecision(4)} mg`}
+                  </dd>
                 </div>
                 <div>
                   <dt>H₂O product vapor</dt>
@@ -915,7 +856,11 @@ export function WorkbenchScreen({
                   <tbody>
                     <tr>
                       <td>H₂</td>
-                      <td>{availableH2.toExponential(3)} mg</td>
+                      <td>
+                        {availableH2 === null
+                          ? "Unavailable"
+                          : `${availableH2.toExponential(3)} mg`}
+                      </td>
                     </tr>
                     <tr>
                       <td>O₂</td>

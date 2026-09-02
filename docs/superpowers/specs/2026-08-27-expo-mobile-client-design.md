@@ -107,17 +107,20 @@ boots; it is done when the root gate is green.
   `simulationRequest` function and displays homogeneous scalar 0D pressure and
   temperature traces. A failed gate never displays a proposed trace.
 - Test Runs lists persisted local records, distinguishes measured,
-  unmeasured, and synthetic entries, and can add an empty draft without
-  inventing measurements. Editing, validation, deletion, and native file
-  import remain on the web client until complete small-screen review flows
-  exist.
+  unmeasured, and synthetic entries, and can add and edit persisted drafts
+  without inventing measurements. Blank fields remain `null`; saves merge
+  edited fields onto a fresh server ledger and explicit validation remains
+  subject to the typed server evidence rules. Dirty editors guard tab and run
+  selection changes. Native import accepts only the canonical JSON/CSV names,
+  verifies the cache copy against the 2 MiB limit before native upload, and
+  leaves source files outside HydroCycle untouched. Deletion requires a named,
+  destructive native confirmation and reports owned-attachment cleanup
+  failures separately.
 
 ## Deferred and out of scope
 
 - Physical-device and store distribution are blocked on invariant 7 and need
   an explicit future decision. They are not part of this implementation.
-- Test Run editing, deletion, and native file import are deferred; partial
-  write flows would weaken validation and destructive-action protections.
 - Heat-term, P-V, and uncertainty-band chart parity are optional future mobile
   depth. The implemented pressure and temperature traces remain single-zone
   scalar views, never spatial or CFD output.
