@@ -53,6 +53,15 @@ interface EditorDraft {
   uncertainties: Record<ScalarKey, string>;
 }
 
+const TEXT_FIELDS = [
+  ["name", "Name"],
+  ["operator", "Operator"],
+  ["sampleId", "Sample"],
+  ["method", "Method"],
+  ["calibrationReference", "Calibration reference"],
+  ["reviewNotes", "Notes"],
+] as const;
+
 function inputText(value: string | number | null): string {
   return value === null ? "" : String(value);
 }
@@ -72,6 +81,37 @@ function draftFor(run: TestRunView): EditorDraft {
       SCALARS.map(({ key }) => [key, inputText(run.standardUncertainty[key])]),
     ) as Record<ScalarKey, string>,
   };
+}
+
+function concurrentEditConflicts(
+  original: EditorDraft,
+  edited: EditorDraft,
+  latest: EditorDraft,
+): string[] {
+  const conflicts: string[] = TEXT_FIELDS.flatMap(([key, label]) =>
+    edited[key] !== original[key] &&
+    latest[key] !== original[key] &&
+    latest[key] !== edited[key]
+      ? [label]
+      : [],
+  );
+  for (const { key, label } of SCALARS) {
+    if (
+      edited.values[key] !== original.values[key] &&
+      latest.values[key] !== original.values[key] &&
+      latest.values[key] !== edited.values[key]
+    ) {
+      conflicts.push(`${label} value`);
+    }
+    if (
+      edited.uncertainties[key] !== original.uncertainties[key] &&
+      latest.uncertainties[key] !== original.uncertainties[key] &&
+      latest.uncertainties[key] !== edited.uncertainties[key]
+    ) {
+      conflicts.push(`${label} uncertainty`);
+    }
+  }
+  return conflicts;
 }
 
 export function nullableFiniteNumber(text: string): number | null {
@@ -208,6 +248,23 @@ export default function TestRunEditor({
       onSavingChange(true);
       const latest = mapApiTestRun(await getTestRun(run.id));
       const originalDraft = draftFor(run);
+      const conflicts = concurrentEditConflicts(
+        originalDraft,
+        draft,
+        draftFor(latest),
+      );
+      if (
+        status !== run.status &&
+        latest.status !== run.status &&
+        latest.status !== status
+      ) {
+        conflicts.push("Status");
+      }
+      if (conflicts.length > 0) {
+        throw new Error(
+          `Test Run changed on the server in: ${conflicts.join(", ")}. Your edits remain unsaved; cancel them to load the latest revision.`,
+        );
+      }
       const latestValues = { ...latest };
       const latestUncertainties = { ...latest.standardUncertainty };
       for (const { key } of SCALARS) {
@@ -267,14 +324,7 @@ export default function TestRunEditor({
 
   return (
     <Card title="Edit selected run" subtitle={`Current status: ${run.status}`}>
-      {[
-        ["name", "Name"],
-        ["operator", "Operator"],
-        ["sampleId", "Sample"],
-        ["method", "Method"],
-        ["calibrationReference", "Calibration reference"],
-        ["reviewNotes", "Notes"],
-      ].map(([key, label]) => (
+      {TEXT_FIELDS.map(([key, label]) => (
         <View key={key} style={styles.field}>
           <Text style={styles.label}>{label}</Text>
           <TextInput

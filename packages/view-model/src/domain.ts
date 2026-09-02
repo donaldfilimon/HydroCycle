@@ -142,6 +142,9 @@ export interface TestRunView {
   name: string;
   status: TestRunStatus;
   synthetic: boolean;
+  /** Server revision token used for optimistic Test Run operations. */
+  updatedAt: string;
+  /** User-facing event/update timestamp retained for existing presentation code. */
   timestamp: string;
   totalH2MgL: number | null;
   retainedH2MgL: number | null;

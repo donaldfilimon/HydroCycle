@@ -713,7 +713,10 @@ describe("TestRunsScreen", () => {
       buttons?.find((button) => button.text === "Delete Test Run")?.onPress?.(),
     );
     await waitFor(() =>
-      expect(deleteTestRunMock).toHaveBeenCalledWith("run-1"),
+      expect(deleteTestRunMock).toHaveBeenCalledWith(
+        "run-1",
+        "2026-08-27T13:00:00Z",
+      ),
     );
     await waitFor(() => expect(screen.queryByText("Reviewed run")).toBeNull());
   });
@@ -809,6 +812,7 @@ describe("TestRunsScreen", () => {
     const concurrent: ApiTestRunDocument = {
       ...persisted,
       name: "Concurrent server name",
+      updated_at: "2026-08-27T14:00:00Z",
       measurements: {
         ...persisted.measurements,
         headspace_gc_mg_l: {
@@ -840,5 +844,28 @@ describe("TestRunsScreen", () => {
     expect(payload?.measurements?.headspace_gc_mg_l).toEqual(
       concurrent.measurements.headspace_gc_mg_l,
     );
+    expect(payload?.expected_updated_at).toBe("2026-08-27T14:00:00Z");
+  });
+
+  it("keeps dirty edits and refuses to overwrite a concurrently changed field", async () => {
+    const persisted = run("run-1", "Reviewed run", "valid");
+    const concurrent: ApiTestRunDocument = {
+      ...persisted,
+      notes: "Server note",
+      updated_at: "2026-08-27T14:00:00Z",
+    };
+    getTestRunsMock.mockResolvedValue([persisted]);
+    getTestRunMock.mockResolvedValue(concurrent);
+    render(<Harness />);
+    await screen.findByText("Reviewed run");
+    fireEvent.press(screen.getByRole("radio", { name: "Select Reviewed run" }));
+    fireEvent.changeText(screen.getByLabelText("Notes"), "Mobile note");
+    fireEvent.press(screen.getByRole("button", { name: "Save" }));
+
+    expect(
+      await screen.findByText(/Test Run changed on the server in: Notes/),
+    ).toBeTruthy();
+    expect(screen.getByLabelText("Notes").props.value).toBe("Mobile note");
+    expect(patchTestRunMock).not.toHaveBeenCalled();
   });
 });

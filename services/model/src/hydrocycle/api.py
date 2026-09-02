@@ -7,7 +7,7 @@ import os
 import platform
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
-from datetime import UTC
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated, Any, cast
 from uuid import uuid4
@@ -101,6 +101,53 @@ def _get_test_run_or_404(session: Session, test_run_id: str) -> TestRunRecord:
     if record is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Test run not found")
     return record
+
+
+def _as_utc(value: datetime) -> datetime:
+    return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
+
+
+def _require_current_test_run(
+    record: TestRunRecord,
+    expected_updated_at: datetime,
+    *,
+    action: str,
+) -> None:
+    if _as_utc(record.updated_at) != _as_utc(expected_updated_at):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Test Run changed since it was loaded; refresh before {action}",
+        )
+
+
+def _claim_current_test_run(
+    session: Session,
+    record: TestRunRecord,
+    expected_updated_at: datetime,
+    *,
+    action: str,
+) -> None:
+    """Atomically claim a caller's exact Test Run revision before mutation."""
+
+    _require_current_test_run(record, expected_updated_at, action=action)
+    claimed_at = utc_now()
+    claim = session.execute(
+        update(TestRunRecord)
+        .where(
+            TestRunRecord.id == record.id,
+            TestRunRecord.updated_at == record.updated_at,
+        )
+        .values(updated_at=claimed_at)
+        .returning(TestRunRecord.id),
+        execution_options={"synchronize_session": False},
+    )
+    if claim.scalar_one_or_none() is None:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Test Run changed since it was loaded; refresh before {action}",
+        )
+    record.updated_at = claimed_at
 
 
 def _add_evidence(
@@ -768,46 +815,12 @@ def create_app(
     ) -> dict[str, Any]:
         record = _get_test_run_or_404(session, test_run_id)
         supplied = payload.model_fields_set
-        replacement_fields = {
-            "measurements",
-            "calibration_references",
-            "comparisons",
-            "evidence",
-            "provenance",
-            "is_demo_synthetic",
-        }
-        if replacement_fields & supplied and payload.expected_updated_at is None:
-            raise HTTPException(
-                status_code=status.HTTP_428_PRECONDITION_REQUIRED,
-                detail="Evidence-ledger replacement requires expected_updated_at",
-            )
-        if payload.expected_updated_at is not None:
-            record_updated_at = record.updated_at
-            if record_updated_at.tzinfo is None:
-                record_updated_at = record_updated_at.replace(tzinfo=UTC)
-            if record_updated_at != payload.expected_updated_at.astimezone(UTC):
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail="Test Run changed since it was loaded; refresh and retry the edit",
-                )
-            claimed_at = utc_now()
-            claim = session.execute(
-                update(TestRunRecord)
-                .where(
-                    TestRunRecord.id == test_run_id,
-                    TestRunRecord.updated_at == record.updated_at,
-                )
-                .values(updated_at=claimed_at)
-                .returning(TestRunRecord.id),
-                execution_options={"synchronize_session": False},
-            )
-            if claim.scalar_one_or_none() is None:
-                session.rollback()
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail="Test Run changed since it was loaded; refresh and retry the edit",
-                )
-            record.updated_at = claimed_at
+        _claim_current_test_run(
+            session,
+            record,
+            payload.expected_updated_at,
+            action="saving the edit",
+        )
         required_fields = {
             "name",
             "status",
@@ -895,6 +908,7 @@ def create_app(
     def delete_test_run(
         test_run_id: str,
         session: SessionDependency,
+        expected_updated_at: Annotated[datetime, Query()],
         confirm: Annotated[bool, Query(description="Explicit UI/user confirmation")] = False,
     ) -> dict[str, Any]:
         if not confirm:
@@ -903,6 +917,12 @@ def create_app(
                 detail="Deletion requires confirm=true",
             )
         record = _get_test_run_or_404(session, test_run_id)
+        _claim_current_test_run(
+            session,
+            record,
+            expected_updated_at,
+            action="deleting it",
+        )
         owned_names = [item.storage_name for item in record.attachments if item.locally_owned]
         session.delete(record)
         session.commit()
@@ -931,6 +951,7 @@ def create_app(
         session: SessionDependency,
         filename: Annotated[str | None, Query(max_length=128)] = None,
         test_run_id: Annotated[str | None, Query(max_length=36)] = None,
+        expected_updated_at: Annotated[datetime | None, Query()] = None,
         calibration_reference: Annotated[str | None, Query(max_length=500)] = None,
     ) -> dict[str, Any]:
         try:
@@ -991,6 +1012,19 @@ def create_app(
                     session.flush()
                 else:
                     record = _get_test_run_or_404(session, test_run_id)
+                    if expected_updated_at is None:
+                        raise HTTPException(
+                            status_code=status.HTTP_428_PRECONDITION_REQUIRED,
+                            detail=(
+                                "Import into an existing Test Run requires expected_updated_at"
+                            ),
+                        )
+                    _claim_current_test_run(
+                        session,
+                        record,
+                        expected_updated_at,
+                        action="importing into it",
+                    )
                 measurements_payload = TestRunMeasurements.model_validate(
                     record.measurements_json
                 ).model_dump(mode="json", by_alias=True, exclude_none=False)
@@ -1087,12 +1121,14 @@ def create_app(
     def export_test_run(
         test_run_id: str,
         session: SessionDependency,
+        expected_updated_at: Annotated[datetime, Query()],
         export_format: Annotated[
             str, Query(alias="format", pattern=r"^[a-z_]+$")
         ] = "canonical_json",
         simulation_id: Annotated[str | None, Query(max_length=64)] = None,
     ) -> Response:
         record = _get_test_run_or_404(session, test_run_id)
+        _require_current_test_run(record, expected_updated_at, action="exporting it")
         try:
             if export_format in {"canonical_json", "json"}:
                 content, media_type, download_name = canonical_test_run_export(session, record)

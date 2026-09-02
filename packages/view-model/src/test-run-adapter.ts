@@ -135,6 +135,7 @@ export function mapApiTestRun(document: ApiTestRunDocument): TestRunView {
     name: document.name,
     status: document.status,
     synthetic: document.is_demo_synthetic,
+    updatedAt: document.updated_at,
     timestamp: document.updated_at,
     totalH2MgL,
     retainedH2MgL,
@@ -374,7 +375,7 @@ export function testRunPayload(run: TestRunView): ApiTestRunCreate {
 export function testRunPatchPayload(run: TestRunView): ApiTestRunPatch {
   const payload = testRunPayload(run);
   return {
-    expected_updated_at: run.timestamp,
+    expected_updated_at: run.updatedAt,
     name: run.name,
     status: run.status,
     operator: run.operator,

@@ -18,6 +18,9 @@ export EXPO_NO_TELEMETRY=1
 EXPORT_DIRECTORIES=()
 
 cleanup() {
+  if ((${#EXPORT_DIRECTORIES[@]} == 0)); then
+    return
+  fi
   for directory in "${EXPORT_DIRECTORIES[@]}"; do
     rm -rf "$directory"
   done

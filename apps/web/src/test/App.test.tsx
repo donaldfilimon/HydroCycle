@@ -262,6 +262,7 @@ describe("HydroCycle application flows", () => {
         name: /discard changes/i,
       }),
     );
+    expect(operator).toHaveValue("Demo operator");
     expect(
       screen.getByRole("dialog", { name: /import measured data/i }),
     ).toBeInTheDocument();
@@ -296,7 +297,7 @@ describe("HydroCycle application flows", () => {
     ).toBeInTheDocument();
   });
 
-  it("does not guard clean navigation, evaluation, or export, and retains the unload warning", async () => {
+  it("guards dirty evaluation and export, discards visibly, and retains the unload warning", async () => {
     const user = userEvent.setup();
     const anchorClick = vi
       .spyOn(HTMLAnchorElement.prototype, "click")
@@ -306,12 +307,29 @@ describe("HydroCycle application flows", () => {
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Test Runs" }));
-    await user.type(screen.getByLabelText("Operator"), " edited");
+    const operator = screen.getByLabelText("Operator");
+    await user.type(operator, " edited");
     await user.click(screen.getByRole("button", { name: /run model/i }));
+    expect(screen.getByRole("alertdialog")).toHaveTextContent(
+      /discard unsaved changes/i,
+    );
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: /cancel/i,
+      }),
+    );
+    expect(operator).toHaveValue("Demo operator edited");
+
     await user.click(screen.getByRole("button", { name: /^export$/i }));
-    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: /discard changes/i,
+      }),
+    );
+    expect(operator).toHaveValue("Demo operator");
     expect(anchorClick).toHaveBeenCalledOnce();
 
+    await user.type(operator, " changed again");
     const unload = new Event("beforeunload", { cancelable: true });
     window.dispatchEvent(unload);
     expect(unload.defaultPrevented).toBe(true);
@@ -363,8 +381,17 @@ describe("HydroCycle application flows", () => {
       .getByRole("heading", { name: /Synthetic-003/i })
       .closest(".run-workspace");
     expect(workspace).not.toBeNull();
+    await user.type(screen.getByLabelText("Operator"), " edited");
     await user.click(
       within(workspace as HTMLElement).getByRole("button", { name: /delete/i }),
+    );
+    expect(screen.getByRole("alertdialog")).toHaveTextContent(
+      /discard unsaved changes/i,
+    );
+    await user.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: /discard changes/i,
+      }),
     );
     const dialog = screen.getByRole("alertdialog");
     expect(dialog).toHaveTextContent(/locally owned attachments/i);

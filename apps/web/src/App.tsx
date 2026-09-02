@@ -7,6 +7,7 @@ import {
   deleteTestRun,
   downloadTestRunExport,
   getHealth,
+  getTestRunRaw,
   getTestRunsRaw,
   importTestRun,
   patchTestRun,
@@ -435,6 +436,7 @@ export default function App({ staticDemo = STATIC_DEMO }: AppProps = {}) {
   const [importOpen, setImportOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editorDirty, setEditorDirty] = useState(false);
+  const [editorDiscardRevision, setEditorDiscardRevision] = useState(0);
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
   const [notice, setNotice] = useState(
     staticDemo
@@ -526,6 +528,7 @@ export default function App({ staticDemo = STATIC_DEMO }: AppProps = {}) {
     const action = pendingDiscardActionRef.current;
     pendingDiscardActionRef.current = null;
     setDiscardDialogOpen(false);
+    setEditorDiscardRevision((revision) => revision + 1);
     setEditorDirty(false);
     action?.();
   }, []);
@@ -610,18 +613,23 @@ export default function App({ staticDemo = STATIC_DEMO }: AppProps = {}) {
       if (generation !== modelGenerationRef.current) return;
       setSimulation(mapApiSimulationResult(fallback, raw));
       if (persistence) {
-        setRuns((current) =>
-          current.map((run) =>
-            run.id === persistence.testRunId
-              ? {
-                  ...run,
-                  simulationIds: Array.from(
-                    new Set([...run.simulationIds, raw.result_id]),
-                  ),
-                }
-              : run,
-          ),
-        );
+        try {
+          const refreshed = mapApiTestRun(
+            await getTestRunRaw(persistence.testRunId),
+          );
+          if (generation !== modelGenerationRef.current) return;
+          setRuns((current) =>
+            current.map((run) =>
+              run.id === persistence.testRunId ? refreshed : run,
+            ),
+          );
+        } catch (refreshError) {
+          if (generation !== modelGenerationRef.current) return;
+          setNotice(
+            `Evaluation completed, but the linked Test Run could not be refreshed. Export, import, and delete remain blocked by its stale revision until the ledger is reloaded. ${refreshError instanceof Error ? refreshError.message : ""}`.trim(),
+          );
+          return;
+        }
       }
       setHealth(
         (current) => current ?? { status: "ok", service: "hydrocycle-model" },
@@ -686,7 +694,10 @@ export default function App({ staticDemo = STATIC_DEMO }: AppProps = {}) {
     const selectedRun = runs.find((run) => run.id === selectedRunId);
     if (screen === "test-runs" && selectedRun?.persisted) {
       try {
-        const exported = await downloadTestRunExport(selectedRun.id);
+        const exported = await downloadTestRunExport(
+          selectedRun.id,
+          selectedRun.updatedAt,
+        );
         triggerDownload(exported.blob, exported.filename);
         setNotice(`Exported canonical persisted run ${selectedRun.name}.`);
         return;
@@ -722,6 +733,7 @@ export default function App({ staticDemo = STATIC_DEMO }: AppProps = {}) {
       name: "Untitled run",
       status: "draft",
       synthetic: false,
+      updatedAt: new Date().toISOString(),
       timestamp: new Date().toISOString(),
       totalH2MgL: null,
       retainedH2MgL: null,
@@ -828,6 +840,7 @@ export default function App({ staticDemo = STATIC_DEMO }: AppProps = {}) {
     try {
       const exported = await downloadTestRunExport(
         run.id,
+        run.updatedAt,
         "cfd_boundary",
         simulation.id,
       );
@@ -852,6 +865,7 @@ export default function App({ staticDemo = STATIC_DEMO }: AppProps = {}) {
       id: `local-${crypto.randomUUID()}`,
       name: `${source.name} copy`,
       status: "draft",
+      updatedAt: new Date().toISOString(),
       timestamp: new Date().toISOString(),
       persisted: false,
       attachmentHashes: [],
@@ -874,7 +888,9 @@ export default function App({ staticDemo = STATIC_DEMO }: AppProps = {}) {
     if (!run) return;
     runsGenerationRef.current += 1;
     try {
-      const result = run.persisted ? await deleteTestRun(id) : null;
+      const result = run.persisted
+        ? await deleteTestRun(id, run.updatedAt)
+        : null;
       setRuns((current) => current.filter((candidate) => candidate.id !== id));
       setSelectedRunId((current) =>
         current === id
@@ -917,9 +933,9 @@ export default function App({ staticDemo = STATIC_DEMO }: AppProps = {}) {
       gatePassed={simulation.gate.passed}
       staticDemo={staticDemo}
       onNavigate={guardedNavigate}
-      onRun={() => void runModel()}
+      onRun={() => requestDiscard(() => void runModel())}
       onImport={requestImport}
-      onExport={() => void exportBundle()}
+      onExport={() => requestDiscard(() => void exportBundle())}
       dialogOpen={importOpen || deleteId !== null || discardDialogOpen}
     >
       <div className="app-notice" role="status" aria-live="polite">
@@ -959,10 +975,11 @@ export default function App({ staticDemo = STATIC_DEMO }: AppProps = {}) {
           selectedId={selectedRunId}
           onSelect={(id) => requestDiscard(() => setSelectedRunId(id))}
           onDirtyChange={setEditorDirty}
+          discardRevision={editorDiscardRevision}
           onSave={saveRun}
           onNew={() => requestDiscard(() => void newRun())}
           onDuplicate={(id) => requestDiscard(() => void duplicateRun(id))}
-          onDelete={openDeleteDialog}
+          onDelete={(id) => requestDiscard(() => openDeleteDialog(id))}
           onImport={requestImport}
           linkedSimulation={
             simulation.id && selectedRun?.simulationIds.includes(simulation.id)

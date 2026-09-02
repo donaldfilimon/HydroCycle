@@ -251,6 +251,7 @@ export default function TestRunsScreen({
         id: `mobile-copy-${Date.now()}`,
         name: `${selectedRun.name} copy`,
         status: "draft",
+        updatedAt: new Date().toISOString(),
         timestamp: new Date().toISOString(),
         persisted: false,
         attachmentHashes: [],
@@ -321,6 +322,7 @@ export default function TestRunsScreen({
     try {
       const response = await importTestRunFile(file, {
         ...(csv ? { testRunId: selectedRun?.id } : {}),
+        ...(csv ? { expectedUpdatedAt: selectedRun?.updatedAt } : {}),
         ...(csv
           ? {
               calibrationReference:
@@ -355,7 +357,7 @@ export default function TestRunsScreen({
       if (!(await Sharing.isAvailableAsync())) {
         throw new Error("Native file sharing is unavailable.");
       }
-      uri = await downloadTestRunExport(selectedRun.id);
+      uri = await downloadTestRunExport(selectedRun.id, selectedRun.updatedAt);
       await Sharing.shareAsync(uri, {
         mimeType: "application/json",
         UTI: "public.json",
@@ -390,7 +392,7 @@ export default function TestRunsScreen({
             invalidateLoad();
             setOperation("Deleting run…");
             setError(null);
-            void deleteTestRun(selectedRun.id)
+            void deleteTestRun(selectedRun.id, selectedRun.updatedAt)
               .then((result) => {
                 setRuns((current) =>
                   (current ?? []).filter((run) => run.id !== result.testRunId),

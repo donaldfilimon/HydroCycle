@@ -50,7 +50,10 @@ describe("mobile Test Run PATCH", () => {
   });
 
   it("builds typed path, body, and signal options", () => {
-    const body = { operator: null } satisfies ApiTestRunPatch;
+    const body = {
+      expected_updated_at: "2026-09-02T10:00:00Z",
+      operator: null,
+    } satisfies ApiTestRunPatch;
     const signal = new AbortController().signal;
 
     expect(testRunPatchOptions("run-1", body, signal)).toEqual({
@@ -71,14 +74,21 @@ describe("mobile Test Run PATCH", () => {
       PATCH: patch,
     } as unknown as NonNullable<Parameters<typeof patchTestRun>[2]>;
 
-    await expect(patchTestRun("run-1", { notes: null }, client)).resolves.toBe(
-      document,
-    );
+    await expect(
+      patchTestRun(
+        "run-1",
+        { expected_updated_at: "2026-09-02T10:00:00Z", notes: null },
+        client,
+      ),
+    ).resolves.toBe(document);
     expect(patch).toHaveBeenCalledWith(
       "/api/v1/test-runs/{test_run_id}",
       expect.objectContaining({
         params: { path: { test_run_id: "run-1" } },
-        body: { notes: null },
+        body: {
+          expected_updated_at: "2026-09-02T10:00:00Z",
+          notes: null,
+        },
         signal: expect.any(AbortSignal),
       }),
     );
@@ -203,14 +213,18 @@ describe("mobile Test Run file operations", () => {
           size: 128,
           mimeType: "text/csv",
         },
-        { testRunId: "run-1", calibrationReference: "CAL 7" },
+        {
+          testRunId: "run-1",
+          expectedUpdatedAt: "2026-09-02T10:00:00Z",
+          calibrationReference: "CAL 7",
+        },
         upload,
         stat,
       ),
     ).resolves.toEqual(response);
     expect(upload).toHaveBeenCalledWith(
       expect.stringMatching(
-        /filename=pressure_trace\.csv&test_run_id=run-1&calibration_reference=CAL\+7$/,
+        /filename=pressure_trace\.csv&test_run_id=run-1&expected_updated_at=2026-09-02T10%3A00%3A00Z&calibration_reference=CAL\+7$/,
       ),
       "file:///cache/trace.csv",
       expect.objectContaining({
@@ -263,9 +277,11 @@ describe("mobile Test Run file operations", () => {
     });
     const client = {
       DELETE: remove,
-    } as unknown as NonNullable<Parameters<typeof deleteTestRun>[1]>;
+    } as unknown as NonNullable<Parameters<typeof deleteTestRun>[2]>;
 
-    await expect(deleteTestRun("run-1", client)).resolves.toEqual({
+    await expect(
+      deleteTestRun("run-1", "2026-09-02T10:00:00Z", client),
+    ).resolves.toEqual({
       deleted: true,
       testRunId: "run-1",
       ownedAttachmentsRemoved: 0,
@@ -277,7 +293,10 @@ describe("mobile Test Run file operations", () => {
       expect.objectContaining({
         params: {
           path: { test_run_id: "run-1" },
-          query: { confirm: true },
+          query: {
+            confirm: true,
+            expected_updated_at: "2026-09-02T10:00:00Z",
+          },
         },
         signal: expect.any(AbortSignal),
       }),
@@ -292,10 +311,10 @@ describe("mobile Test Run file operations", () => {
     });
     const client = {
       DELETE: remove,
-    } as unknown as NonNullable<Parameters<typeof deleteTestRun>[1]>;
+    } as unknown as NonNullable<Parameters<typeof deleteTestRun>[2]>;
 
-    await expect(deleteTestRun("run-1", client)).rejects.toThrow(
-      "did not confirm Test Run deletion",
-    );
+    await expect(
+      deleteTestRun("run-1", "2026-09-02T10:00:00Z", client),
+    ).rejects.toThrow("did not confirm Test Run deletion");
   });
 });

@@ -182,7 +182,11 @@ def test_test_run_crud_preserves_null_and_requires_delete_confirmation(
 
     patched = client.patch(
         f"/api/v1/test-runs/{created['id']}",
-        json={"status": "needs_review", "notes": "Awaiting calibration review"},
+        json={
+            "expected_updated_at": created["updated_at"],
+            "status": "needs_review",
+            "notes": "Awaiting calibration review",
+        },
     )
     assert patched.status_code == 200
     assert patched.json()["status"] == "needs_review"
@@ -191,9 +195,15 @@ def test_test_run_crud_preserves_null_and_requires_delete_confirmation(
     listing = client.get("/api/v1/test-runs")
     assert [item["id"] for item in listing.json()] == [created["id"]]
 
-    refused = client.delete(f"/api/v1/test-runs/{created['id']}")
+    refused = client.delete(
+        f"/api/v1/test-runs/{created['id']}",
+        params={"expected_updated_at": patched.json()["updated_at"]},
+    )
     assert refused.status_code == 409
-    deleted = client.delete(f"/api/v1/test-runs/{created['id']}?confirm=true")
+    deleted = client.delete(
+        f"/api/v1/test-runs/{created['id']}",
+        params={"confirm": True, "expected_updated_at": patched.json()["updated_at"]},
+    )
     assert deleted.status_code == 200
     assert deleted.json()["deleted"] is True
     assert client.get(f"/api/v1/test-runs/{created['id']}").status_code == 404
@@ -233,11 +243,18 @@ def test_partial_edit_and_export_preserve_unedited_provenance(
 
     edited = client.patch(
         f"/api/v1/test-runs/{created['id']}",
-        json={"name": "Edited provenance source", "notes": "metadata-only edit"},
+        json={
+            "expected_updated_at": created["updated_at"],
+            "name": "Edited provenance source",
+            "notes": "metadata-only edit",
+        },
     )
     assert edited.status_code == 200, edited.text
 
-    exported = client.get(f"/api/v1/test-runs/{created['id']}/export?format=json")
+    exported = client.get(
+        f"/api/v1/test-runs/{created['id']}/export",
+        params={"format": "json", "expected_updated_at": edited.json()["updated_at"]},
+    )
     assert exported.status_code == 200, exported.text
     document = exported.json()["test_run"]
     assert document["sample_id"] == "SAMPLE-PRESERVE-1"
@@ -271,12 +288,43 @@ def test_patch_rejects_a_stale_expected_update_timestamp(
     assert stale.status_code == 409
     assert "changed since it was loaded" in stale.json()["detail"]
 
+    stale_export = client.get(
+        f"/api/v1/test-runs/{created['id']}/export",
+        params={"expected_updated_at": created["updated_at"]},
+    )
+    assert stale_export.status_code == 409
+    assert "refresh before exporting" in stale_export.json()["detail"]
+
+    stale_import = client.post(
+        "/api/v1/test-runs/import",
+        params={
+            "test_run_id": created["id"],
+            "expected_updated_at": created["updated_at"],
+            "calibration_reference": "STALE-CAL",
+        },
+        headers={"X-Filename": "hydrogen_decay.csv", "Content-Type": "text/csv"},
+        content="time_s,total_h2_mg_L,uncertainty_mg_L\n0,2.2,0.1\n",
+    )
+    assert stale_import.status_code == 409
+    assert "refresh before importing" in stale_import.json()["detail"]
+
+    stale_delete = client.delete(
+        f"/api/v1/test-runs/{created['id']}",
+        params={"confirm": True, "expected_updated_at": created["updated_at"]},
+    )
+    assert stale_delete.status_code == 409
+    assert "refresh before deleting" in stale_delete.json()["detail"]
+    assert client.get(f"/api/v1/test-runs/{created['id']}").status_code == 200
+
     missing_precondition = client.patch(
         f"/api/v1/test-runs/{created['id']}",
         json={"measurements": created["measurements"]},
     )
-    assert missing_precondition.status_code == 428
-    assert "expected_updated_at" in missing_precondition.json()["detail"]
+    assert missing_precondition.status_code == 422
+    assert missing_precondition.json()["detail"][0]["loc"] == [
+        "body",
+        "expected_updated_at",
+    ]
 
 
 def test_typed_scalar_measurement_round_trip_preserves_full_uncertainty(
@@ -395,7 +443,11 @@ def test_review_status_cannot_bypass_measurement_and_calibration_validation(
     )
     assert scalar_only.status_code == 201, scalar_only.text
     reviewed_scalar = client.get(
-        f"/api/v1/test-runs/{scalar_only.json()['id']}/export?format=reviewed_csv"
+        f"/api/v1/test-runs/{scalar_only.json()['id']}/export",
+        params={
+            "format": "reviewed_csv",
+            "expected_updated_at": scalar_only.json()["updated_at"],
+        },
     )
     assert reviewed_scalar.status_code == 409
     assert "canonical measurement series" in reviewed_scalar.text
@@ -449,7 +501,10 @@ def test_review_status_cannot_bypass_measurement_and_calibration_validation(
             ]
         },
     )
-    patch = client.patch(f"/api/v1/test-runs/{draft['id']}", json={"status": "valid"})
+    patch = client.patch(
+        f"/api/v1/test-runs/{draft['id']}",
+        json={"expected_updated_at": draft["updated_at"], "status": "valid"},
+    )
     assert patch.status_code == 422
 
     residual_draft = create_run(
@@ -468,7 +523,7 @@ def test_review_status_cannot_bypass_measurement_and_calibration_validation(
     )
     residual_review = client.patch(
         f"/api/v1/test-runs/{residual_draft['id']}",
-        json={"status": "valid"},
+        json={"expected_updated_at": residual_draft["updated_at"], "status": "valid"},
     )
     assert residual_review.status_code == 422
     assert "0.5%" in residual_review.json()["detail"]
@@ -479,7 +534,14 @@ def test_review_status_cannot_bypass_measurement_and_calibration_validation(
         assert stored is not None
         stored.status = "valid"
         stored.calibrations_json = []
-    exported = client.get(f"/api/v1/test-runs/{draft['id']}/export?format=reviewed_csv")
+    corrupted = client.get(f"/api/v1/test-runs/{draft['id']}").json()
+    exported = client.get(
+        f"/api/v1/test-runs/{draft['id']}/export",
+        params={
+            "format": "reviewed_csv",
+            "expected_updated_at": corrupted["updated_at"],
+        },
+    )
     assert exported.status_code == 409
     assert "validation failed" in exported.json()["detail"].lower()
 
@@ -514,7 +576,10 @@ def test_csv_import_hash_storage_validation_and_owned_cleanup(
     assert formula.status_code == 422
     assert formula.json()["detail"]["field"] == "total_h2_mg_L"
 
-    deleted = client.delete(f"/api/v1/test-runs/{run['id']}?confirm=true")
+    deleted = client.delete(
+        f"/api/v1/test-runs/{run['id']}",
+        params={"confirm": True, "expected_updated_at": run["updated_at"]},
+    )
     assert deleted.status_code == 200
     assert deleted.json()["owned_attachments_removed"] == 1
     assert list(attachments.iterdir()) == []
@@ -552,6 +617,7 @@ def test_evidence_requires_complete_provenance_and_owned_local_reference(
         "/api/v1/test-runs/import",
         params={
             "test_run_id": owner["id"],
+            "expected_updated_at": owner["updated_at"],
             "calibration_reference": "GC-CAL-EVIDENCE",
         },
         headers={"X-Filename": "hydrogen_decay.csv", "Content-Type": "text/csv"},
@@ -608,6 +674,7 @@ def test_multipart_import_and_reviewed_csv_export(
     )
     imported = client.post(
         "/api/v1/test-runs/import",
+        params={"expected_updated_at": run["updated_at"]},
         files={
             "file": (
                 "bubble_distribution.csv",
@@ -623,10 +690,22 @@ def test_multipart_import_and_reviewed_csv_export(
     assert imported.status_code == 201, imported.text
     assert imported.json()["test_run"]["status"] == "needs_review"
 
-    reviewed = client.patch(f"/api/v1/test-runs/{run['id']}", json={"status": "valid"})
+    reviewed = client.patch(
+        f"/api/v1/test-runs/{run['id']}",
+        json={
+            "expected_updated_at": imported.json()["test_run"]["updated_at"],
+            "status": "valid",
+        },
+    )
     assert reviewed.status_code == 200
 
-    exported = client.get(f"/api/v1/test-runs/{run['id']}/export?format=reviewed_csv")
+    exported = client.get(
+        f"/api/v1/test-runs/{run['id']}/export",
+        params={
+            "format": "reviewed_csv",
+            "expected_updated_at": reviewed.json()["updated_at"],
+        },
+    )
     assert exported.status_code == 200, exported.text
     with ZipFile(io.BytesIO(exported.content)) as archive:
         assert set(archive.namelist()) == {
@@ -651,6 +730,7 @@ def test_canonical_json_export_round_trip_preserves_content_hash(
         "/api/v1/test-runs/import",
         params={
             "test_run_id": original["id"],
+            "expected_updated_at": original["updated_at"],
             "calibration_reference": "PRESSURE-CAL-ROUNDTRIP",
         },
         headers={"X-Filename": "pressure_trace.csv", "Content-Type": "text/csv"},
@@ -702,7 +782,11 @@ def test_canonical_json_export_round_trip_preserves_content_hash(
     )
     assert evaluated.status_code == 200, evaluated.text
     result_id = evaluated.json()["result_id"]
-    exported = client.get(f"/api/v1/test-runs/{original['id']}/export?format=json")
+    current_original = client.get(f"/api/v1/test-runs/{original['id']}").json()
+    exported = client.get(
+        f"/api/v1/test-runs/{original['id']}/export",
+        params={"format": "json", "expected_updated_at": current_original["updated_at"]},
+    )
     assert exported.status_code == 200
     assert len(exported.headers["x-content-sha256"]) == 64
 
@@ -759,7 +843,11 @@ def test_canonical_import_rejects_forged_simulation_id_and_embedded_result(
         json=simulation_input.model_dump(mode="json"),
     )
     assert evaluated.status_code == 200
-    exported = client.get(f"/api/v1/test-runs/{source_run['id']}/export?format=json")
+    current_source = client.get(f"/api/v1/test-runs/{source_run['id']}").json()
+    exported = client.get(
+        f"/api/v1/test-runs/{source_run['id']}/export",
+        params={"format": "json", "expected_updated_at": current_source["updated_at"]},
+    )
     assert exported.status_code == 200
     original = json.loads(exported.content)
     before_ids = {item["id"] for item in client.get("/api/v1/test-runs").json()}
@@ -832,7 +920,11 @@ def test_persisted_pass_simulation_and_neutral_0d_boundary_export(
 
     exported = client.get(
         f"/api/v1/test-runs/{run['id']}/export",
-        params={"format": "cfd_boundary", "simulation_id": result["result_id"]},
+        params={
+            "format": "cfd_boundary",
+            "simulation_id": result["result_id"],
+            "expected_updated_at": linked_run.json()["updated_at"],
+        },
     )
     assert exported.status_code == 200, exported.text
     boundary = CfdBoundaryExport.model_validate(exported.json())
@@ -852,7 +944,13 @@ def test_persisted_pass_simulation_and_neutral_0d_boundary_export(
     assert relinked.json()["result_id"] == result["result_id"]
     second_export = client.get(
         f"/api/v1/test-runs/{other_run['id']}/export",
-        params={"format": "cfd_boundary", "simulation_id": result["result_id"]},
+        params={
+            "format": "cfd_boundary",
+            "simulation_id": result["result_id"],
+            "expected_updated_at": client.get(f"/api/v1/test-runs/{other_run['id']}").json()[
+                "updated_at"
+            ],
+        },
     )
     assert second_export.status_code == 200
 
@@ -915,7 +1013,11 @@ def test_persisted_simulation_comparison_is_typed_deterministic_and_exported(
     ]["items"]
     assert repeated_comparisons == comparisons
 
-    exported = client.get(f"/api/v1/test-runs/{scalar_run['id']}/export?format=json")
+    current_scalar = client.get(f"/api/v1/test-runs/{scalar_run['id']}").json()
+    exported = client.get(
+        f"/api/v1/test-runs/{scalar_run['id']}/export",
+        params={"format": "json", "expected_updated_at": current_scalar["updated_at"]},
+    )
     assert exported.status_code == 200
     assert exported.json()["test_run"]["comparisons"]["items"] == comparisons
 
@@ -1111,7 +1213,10 @@ def test_delete_never_unlinks_non_owned_attachment(
             )
         )
 
-    deleted = client.delete(f"/api/v1/test-runs/{run['id']}?confirm=true")
+    deleted = client.delete(
+        f"/api/v1/test-runs/{run['id']}",
+        params={"confirm": True, "expected_updated_at": run["updated_at"]},
+    )
     assert deleted.status_code == 200
     assert deleted.json()["owned_attachments_removed"] == 0
     assert sentinel.read_text() == "must remain"

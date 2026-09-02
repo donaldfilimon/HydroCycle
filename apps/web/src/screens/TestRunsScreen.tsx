@@ -33,6 +33,7 @@ interface TestRunsScreenProps {
   selectedId: string;
   onSelect: (id: string) => void;
   onDirtyChange: (dirty: boolean) => void;
+  discardRevision: number;
   onSave: (run: TestRunView) => Promise<boolean>;
   onNew: () => void;
   onDuplicate: (id: string) => void;
@@ -148,6 +149,7 @@ export function TestRunsScreen({
   selectedId,
   onSelect,
   onDirtyChange,
+  discardRevision,
   onSave,
   onNew,
   onDuplicate,
@@ -169,7 +171,7 @@ export function TestRunsScreen({
     setDraft(selected ?? null);
     setDirty(false);
     onDirtyChange(false);
-  }, [onDirtyChange, selected]);
+  }, [discardRevision, onDirtyChange, selected]);
 
   const visibleRuns = useMemo(
     () =>
@@ -1288,16 +1290,18 @@ export function TestRunsScreen({
           <button
             className="button button--outline"
             type="button"
-            disabled={!cfdExportAvailable}
+            disabled={!cfdExportAvailable || dirty}
             aria-describedby="cfd-export-reason"
             onClick={() => void onExportCfd(draft)}
           >
             Export neutral 0D CFD boundary
           </button>
           <p id="cfd-export-reason" className="action-reason">
-            {cfdExportAvailable
-              ? "Available for the persisted gate-passing simulation. Homogeneous states only; no spatial field is generated."
-              : "Unavailable until this persisted run owns a gate-passing proposed cycle."}
+            {dirty
+              ? "Save or discard the current Test Run edits before exporting a server-authoritative boundary."
+              : cfdExportAvailable
+                ? "Available for the persisted gate-passing simulation. Homogeneous states only; no spatial field is generated."
+                : "Unavailable until this persisted run owns a gate-passing proposed cycle."}
           </p>
         </section>
 

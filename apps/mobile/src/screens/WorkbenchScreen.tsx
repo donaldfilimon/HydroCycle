@@ -1,6 +1,7 @@
 import {
   DEFAULT_INPUTS,
   makeSimulationFixture,
+  mapApiTestRun,
   mapApiSimulationResult,
   mayContributeMeasurementEvidence,
   proposedCycleForDisplay,
@@ -18,7 +19,7 @@ import {
   View,
 } from "react-native";
 
-import { postSimulation } from "../api";
+import { getTestRun, postSimulation } from "../api";
 import { Badge, Card, Note, Row } from "../components/ui";
 import { TraceChart } from "../components/TraceChart";
 import {
@@ -73,7 +74,7 @@ interface WorkbenchScreenProps {
   selectedRun: TestRunView | null;
   session: SimulationSession | null;
   onSessionChange: (session: SimulationSession | null) => void;
-  onSimulationLinked: (runId: string, resultId: string) => void;
+  onSimulationLinked: (run: TestRunView) => void;
 }
 
 export default function WorkbenchScreen({
@@ -120,6 +121,7 @@ export default function WorkbenchScreen({
     const generation = ++requestGenerationRef.current;
     setBusy(true);
     setError(null);
+    let simulationCompleted = false;
     try {
       const measurementRun = mayContributeMeasurementEvidence(
         inputs.fixture,
@@ -146,12 +148,26 @@ export default function WorkbenchScreen({
         linkedTestRunId: linkedRun?.id ?? null,
         inputs: { ...inputs },
       });
+      simulationCompleted = true;
       if (linkedRun && selectedRunIdRef.current === linkedRun.id) {
-        onSimulationLinked(linkedRun.id, next.result_id);
+        const refreshed = mapApiTestRun(await getTestRun(linkedRun.id));
+        if (
+          controller.signal.aborted ||
+          generation !== requestGenerationRef.current ||
+          selectedRunIdRef.current !== linkedRun.id
+        ) {
+          return;
+        }
+        onSimulationLinked(refreshed);
       }
     } catch (cause) {
       if (controller.signal.aborted) return;
-      setError(cause instanceof Error ? cause.message : String(cause));
+      const message = cause instanceof Error ? cause.message : String(cause);
+      setError(
+        simulationCompleted
+          ? `Simulation completed and was linked, but the Test Run revision could not be refreshed. Export, import, and delete remain blocked until the ledger is reloaded. ${message}`
+          : message,
+      );
     } finally {
       if (generation === requestGenerationRef.current) {
         requestRef.current = null;
@@ -257,7 +273,13 @@ export default function WorkbenchScreen({
       </View>
 
       {error ? (
-        <Card title="Simulation failed">
+        <Card
+          title={
+            error.startsWith("Simulation completed")
+              ? "Test Run refresh failed"
+              : "Simulation failed"
+          }
+        >
           <Text style={styles.errorText}>{error}</Text>
           <Note>
             The model service must be running on the host. This app is

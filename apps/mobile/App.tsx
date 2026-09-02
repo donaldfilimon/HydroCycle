@@ -48,16 +48,9 @@ export default function App() {
   const [testRunsDirty, setTestRunsDirty] = useState(false);
   const [testRunsBusy, setTestRunsBusy] = useState(false);
 
-  const linkSimulation = useCallback((runId: string, resultId: string) => {
+  const linkSimulation = useCallback((refreshed: TestRunView) => {
     setSelectedRun((current) =>
-      current?.id === runId
-        ? {
-            ...current,
-            simulationIds: current.simulationIds.includes(resultId)
-              ? current.simulationIds
-              : [...current.simulationIds, resultId],
-          }
-        : current,
+      current?.id === refreshed.id ? refreshed : current,
     );
   }, []);
 

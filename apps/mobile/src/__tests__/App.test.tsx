@@ -285,8 +285,13 @@ describe("mobile tab state", () => {
   it("links a late simulation without overwriting edits to the same run", async () => {
     const original = reviewedRun();
     const saved = { ...original, name: "Saved during simulation" };
+    const refreshed = {
+      ...saved,
+      simulation_ids: [simulationResult().result_id],
+      updated_at: "2026-08-27T13:05:00Z",
+    };
     mockGetTestRuns.mockResolvedValue([original]);
-    mockGetTestRun.mockResolvedValue(original);
+    mockGetTestRun.mockResolvedValue(refreshed);
     mockPatchTestRun.mockResolvedValue(saved);
     let resolveSimulation!: (result: ApiSimulationResult) => void;
     mockPostSimulation.mockImplementation(

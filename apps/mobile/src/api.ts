@@ -57,7 +57,10 @@ function causeMessage(cause: unknown): string {
 
 function errorMessage(error: unknown, response: Response): string {
   if (typeof error === "string") return error;
-  if (error && typeof error === "object") return JSON.stringify(error);
+  if (isRecord(error)) {
+    if (typeof error.detail === "string") return error.detail;
+    return JSON.stringify(error);
+  }
   return `${response.status} ${response.statusText}`;
 }
 
@@ -167,6 +170,7 @@ export async function createTestRun(
 
 export async function deleteTestRun(
   id: string,
+  expectedUpdatedAt: string,
   apiClient: HydroCycleApiClient = client,
 ): Promise<DeleteTestRunResult> {
   return withTimeout(SIMULATION_TIMEOUT_MS, async (signal) => {
@@ -175,7 +179,7 @@ export async function deleteTestRun(
       {
         params: {
           path: { test_run_id: id },
-          query: { confirm: true },
+          query: { confirm: true, expected_updated_at: expectedUpdatedAt },
         },
         signal,
       },
@@ -257,7 +261,11 @@ function importResponseError(body: string, status: number): string {
 
 export async function importTestRunFile(
   file: LocalImportFile,
-  options: { testRunId?: string; calibrationReference?: string } = {},
+  options: {
+    testRunId?: string;
+    expectedUpdatedAt?: string;
+    calibrationReference?: string;
+  } = {},
   upload: typeof FileSystem.uploadAsync = FileSystem.uploadAsync,
   stat: typeof FileSystem.getInfoAsync = FileSystem.getInfoAsync,
 ): Promise<ApiTestRunImportResponse> {
@@ -272,6 +280,9 @@ export async function importTestRunFile(
   }
   const query = new URLSearchParams({ filename: file.name });
   if (options.testRunId) query.set("test_run_id", options.testRunId);
+  if (options.expectedUpdatedAt) {
+    query.set("expected_updated_at", options.expectedUpdatedAt);
+  }
   if (options.calibrationReference) {
     query.set("calibration_reference", options.calibrationReference);
   }
@@ -316,13 +327,21 @@ export async function importTestRunFile(
   return parsed as ApiTestRunImportResponse;
 }
 
-export async function downloadTestRunExport(id: string): Promise<string> {
+export async function downloadTestRunExport(
+  id: string,
+  expectedUpdatedAt: string,
+): Promise<string> {
   if (!FileSystem.cacheDirectory) {
     throw new Error("Temporary file storage is unavailable.");
   }
   const destination = `${FileSystem.cacheDirectory}hydrocycle-${encodeURIComponent(id)}.json`;
   const result = await FileSystem.downloadAsync(
-    `${API_BASE_URL}/api/v1/test-runs/${encodeURIComponent(id)}/export?format=canonical_json`,
+    `${API_BASE_URL}/api/v1/test-runs/${encodeURIComponent(id)}/export?${new URLSearchParams(
+      {
+        format: "canonical_json",
+        expected_updated_at: expectedUpdatedAt,
+      },
+    ).toString()}`,
     destination,
     { headers: { Accept: "application/json" } },
   );

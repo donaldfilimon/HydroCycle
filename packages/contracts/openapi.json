@@ -2583,16 +2583,9 @@
             "title": "Evidence"
           },
           "expected_updated_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Expected Updated At"
+            "format": "date-time",
+            "title": "Expected Updated At",
+            "type": "string"
           },
           "is_demo_synthetic": {
             "anyOf": [
@@ -2685,6 +2678,9 @@
             ]
           }
         },
+        "required": [
+          "expected_updated_at"
+        ],
         "title": "TestRunPatch",
         "type": "object"
       },
@@ -3271,6 +3267,23 @@
           },
           {
             "in": "query",
+            "name": "expected_updated_at",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Expected Updated At"
+            }
+          },
+          {
+            "in": "query",
             "name": "calibration_reference",
             "required": false,
             "schema": {
@@ -3325,6 +3338,16 @@
             "required": true,
             "schema": {
               "title": "Test Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "expected_updated_at",
+            "required": true,
+            "schema": {
+              "format": "date-time",
+              "title": "Expected Updated At",
               "type": "string"
             }
           },
@@ -3471,6 +3494,16 @@
             "required": true,
             "schema": {
               "title": "Test Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "expected_updated_at",
+            "required": true,
+            "schema": {
+              "format": "date-time",
+              "title": "Expected Updated At",
               "type": "string"
             }
           },

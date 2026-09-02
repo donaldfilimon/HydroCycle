@@ -13,7 +13,11 @@ const client = createHydroCycleClient();
 
 function errorMessage(error: unknown, response: Response) {
   if (typeof error === "string") return error;
-  if (error && typeof error === "object") return JSON.stringify(error);
+  if (error && typeof error === "object") {
+    const detail = "detail" in error ? error.detail : null;
+    if (typeof detail === "string") return detail;
+    return JSON.stringify(error);
+  }
   return `${response.status} ${response.statusText}`;
 }
 
@@ -62,6 +66,15 @@ export async function getTestRunsRaw() {
   return data;
 }
 
+export async function getTestRunRaw(id: string): Promise<ApiTestRunDocument> {
+  const { data, error, response } = await client.GET(
+    "/api/v1/test-runs/{test_run_id}",
+    { params: { path: { test_run_id: id } } },
+  );
+  if (!data) throw new Error(errorMessage(error, response));
+  return data;
+}
+
 export async function createTestRun(
   body: ApiTestRunCreate,
 ): Promise<ApiTestRunDocument> {
@@ -91,13 +104,16 @@ export interface DeleteTestRunResult {
   ownedAttachmentCleanupFailures: number;
 }
 
-export async function deleteTestRun(id: string): Promise<DeleteTestRunResult> {
+export async function deleteTestRun(
+  id: string,
+  expectedUpdatedAt: string,
+): Promise<DeleteTestRunResult> {
   const { data, error, response } = await client.DELETE(
     "/api/v1/test-runs/{test_run_id}",
     {
       params: {
         path: { test_run_id: id },
-        query: { confirm: true },
+        query: { confirm: true, expected_updated_at: expectedUpdatedAt },
       },
     },
   );
@@ -139,6 +155,7 @@ export async function importTestRun(
 
 export async function downloadTestRunExport(
   id: string,
+  expectedUpdatedAt: string,
   format: "canonical_json" | "reviewed_csv" | "cfd_boundary" = "canonical_json",
   simulationId?: string,
 ) {
@@ -147,6 +164,7 @@ export async function downloadTestRunExport(
     window.location.origin,
   );
   url.searchParams.set("format", format);
+  url.searchParams.set("expected_updated_at", expectedUpdatedAt);
   if (simulationId) url.searchParams.set("simulation_id", simulationId);
   const response = await fetch(url, { headers: { Accept: "*/*" } });
   if (!response.ok) {

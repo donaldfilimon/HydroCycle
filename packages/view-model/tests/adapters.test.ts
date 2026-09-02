@@ -250,7 +250,7 @@ describe("Test Run adapter", () => {
     expect(createPayload.measurements?.retained_h2_mg_l).toBeNull();
 
     const patchPayload = testRunPatchPayload(view);
-    expect(patchPayload.expected_updated_at).toBe(view.timestamp);
+    expect(patchPayload.expected_updated_at).toBe(view.updatedAt);
     expect(patchPayload.sample_id).toBe("SAMPLE-42");
     expect(patchPayload.provenance?.source).toBe("canonical JSON import");
     expect(patchPayload.measurements?.retained_h2_mg_l).toBeNull();

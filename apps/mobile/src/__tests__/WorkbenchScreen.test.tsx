@@ -1,10 +1,27 @@
-import { DEFAULT_INPUTS } from "@hydrocycle/view-model";
-import { render, screen, within } from "@testing-library/react-native";
+import { DEFAULT_INPUTS, demoRuns } from "@hydrocycle/view-model";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react-native";
 
-import type { ApiSimulationResult } from "../api";
+import {
+  getTestRun,
+  postSimulation,
+  type ApiSimulationResult,
+  type ApiTestRunDocument,
+} from "../api";
 import WorkbenchScreen from "../screens/WorkbenchScreen";
 
-jest.mock("../api", () => ({ postSimulation: jest.fn() }));
+jest.mock("../api", () => ({
+  getTestRun: jest.fn(),
+  postSimulation: jest.fn(),
+}));
+
+const getTestRunMock = jest.mocked(getTestRun);
+const postSimulationMock = jest.mocked(postSimulation);
 
 function cycle(
   pressurePa: readonly [number, number, number],
@@ -99,10 +116,7 @@ function result({
       mass_balance: { residual_h2_mg_per_cycle: 0 },
       domain_warnings: [],
     },
-    motored_baseline: cycle(
-      [100_000, 2_000_000, 110_000],
-      withUncertainty,
-    ),
+    motored_baseline: cycle([100_000, 2_000_000, 110_000], withUncertainty),
     proposed_cycle: includeProposed
       ? cycle([100_000, 4_000_000, 120_000], withUncertainty)
       : null,
@@ -138,7 +152,39 @@ function renderWorkbench(simulation: ApiSimulationResult) {
   );
 }
 
+function refreshedRunDocument(
+  simulationId: string,
+  updatedAt: string,
+): ApiTestRunDocument {
+  return {
+    id: "persisted-run",
+    name: "Persisted run",
+    status: "draft",
+    is_demo_synthetic: false,
+    operator: null,
+    sample_id: null,
+    notes: null,
+    created_at: "2026-09-02T12:00:00Z",
+    updated_at: updatedAt,
+    simulation_ids: [simulationId],
+    provenance: {
+      source: "mobile workbench test",
+      method: null,
+      is_demo_synthetic: false,
+    },
+    calibration_references: [],
+    comparisons: { items: [] },
+    evidence: [],
+    attachments: [],
+    measurements: {},
+  } as ApiTestRunDocument;
+}
+
 describe("mobile Workbench cycle evidence", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it("renders accessible P–V and reported uncertainty-band views as homogeneous 0D evidence", () => {
     renderWorkbench(
       result({ passed: true, includeProposed: true, withUncertainty: true }),
@@ -177,7 +223,8 @@ describe("mobile Workbench cycle evidence", () => {
     expect(
       screen.getByText("No proposed reactive cycle — motored baseline only."),
     ).toBeTruthy();
-    const availableHydrogenRow = screen.getByText("H2 available").parent!.parent!;
+    const availableHydrogenRow =
+      screen.getByText("H2 available").parent!.parent!;
     expect(within(availableHydrogenRow).getByText("—")).toBeTruthy();
     expect(within(availableHydrogenRow).queryByText("0.000 mg/cyc")).toBeNull();
     expect(
@@ -189,5 +236,83 @@ describe("mobile Workbench cycle evidence", () => {
     expect(screen.queryByTestId("interval-pressure-motored")).toBeNull();
     expect(screen.getByTestId("series-pv-motored")).toBeTruthy();
     expect(screen.queryByTestId("series-pv-proposed")).toBeNull();
+  });
+
+  it("refreshes a persisted Test Run after linking a simulation", async () => {
+    const simulation = result({
+      passed: false,
+      includeProposed: false,
+      withUncertainty: false,
+    });
+    const refreshed = refreshedRunDocument(
+      simulation.result_id,
+      "2026-09-02T12:05:00Z",
+    );
+    const onSimulationLinked = jest.fn();
+    postSimulationMock.mockResolvedValue(simulation);
+    getTestRunMock.mockResolvedValue(refreshed);
+
+    render(
+      <WorkbenchScreen
+        selectedRun={{
+          ...demoRuns[0]!,
+          id: refreshed.id,
+          name: refreshed.name,
+          persisted: true,
+        }}
+        session={null}
+        onSessionChange={jest.fn()}
+        onSimulationLinked={onSimulationLinked}
+      />,
+    );
+
+    fireEvent.press(screen.getByRole("button", { name: /run simulation/i }));
+
+    await waitFor(() =>
+      expect(getTestRunMock).toHaveBeenCalledWith("persisted-run"),
+    );
+    expect(onSimulationLinked).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "persisted-run",
+        updatedAt: "2026-09-02T12:05:00Z",
+        simulationIds: [simulation.result_id],
+      }),
+    );
+  });
+
+  it("keeps a completed simulation visible when its Test Run refresh fails", async () => {
+    const simulation = result({
+      passed: false,
+      includeProposed: false,
+      withUncertainty: false,
+    });
+    const onSessionChange = jest.fn();
+    postSimulationMock.mockResolvedValue(simulation);
+    getTestRunMock.mockRejectedValue(new Error("refresh unavailable"));
+
+    render(
+      <WorkbenchScreen
+        selectedRun={{
+          ...demoRuns[0]!,
+          id: "persisted-run",
+          persisted: true,
+        }}
+        session={null}
+        onSessionChange={onSessionChange}
+        onSimulationLinked={jest.fn()}
+      />,
+    );
+
+    fireEvent.press(screen.getByRole("button", { name: /run simulation/i }));
+
+    await waitFor(() =>
+      expect(screen.getByText("Test Run refresh failed")).toBeTruthy(),
+    );
+    expect(
+      screen.getByText(/Simulation completed and was linked/),
+    ).toBeTruthy();
+    expect(onSessionChange).toHaveBeenCalledWith(
+      expect.objectContaining({ result: simulation }),
+    );
   });
 });

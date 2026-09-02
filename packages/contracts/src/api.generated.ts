@@ -975,8 +975,11 @@ export interface components {
             comparisons?: components["schemas"]["ComparisonCollection"] | null;
             /** Evidence */
             evidence?: components["schemas"]["EvidenceInput"][] | null;
-            /** Expected Updated At */
-            expected_updated_at?: string | null;
+            /**
+             * Expected Updated At
+             * Format: date-time
+             */
+            expected_updated_at: string;
             /** Is Demo Synthetic */
             is_demo_synthetic?: boolean | null;
             measurements?: components["schemas"]["TestRunMeasurements"] | null;
@@ -1283,6 +1286,7 @@ export interface operations {
             query?: {
                 filename?: string | null;
                 test_run_id?: string | null;
+                expected_updated_at?: string | null;
                 calibration_reference?: string | null;
             };
             header?: never;
@@ -1344,7 +1348,8 @@ export interface operations {
     };
     delete_test_run_api_v1_test_runs__test_run_id__delete: {
         parameters: {
-            query?: {
+            query: {
+                expected_updated_at: string;
                 /** @description Explicit UI/user confirmation */
                 confirm?: boolean;
             };
@@ -1415,7 +1420,8 @@ export interface operations {
     };
     export_test_run_api_v1_test_runs__test_run_id__export_get: {
         parameters: {
-            query?: {
+            query: {
+                expected_updated_at: string;
                 format?: string;
                 simulation_id?: string | null;
             };
