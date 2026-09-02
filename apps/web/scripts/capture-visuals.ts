@@ -3,58 +3,36 @@ import { mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url));
-const outputDirectory = `${repositoryRoot}/docs/fidelity/implementation`;
-const baseUrl = "http://127.0.0.1:5173";
+const outputDirectory = `${repositoryRoot}/docs/fidelity/unified-next`;
+const baseUrl = process.env.HYDROCYCLE_VISUAL_URL ?? "http://127.0.0.1:5173";
 
 await mkdir(outputDirectory, { recursive: true });
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ channel: "chrome", headless: true });
 try {
-  const page = await browser.newPage({
-    viewport: { width: 1536, height: 1024 },
-    deviceScaleFactor: 1,
-    reducedMotion: "reduce",
-  });
-
-  await page.goto(`${baseUrl}/?view=summary`);
-  await page.getByText(/local model service: ok/i).waitFor();
-  await page.getByRole("button", { name: /run model/i }).click();
-  await page
-    .getByText(/evaluation completed by the local model service/i)
-    .waitFor();
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({
-    path: `${outputDirectory}/summary-1536x1024.png`,
-    animations: "disabled",
-  });
-
-  await page.getByRole("button", { name: "Workbench", exact: true }).click();
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({
-    path: `${outputDirectory}/workbench-1536x1024.png`,
-    animations: "disabled",
-  });
-
-  await page.getByRole("button", { name: "Test Runs", exact: true }).click();
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({
-    path: `${outputDirectory}/test-runs-1536x1024.png`,
-    animations: "disabled",
-  });
-
-  await page.setViewportSize({ width: 390, height: 844 });
-  for (const view of ["summary", "workbench", "test-runs"] as const) {
-    await page.goto(`${baseUrl}/?view=${view}`);
-    await page.getByText(/local model service: ok/i).waitFor();
-    await page.screenshot({
-      path: `${outputDirectory}/${view}-390x844.png`,
-      animations: "disabled",
+  for (const viewport of [
+    { suffix: "1536x1024", width: 1536, height: 1024 },
+    { suffix: "1024x768", width: 1024, height: 768 },
+    { suffix: "pixel-7", width: 412, height: 915 },
+  ] as const) {
+    const page = await browser.newPage({
+      viewport,
+      deviceScaleFactor: 1,
+      reducedMotion: "reduce",
     });
+    for (const route of ["summary", "workbench", "test-runs"] as const) {
+      await page.goto(`${baseUrl}/${route}`, { waitUntil: "networkidle" });
+      await page.locator("main").waitFor();
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.screenshot({
+        path: `${outputDirectory}/${route}-${viewport.suffix}.png`,
+        animations: "disabled",
+      });
+    }
+    await page.close();
   }
 } finally {
   await browser.close();
 }
 
-console.log(
-  `Captured HydroCycle visual acceptance images in ${outputDirectory}`,
-);
+console.log(`Captured HydroCycle visual evidence in ${outputDirectory}`);

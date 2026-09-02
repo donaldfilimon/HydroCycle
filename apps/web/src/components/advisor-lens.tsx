@@ -13,6 +13,20 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useHydroCycle } from "../state/app-state";
 
+export function useAdvisorDisclosure() {
+  const [open, setOpen] = useState(true);
+
+  useEffect(() => {
+    const mobile = window.matchMedia("(max-width: 760px)");
+    const syncToViewport = () => setOpen(!mobile.matches);
+    syncToViewport();
+    mobile.addEventListener("change", syncToViewport);
+    return () => mobile.removeEventListener("change", syncToViewport);
+  }, []);
+
+  return [open, setOpen] as const;
+}
+
 function contextFor(
   route: AdvisorContextV1["route"],
   question: string,
@@ -145,7 +159,7 @@ export function AdvisorLens({
   }, [state.advisorContextKey]);
 
   if (!open) return null;
-  async function ask() {
+  function ask() {
     const context = contextFor(
       route,
       question,
@@ -157,7 +171,7 @@ export function AdvisorLens({
       setFixtureAnswer(guidedFixtureAnswer(context));
       return;
     }
-    await submit(context);
+    submit(context);
   }
 
   return (
@@ -200,7 +214,7 @@ export function AdvisorLens({
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          void ask();
+          ask();
         }}
       >
         <label className="sr-only" htmlFor={`advisor-${route}`}>

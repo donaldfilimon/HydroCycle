@@ -6,12 +6,16 @@ import {
   CheckCircle2,
   CloudCog,
   Droplets,
+  MessageSquareText,
   Sigma,
   Waves,
 } from "lucide-react";
 import Link from "next/link";
 
-import { AdvisorLens } from "../../components/advisor-lens";
+import {
+  AdvisorLens,
+  useAdvisorDisclosure,
+} from "../../components/advisor-lens";
 import { useHydroCycle } from "../../state/app-state";
 
 function value(value: number | null, digits = 2): string {
@@ -20,6 +24,7 @@ function value(value: number | null, digits = 2): string {
 
 export function SummaryPage() {
   const { state, runtime } = useHydroCycle();
+  const [advisorOpen, setAdvisorOpen] = useAdvisorDisclosure();
   const { result } = state;
   const gate = result.gate;
   const terms = [
@@ -234,9 +239,18 @@ export function SummaryPage() {
               <small>Baseline and scenario comparison</small>
               <ArrowRight />
             </Link>
+            {!advisorOpen ? (
+              <button type="button" onClick={() => setAdvisorOpen(true)}>
+                <span>ASK ADVISOR</span>
+                <small>Read-only evidence guidance</small>
+                <MessageSquareText />
+              </button>
+            ) : null}
           </footer>
         </section>
-        <AdvisorLens route="summary" />
+        {advisorOpen ? (
+          <AdvisorLens route="summary" onClose={() => setAdvisorOpen(false)} />
+        ) : null}
       </div>
     </div>
   );

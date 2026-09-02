@@ -29,41 +29,47 @@ export class FixtureHydroCycleDataSource implements HydroCycleDataSource {
   private runs = demoRuns.map((run) => ({ ...run }));
   private fixture = DEFAULT_INPUTS.fixture;
 
-  async health() {
-    return { status: "ok" as const, detail: "Deterministic public fixture" };
+  health() {
+    return Promise.resolve({
+      status: "ok" as const,
+      detail: "Deterministic public fixture",
+    });
   }
 
-  async modelMetadata() {
-    return {
+  modelMetadata() {
+    return Promise.resolve({
       solver: "fixture",
       python: null,
       cantera: null,
       mechanism: null,
       seed: DEFAULT_INPUTS.seed,
-    };
-  }
-
-  async simulate(input: Parameters<HydroCycleDataSource["simulate"]>[0]) {
-    return makeSimulationFixture(this.fixture, {
-      ...input,
-      fixture: this.fixture,
     });
   }
 
-  async listTestRuns() {
-    return this.runs.map((run) => ({ ...run }));
+  simulate(input: Parameters<HydroCycleDataSource["simulate"]>[0]) {
+    return Promise.resolve(
+      makeSimulationFixture(this.fixture, {
+        ...input,
+        fixture: this.fixture,
+      }),
+    );
   }
 
-  async getTestRun(id: string) {
+  listTestRuns() {
+    return Promise.resolve(this.runs.map((run) => ({ ...run })));
+  }
+
+  getTestRun(id: string) {
     const run = this.runs.find((item) => item.id === id);
-    if (!run) throw new Error("Fixture Test Run was not found.");
-    return { ...run };
+    if (!run) {
+      return Promise.reject(new Error("Fixture Test Run was not found."));
+    }
+    return Promise.resolve({ ...run });
   }
 
-  async createTestRun(input: TestRunCreate) {
+  createTestRun(input: TestRunCreate) {
     const now = new Date().toISOString();
-    const template = this.runs[0];
-    if (!template) throw new Error("Fixture seed is unavailable.");
+    const template = demoRuns[0];
     const run: TestRunView = {
       ...template,
       id: `session-${crypto.randomUUID()}`,
@@ -78,7 +84,7 @@ export class FixtureHydroCycleDataSource implements HydroCycleDataSource {
       timestamp: now,
     };
     this.runs = [run, ...this.runs];
-    return { ...run };
+    return Promise.resolve({ ...run });
   }
 
   async patchTestRun(id: string, input: TestRunPatch) {
@@ -123,12 +129,16 @@ export class FixtureHydroCycleDataSource implements HydroCycleDataSource {
     };
   }
 
-  async importTestRun(
-    _source: ImportSource,
-    _options?: RequestOptions,
+  importTestRun(
+    source: ImportSource,
+    options?: RequestOptions,
   ): Promise<TestRunView> {
-    throw new Error(
-      this.capabilities.disabledReason ?? "Import is unavailable.",
+    void source;
+    void options;
+    return Promise.reject(
+      new Error(
+        this.capabilities.disabledReason ?? "Import is unavailable.",
+      ),
     );
   }
 

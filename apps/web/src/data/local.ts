@@ -57,30 +57,32 @@ export class LocalHydroCycleDataSource implements HydroCycleDataSource {
       { signal: options.signal },
     );
     if (!data) throw new Error(errorMessage(error, response));
-    const metadata = data as components["schemas"]["ModelMetadata"];
+    const metadata = data;
     return {
       solver: metadata.model_version,
       python: null,
-      cantera: metadata.cantera_version ?? null,
-      mechanism: metadata.mechanism ?? null,
+      cantera: metadata.cantera_version,
+      mechanism: metadata.mechanism,
       seed: null,
     };
   }
 
   async simulate(
     input: Parameters<HydroCycleDataSource["simulate"]>[0],
-    options: Parameters<HydroCycleDataSource["simulate"]>[1] = {},
+    options: NonNullable<
+      Parameters<HydroCycleDataSource["simulate"]>[1]
+    > = {},
   ) {
     const { data, error, response } = await client.POST("/api/v1/simulations", {
       body: simulationRequest(input),
-      ...(options?.persistToTestRunId
+      ...(options.persistToTestRunId
         ? {
             params: {
               query: { persist: true, test_run_id: options.persistToTestRunId },
             },
           }
         : {}),
-      signal: options?.signal,
+      signal: options.signal,
     });
     if (!data) throw new Error(errorMessage(error, response));
     return mapApiSimulationResult(

@@ -21,6 +21,7 @@ export default defineConfig({
       testIgnore: /\.(mobile|tablet)\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
+        channel: "chrome",
         viewport: { width: 1536, height: 1024 },
       },
     },
@@ -29,13 +30,14 @@ export default defineConfig({
       testMatch: /\.tablet\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
+        channel: "chrome",
         viewport: { width: 1024, height: 768 },
       },
     },
     {
       name: "chromium-mobile",
       testMatch: /\.mobile\.spec\.ts/,
-      use: { ...devices["Pixel 7"] },
+      use: { ...devices["Pixel 7"], channel: "chrome" },
     },
   ],
   webServer: {

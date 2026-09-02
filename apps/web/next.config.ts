@@ -6,13 +6,13 @@ const pages = mode === "hosted" && target === "pages";
 const localRouting: Pick<NextConfig, "rewrites"> =
   mode === "local"
     ? {
-        async rewrites() {
-          return [
+        rewrites() {
+          return Promise.resolve([
             {
               source: "/gateway/:path*",
               destination: "http://127.0.0.1:8787/:path*",
             },
-          ];
+          ]);
         },
       }
     : {};

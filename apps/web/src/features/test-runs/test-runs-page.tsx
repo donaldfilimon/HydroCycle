@@ -2,13 +2,14 @@
 
 import type { TestRunView } from "@hydrocycle/view-model";
 import {
-  getCoreRowModel,
-  getSortedRowModel,
-  legacyCreateColumnHelper,
-  useLegacyTable,
-  type LegacyColumnDef,
-} from "@tanstack/react-table/legacy";
-import { flexRender, type SortingState } from "@tanstack/react-table";
+  createColumnHelper,
+  createSortedRowModel,
+  rowSortingFeature,
+  sortFn_alphanumeric,
+  tableFeatures,
+  useTable,
+  type SortingState,
+} from "@tanstack/react-table";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowDownToLine,
@@ -31,7 +32,10 @@ import {
   YAxis,
 } from "recharts";
 
-import { AdvisorLens } from "../../components/advisor-lens";
+import {
+  AdvisorLens,
+  useAdvisorDisclosure,
+} from "../../components/advisor-lens";
 import { useHydroCycle } from "../../state/app-state";
 
 type DisplayState = "Draft" | "Needs evidence" | "Reviewed" | "Invalid";
@@ -71,7 +75,13 @@ export const testRunFields = [
   scale?: number;
 }>;
 
-const column = legacyCreateColumnHelper<TestRunView>();
+const ledgerFeatures = tableFeatures({
+  rowSortingFeature,
+  sortedRowModel: createSortedRowModel(),
+  sortFns: { alphanumeric: sortFn_alphanumeric },
+});
+const column = createColumnHelper<typeof ledgerFeatures, TestRunView>();
+const EMPTY_RUNS: TestRunView[] = [];
 
 function fieldScale(field: (typeof testRunFields)[number]): number {
   return "scale" in field ? field.scale : 1;
@@ -83,13 +93,13 @@ export function TestRunsPage() {
   const queryClient = useQueryClient();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [filter, setFilter] = useState("");
-  const [advisorOpen, setAdvisorOpen] = useState(true);
+  const [advisorOpen, setAdvisorOpen] = useAdvisorDisclosure();
   const fileRef = useRef<HTMLInputElement>(null);
   const runsQuery = useQuery({
     queryKey: ["test-runs", runtime.mode],
     queryFn: ({ signal }) => dataSource.listTestRuns({ signal }),
   });
-  const runs = runsQuery.data ?? [];
+  const runs = runsQuery.data ?? EMPTY_RUNS;
   const filteredRuns = useMemo(
     () =>
       runs.filter((run) =>
@@ -101,71 +111,70 @@ export function TestRunsPage() {
   );
   const selected =
     runs.find((run) => run.id === state.selectedRunId) ??
-    filteredRuns[0] ??
+    filteredRuns.at(0) ??
     null;
   const comparison = selectedRuns(runs);
 
   const columns = useMemo(
-    () => [
-      column.display({
-        id: "select",
-        header: "",
-        cell: ({ row }) => (
-          <input
-            type="checkbox"
-            checked={state.comparison.includes(row.original.id)}
-            onChange={() =>
-              dispatch({ type: "toggle-compare", id: row.original.id })
-            }
-            aria-label={`Select ${row.original.name} for comparison`}
-          />
-        ),
-      }),
-      column.accessor("name", {
-        header: "Run",
-        cell: (info) => <strong>{info.getValue()}</strong>,
-      }),
-      column.accessor("updatedAt", {
-        header: "Updated",
-        cell: (info) => new Date(info.getValue()).toLocaleString(),
-      }),
-      column.accessor("status", {
-        header: "Status",
-        cell: (info) => (
-          <span className={`ledger-status ledger-status--${info.getValue()}`}>
-            {displayState(info.getValue())}
-          </span>
-        ),
-      }),
-      ...testRunFields.slice(0, 5).map((field) =>
-        column.accessor(field.key, {
-          id: field.key,
-          header: `${field.label} (${field.unit})`,
-          cell: (info) => {
-            const raw = info.getValue();
-            const numeric =
-              typeof raw === "number" ? raw * fieldScale(field) : null;
-            return (
-              <span className={numeric === null ? "is-missing" : ""}>
-                {displayValue(numeric, field.digits)}
-              </span>
-            );
-          },
+    () =>
+      column.columns([
+        column.display({
+          id: "select",
+          header: "",
+          cell: ({ row }) => (
+            <input
+              type="checkbox"
+              checked={state.comparison.includes(row.original.id)}
+              onChange={() =>
+                dispatch({ type: "toggle-compare", id: row.original.id })
+              }
+              aria-label={`Select ${row.original.name} for comparison`}
+            />
+          ),
         }),
-      ),
-      column.accessor("measurementDatasetCount", { header: "Datasets" }),
-    ],
+        column.accessor("name", {
+          header: "Run",
+          sortFn: "alphanumeric",
+          cell: (info) => <strong>{info.getValue()}</strong>,
+        }),
+        column.accessor("updatedAt", {
+          header: "Updated",
+          cell: (info) => new Date(info.getValue()).toLocaleString(),
+        }),
+        column.accessor("status", {
+          header: "Status",
+          cell: (info) => (
+            <span className={`ledger-status ledger-status--${info.getValue()}`}>
+              {displayState(info.getValue())}
+            </span>
+          ),
+        }),
+        ...testRunFields.slice(0, 5).map((field) =>
+          column.accessor(field.key, {
+            id: field.key,
+            header: `${field.label} (${field.unit})`,
+            cell: (info) => {
+              const raw = info.getValue();
+              const numeric =
+                typeof raw === "number" ? raw * fieldScale(field) : null;
+              return (
+                <span className={numeric === null ? "is-missing" : ""}>
+                  {displayValue(numeric, field.digits)}
+                </span>
+              );
+            },
+          }),
+        ),
+        column.accessor("measurementDatasetCount", { header: "Datasets" }),
+      ]),
     [dispatch, state.comparison],
   );
-  const table = useLegacyTable({
+  const table = useTable({
+    features: ledgerFeatures,
     data: filteredRuns,
-    columns: columns as unknown as ReadonlyArray<
-      LegacyColumnDef<TestRunView, unknown>
-    >,
+    columns,
     state: { sorting },
     onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
   });
 
   const refresh = () =>
@@ -299,9 +308,8 @@ export function TestRunsPage() {
                         <button
                           onClick={header.column.getToggleSortingHandler()}
                         >
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
+                          {header.isPlaceholder ? null : (
+                            <table.FlexRender header={header} />
                           )}
                         </button>
                       </th>
@@ -320,18 +328,77 @@ export function TestRunsPage() {
                       dispatch({ type: "select-run", id: row.original.id })
                     }
                   >
-                    {row.getVisibleCells().map((cell) => (
+                    {row.getAllCells().map((cell) => (
                       <td key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
+                        <table.FlexRender cell={cell} />
                       </td>
                     ))}
                   </tr>
                 ))}
               </tbody>
             </table>
+            <div className="ledger-cards" aria-label="Test Run cards">
+              {filteredRuns.map((run) => (
+                <article
+                  key={run.id}
+                  className={selected?.id === run.id ? "is-selected" : ""}
+                >
+                  <header>
+                    <input
+                      type="checkbox"
+                      checked={state.comparison.includes(run.id)}
+                      onChange={() =>
+                        dispatch({ type: "toggle-compare", id: run.id })
+                      }
+                      aria-label={`Select ${run.name} for comparison`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        dispatch({ type: "select-run", id: run.id })
+                      }
+                    >
+                      {run.name}
+                    </button>
+                    <span
+                      className={`ledger-status ledger-status--${run.status}`}
+                    >
+                      {displayState(run.status)}
+                    </span>
+                  </header>
+                  <dl>
+                    <div>
+                      <dt>Total H₂</dt>
+                      <dd>
+                        {run.totalH2MgL === null
+                          ? "Missing"
+                          : `${displayValue(run.totalH2MgL)} mg/L`}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Retention</dt>
+                      <dd>
+                        {run.retentionFraction === null
+                          ? "Missing"
+                          : `${displayValue(run.retentionFraction * 100, 1)}%`}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Temperature</dt>
+                      <dd>
+                        {run.temperatureC === null
+                          ? "Missing"
+                          : `${displayValue(run.temperatureC, 1)} °C`}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Updated</dt>
+                      <dd>{new Date(run.updatedAt).toLocaleDateString()}</dd>
+                    </div>
+                  </dl>
+                </article>
+              ))}
+            </div>
             {runsQuery.isLoading ? (
               <p className="ledger-empty">Loading evidence ledger…</p>
             ) : filteredRuns.length === 0 ? (

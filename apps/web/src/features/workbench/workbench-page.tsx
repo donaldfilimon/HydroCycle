@@ -13,7 +13,10 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { AdvisorLens } from "../../components/advisor-lens";
+import {
+  AdvisorLens,
+  useAdvisorDisclosure,
+} from "../../components/advisor-lens";
 import { PvChart, TraceChart } from "../shared/charts";
 import { useHydroCycle } from "../../state/app-state";
 
@@ -176,7 +179,7 @@ export function WorkbenchPage() {
   const { state, dispatch, runSimulation, cancelSimulation, isDraftStale } =
     useHydroCycle();
   const [formError, setFormError] = useState<string | null>(null);
-  const [advisorOpen, setAdvisorOpen] = useState(true);
+  const [advisorOpen, setAdvisorOpen] = useAdvisorDisclosure();
   const form = useForm<WorkbenchInputs>({
     defaultValues: state.draft,
     mode: "onBlur",
@@ -232,7 +235,12 @@ export function WorkbenchPage() {
         </div>
       </header>
       <div className={`workbench-grid ${advisorOpen ? "has-advisor" : ""}`}>
-        <form className="experiment-rail" onSubmit={form.handleSubmit(submit)}>
+        <form
+          className="experiment-rail"
+          onSubmit={(event) => {
+            void form.handleSubmit((values) => submit(values))(event);
+          }}
+        >
           <header>
             <h2>EXPERIMENT</h2>
             <button
@@ -275,16 +283,20 @@ export function WorkbenchPage() {
             CURRENT INPUTS <span>EDITABLE</span>
           </h3>
           <div className="experiment-fields">
-            {fields.map((field) => (
-              <label key={field.name}>
-                <span>{field.label}</span>
-                <input
-                  type="number"
-                  step={field.step}
-                  {...form.register(field.name, {
-                    setValueAs: (raw: string) =>
-                      field.nullable && raw === "" ? null : Number(raw),
-                    onChange: (event) =>
+            {fields.map((field) => {
+              const registration = form.register(field.name, {
+                setValueAs: (raw: string) =>
+                  field.nullable && raw === "" ? null : Number(raw),
+              });
+              return (
+                <label key={field.name}>
+                  <span>{field.label}</span>
+                  <input
+                    type="number"
+                    step={field.step}
+                    {...registration}
+                    onChange={(event) => {
+                      void registration.onChange(event);
                       dispatch({
                         type: "patch-draft",
                         patch: {
@@ -293,12 +305,13 @@ export function WorkbenchPage() {
                               ? null
                               : Number(event.target.value),
                         },
-                      }),
-                  })}
-                />
-                <small>{field.unit}</small>
-              </label>
-            ))}
+                      });
+                    }}
+                  />
+                  <small>{field.unit}</small>
+                </label>
+              );
+            })}
           </div>
           {state.frozen ? (
             <section className="frozen-set">
