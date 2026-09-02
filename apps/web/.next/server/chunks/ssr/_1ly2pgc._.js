@@ -1,3 +1,0 @@
-module.exports=[80523,a=>{"use strict";var b=a.i(8693),c=a.i(4296),d=a.i(84188),e=a.i(43747);let f={summary:"/summary",workbench:"/workbench","test-runs":"/test-runs"};function g(){let a=(0,c.useRouter)(),g=(0,c.useSearchParams)();return(0,d.useEffect)(()=>{let b=g.get("view"),c=b?f[b]:"/summary";c&&a.replace(c)},[a,g]),(0,b.jsx)(e.SummaryPage,{})}a.s(["default",0,function(){return(0,b.jsx)(d.Suspense,{fallback:(0,b.jsx)(e.SummaryPage,{}),children:(0,b.jsx)(g,{})})}])},7318,a=>{a.v(a=>Promise.resolve().then(()=>a(87481)))},82573,a=>{a.v(b=>Promise.all(["server/chunks/ssr/0l3w_@vercel_oidc_dist_token_0i9bz2s.js"].map(b=>a.l(b))).then(()=>b(53106)))}];
-
-//# sourceMappingURL=_1ly2pgc._.js.map

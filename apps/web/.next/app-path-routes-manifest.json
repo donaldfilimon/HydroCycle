@@ -1,8 +1,0 @@
-{
-  "/_global-error/page": "/_global-error",
-  "/_not-found/page": "/_not-found",
-  "/page": "/",
-  "/summary/page": "/summary",
-  "/test-runs/page": "/test-runs",
-  "/workbench/page": "/workbench"
-}

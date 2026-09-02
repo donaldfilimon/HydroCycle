@@ -1556,8 +1556,8 @@ table,
     max-height: 390px;
   }
   .instrument-readouts {
-    inset-right: 2%;
-    inset-left: 2%;
+    right: 2%;
+    left: 2%;
     gap: 80px;
   }
   .phase-strip {

@@ -2,6 +2,10 @@
 node_modules/
 apps/web/dist/
 apps/web/coverage/
+apps/web/.next/
+apps/web/out/
+apps/web/.wrangler/
+apps/web/tsconfig.tsbuildinfo
 dist/
 playwright-report/
 test-results/

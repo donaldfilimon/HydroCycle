@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <rect width="1200" height="630" fill="#031126"/>
-  <path d="M90 305c100-160 210-190 335-65 90 91 168 80 270-32" fill="none" stroke="#13ccff" stroke-width="30" stroke-linecap="round"/>
-  <path d="M90 390c100-125 205-140 320-45 95 79 184 68 285-31" fill="none" stroke="#256bff" stroke-width="30" stroke-linecap="round"/>
-  <text x="760" y="290" fill="#fff" font-family="ui-monospace, monospace" font-size="72" font-weight="700">HYDROCYCLE</text>
-  <text x="763" y="355" fill="#96a9cc" font-family="ui-monospace, monospace" font-size="26">EVIDENCE-GATED SIMULATION</text>
-</svg>

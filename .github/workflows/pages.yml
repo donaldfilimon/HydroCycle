@@ -44,7 +44,7 @@ jobs:
 
       - name: Build
         env:
-          HYDROCYCLE_PUBLIC_ORIGIN: ${{ steps.pages.outputs.origin }}${{ steps.pages.outputs.base_path }}
+          HYDROCYCLE_PUBLIC_ORIGIN: https://donaldfilimon.github.io/HydroCycle
         run: bun run build:pages
 
       - name: Inspect hosted artifact

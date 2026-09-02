@@ -1,3 +1,0 @@
-module.exports=[16552,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(70291);a.n(d("[project]/node_modules/.bun/next@16.2.11+d8250c1691f7ae7c/node_modules/next/dist/client/components/builtin/global-error.js <module evaluation>"))},76638,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(70291);a.n(d("[project]/node_modules/.bun/next@16.2.11+d8250c1691f7ae7c/node_modules/next/dist/client/components/builtin/global-error.js"))},6332,a=>{"use strict";a.i(16552);var b=a.i(76638);a.n(b)},5484,a=>{a.n(a.i(6332))}];
-
-//# sourceMappingURL=06_1_next_dist_client_components_builtin_global-error_189eqam.js.map
