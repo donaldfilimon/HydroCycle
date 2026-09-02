@@ -1,0 +1,23 @@
+{
+  "name": "@hydrocycle/advisor",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit --pretty false",
+    "test": "vitest run",
+    "check": "bun run format:check && bun run typecheck && bun run test"
+  },
+  "dependencies": {
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}

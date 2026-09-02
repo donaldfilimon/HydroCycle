@@ -16,116 +16,17 @@ import {
 } from "@hydrocycle/view-model";
 
 import { getTestRun, patchTestRun } from "../api";
+import {
+  draftFor,
+  editedRunFor,
+  mergeTestRunEdit,
+  SCALAR_FIELDS,
+  TEXT_FIELDS,
+  type ScalarKey,
+  type TextFieldKey,
+} from "../test-run-editor-model";
 import { theme } from "../theme";
 import { Card, Note } from "./ui";
-
-type ScalarKey =
-  | "totalH2MgL"
-  | "retainedH2MgL"
-  | "releasedH2MgL"
-  | "unaccountedH2MgL"
-  | "temperatureC"
-  | "pressureKpa"
-  | "elapsedS"
-  | "bubbleDiameterNm"
-  | "numberPerMl";
-
-const SCALARS: { key: ScalarKey; label: string; unit: string }[] = [
-  { key: "totalH2MgL", label: "Total H2", unit: "mg/L" },
-  { key: "retainedH2MgL", label: "Retained H2", unit: "mg/L" },
-  { key: "releasedH2MgL", label: "Released H2", unit: "mg/L" },
-  { key: "unaccountedH2MgL", label: "Unaccounted H2", unit: "mg/L" },
-  { key: "temperatureC", label: "Temperature", unit: "°C" },
-  { key: "pressureKpa", label: "Pressure", unit: "kPa" },
-  { key: "elapsedS", label: "Elapsed", unit: "s" },
-  { key: "bubbleDiameterNm", label: "Bubble diameter", unit: "nm" },
-  { key: "numberPerMl", label: "Bubble number", unit: "1/mL" },
-];
-
-interface EditorDraft {
-  name: string;
-  operator: string;
-  sampleId: string;
-  method: string;
-  calibrationReference: string;
-  reviewNotes: string;
-  values: Record<ScalarKey, string>;
-  uncertainties: Record<ScalarKey, string>;
-}
-
-const TEXT_FIELDS = [
-  ["name", "Name"],
-  ["operator", "Operator"],
-  ["sampleId", "Sample"],
-  ["method", "Method"],
-  ["calibrationReference", "Calibration reference"],
-  ["reviewNotes", "Notes"],
-] as const;
-
-function inputText(value: string | number | null): string {
-  return value === null ? "" : String(value);
-}
-
-function draftFor(run: TestRunView): EditorDraft {
-  return {
-    name: run.name,
-    operator: inputText(run.operator),
-    sampleId: inputText(run.sampleId),
-    method: inputText(run.method),
-    calibrationReference: inputText(run.calibrationReference),
-    reviewNotes: inputText(run.reviewNotes),
-    values: Object.fromEntries(
-      SCALARS.map(({ key }) => [key, inputText(run[key])]),
-    ) as Record<ScalarKey, string>,
-    uncertainties: Object.fromEntries(
-      SCALARS.map(({ key }) => [key, inputText(run.standardUncertainty[key])]),
-    ) as Record<ScalarKey, string>,
-  };
-}
-
-function concurrentEditConflicts(
-  original: EditorDraft,
-  edited: EditorDraft,
-  latest: EditorDraft,
-): string[] {
-  const conflicts: string[] = TEXT_FIELDS.flatMap(([key, label]) =>
-    edited[key] !== original[key] &&
-    latest[key] !== original[key] &&
-    latest[key] !== edited[key]
-      ? [label]
-      : [],
-  );
-  for (const { key, label } of SCALARS) {
-    if (
-      edited.values[key] !== original.values[key] &&
-      latest.values[key] !== original.values[key] &&
-      latest.values[key] !== edited.values[key]
-    ) {
-      conflicts.push(`${label} value`);
-    }
-    if (
-      edited.uncertainties[key] !== original.uncertainties[key] &&
-      latest.uncertainties[key] !== original.uncertainties[key] &&
-      latest.uncertainties[key] !== edited.uncertainties[key]
-    ) {
-      conflicts.push(`${label} uncertainty`);
-    }
-  }
-  return conflicts;
-}
-
-export function nullableFiniteNumber(text: string): number | null {
-  if (!text.trim()) return null;
-  const value = Number(text);
-  if (!Number.isFinite(value))
-    throw new Error(`Invalid numeric value: ${text}`);
-  return value;
-}
-
-function nullableText(text: string): string | null {
-  const value = text.trim();
-  return value ? value : null;
-}
 
 interface TestRunEditorProps {
   run: TestRunView;
@@ -153,16 +54,7 @@ export default function TestRunEditor({
     setError(null);
   };
 
-  const updateText = (
-    key:
-      | "name"
-      | "operator"
-      | "sampleId"
-      | "method"
-      | "calibrationReference"
-      | "reviewNotes",
-    value: string,
-  ) => {
+  const updateText = (key: TextFieldKey, value: string) => {
     markDirty();
     setDraft((current) => ({ ...current, [key]: value }));
   };
@@ -199,114 +91,12 @@ export default function TestRunEditor({
     let edited: TestRunView;
     let started = false;
     try {
-      if (!draft.name.trim()) throw new Error("Name is required.");
-      const values = Object.fromEntries(
-        SCALARS.map(({ key, label }) => {
-          try {
-            return [key, nullableFiniteNumber(draft.values[key])];
-          } catch {
-            throw new Error(`${label} must be a finite number or blank.`);
-          }
-        }),
-      ) as Record<ScalarKey, number | null>;
-      const uncertainties = Object.fromEntries(
-        SCALARS.map(({ key, label }) => {
-          try {
-            return [key, nullableFiniteNumber(draft.uncertainties[key])];
-          } catch {
-            throw new Error(
-              `${label} standard uncertainty must be a finite number or blank.`,
-            );
-          }
-        }),
-      ) as Record<ScalarKey, number | null>;
-      for (const { key, label } of SCALARS) {
-        if (values[key] === null && uncertainties[key] !== null) {
-          throw new Error(
-            `${label} standard uncertainty requires a measurement value.`,
-          );
-        }
-      }
-      edited = {
-        ...run,
-        ...values,
-        name: draft.name.trim(),
-        operator: nullableText(draft.operator),
-        sampleId: nullableText(draft.sampleId),
-        method: nullableText(draft.method),
-        calibrationReference: nullableText(draft.calibrationReference),
-        reviewNotes: nullableText(draft.reviewNotes),
-        status,
-        provenance: { ...run.provenance, method: nullableText(draft.method) },
-        standardUncertainty: {
-          ...run.standardUncertainty,
-          ...uncertainties,
-        },
-      };
+      edited = editedRunFor(run, draft, status);
       started = true;
       setSaving(true);
       onSavingChange(true);
       const latest = mapApiTestRun(await getTestRun(run.id));
-      const originalDraft = draftFor(run);
-      const conflicts = concurrentEditConflicts(
-        originalDraft,
-        draft,
-        draftFor(latest),
-      );
-      if (
-        status !== run.status &&
-        latest.status !== run.status &&
-        latest.status !== status
-      ) {
-        conflicts.push("Status");
-      }
-      if (conflicts.length > 0) {
-        throw new Error(
-          `Test Run changed on the server in: ${conflicts.join(", ")}. Your edits remain unsaved; cancel them to load the latest revision.`,
-        );
-      }
-      const latestValues = { ...latest };
-      const latestUncertainties = { ...latest.standardUncertainty };
-      for (const { key } of SCALARS) {
-        if (draft.values[key] !== originalDraft.values[key]) {
-          latestValues[key] = values[key];
-        }
-        if (draft.uncertainties[key] !== originalDraft.uncertainties[key]) {
-          latestUncertainties[key] = uncertainties[key];
-        }
-      }
-      const merged: TestRunView = {
-        ...latest,
-        ...latestValues,
-        name: draft.name !== originalDraft.name ? edited.name : latest.name,
-        operator:
-          draft.operator !== originalDraft.operator
-            ? edited.operator
-            : latest.operator,
-        sampleId:
-          draft.sampleId !== originalDraft.sampleId
-            ? edited.sampleId
-            : latest.sampleId,
-        method:
-          draft.method !== originalDraft.method ? edited.method : latest.method,
-        calibrationReference:
-          draft.calibrationReference !== originalDraft.calibrationReference
-            ? edited.calibrationReference
-            : latest.calibrationReference,
-        reviewNotes:
-          draft.reviewNotes !== originalDraft.reviewNotes
-            ? edited.reviewNotes
-            : latest.reviewNotes,
-        status: status === run.status ? latest.status : status,
-        provenance: {
-          ...latest.provenance,
-          method:
-            draft.method !== originalDraft.method
-              ? edited.method
-              : latest.provenance.method,
-        },
-        standardUncertainty: latestUncertainties,
-      };
+      const merged = mergeTestRunEdit(run, edited, latest);
       const persisted = mapApiTestRun(
         await patchTestRun(run.id, testRunPatchPayload(merged)),
       );
@@ -324,37 +114,14 @@ export default function TestRunEditor({
 
   return (
     <Card title="Edit selected run" subtitle={`Current status: ${run.status}`}>
-      {TEXT_FIELDS.map(([key, label]) => (
+      {TEXT_FIELDS.map(({ key, label }) => (
         <View key={key} style={styles.field}>
           <Text style={styles.label}>{label}</Text>
           <TextInput
             accessibilityLabel={label}
             style={[styles.input, key === "reviewNotes" && styles.notes]}
-            value={
-              draft[
-                key as keyof Pick<
-                  EditorDraft,
-                  | "name"
-                  | "operator"
-                  | "sampleId"
-                  | "method"
-                  | "calibrationReference"
-                  | "reviewNotes"
-                >
-              ]
-            }
-            onChangeText={(value) =>
-              updateText(
-                key as
-                  | "name"
-                  | "operator"
-                  | "sampleId"
-                  | "method"
-                  | "calibrationReference"
-                  | "reviewNotes",
-                value,
-              )
-            }
+            value={draft[key]}
+            onChangeText={(value) => updateText(key, value)}
             multiline={key === "reviewNotes"}
             placeholder={key === "name" ? "Required" : "Blank stores null"}
             placeholderTextColor={theme.color.textMuted}
@@ -362,7 +129,7 @@ export default function TestRunEditor({
         </View>
       ))}
 
-      {SCALARS.map(({ key, label, unit }) => (
+      {SCALAR_FIELDS.map(({ key, label, unit }) => (
         <View key={key} style={styles.scalarGroup}>
           <Text style={styles.scalarTitle}>
             {label} ({unit})

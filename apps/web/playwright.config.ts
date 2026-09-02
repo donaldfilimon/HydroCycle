@@ -40,7 +40,7 @@ export default defineConfig({
   ],
   webServer: {
     command: "bash ../../scripts/e2e-dev.sh",
-    url: `${webUrl}/api/v1/health`,
+    url: `${webUrl}/gateway/api/v1/health`,
     reuseExistingServer: false,
     timeout: 120_000,
   },

@@ -17,6 +17,18 @@ export type ApiTestRunImportResponse =
 type HydroCycleApiClient = ReturnType<typeof createHydroCycleClient>;
 type SimulationPersistence = { testRunId: string };
 
+interface GetTestRunOptions {
+  signal?: AbortSignal;
+  client?: HydroCycleApiClient;
+}
+
+interface DownloadTestRunExportOptions {
+  fileSystem?: Pick<
+    typeof FileSystem,
+    "cacheDirectory" | "deleteAsync" | "downloadAsync" | "readAsStringAsync"
+  >;
+}
+
 export const MAX_IMPORT_BYTES = 2 * 1024 * 1024;
 
 const CANONICAL_IMPORT_FILENAMES = new Set([
@@ -116,16 +128,21 @@ export async function getTestRuns(
 
 export async function getTestRun(
   id: string,
-  apiClient: HydroCycleApiClient = client,
+  options: GetTestRunOptions = {},
 ): Promise<ApiTestRunDocument> {
-  return withTimeout(SIMULATION_TIMEOUT_MS, async (signal) => {
-    const { data, error, response } = await apiClient.GET(
-      "/api/v1/test-runs/{test_run_id}",
-      { params: { path: { test_run_id: id } }, signal },
-    );
-    if (!data) throw new Error(errorMessage(error, response));
-    return data;
-  });
+  const apiClient = options.client ?? client;
+  return withTimeout(
+    SIMULATION_TIMEOUT_MS,
+    async (signal) => {
+      const { data, error, response } = await apiClient.GET(
+        "/api/v1/test-runs/{test_run_id}",
+        { params: { path: { test_run_id: id } }, signal },
+      );
+      if (!data) throw new Error(errorMessage(error, response));
+      return data;
+    },
+    options.signal,
+  );
 }
 
 export function testRunPatchOptions(
@@ -330,12 +347,14 @@ export async function importTestRunFile(
 export async function downloadTestRunExport(
   id: string,
   expectedUpdatedAt: string,
+  options: DownloadTestRunExportOptions = {},
 ): Promise<string> {
-  if (!FileSystem.cacheDirectory) {
+  const fileSystem = options.fileSystem ?? FileSystem;
+  if (!fileSystem.cacheDirectory) {
     throw new Error("Temporary file storage is unavailable.");
   }
-  const destination = `${FileSystem.cacheDirectory}hydrocycle-${encodeURIComponent(id)}.json`;
-  const result = await FileSystem.downloadAsync(
+  const destination = `${fileSystem.cacheDirectory}hydrocycle-${encodeURIComponent(id)}.json`;
+  const result = await fileSystem.downloadAsync(
     `${API_BASE_URL}/api/v1/test-runs/${encodeURIComponent(id)}/export?${new URLSearchParams(
       {
         format: "canonical_json",
@@ -346,8 +365,11 @@ export async function downloadTestRunExport(
     { headers: { Accept: "application/json" } },
   );
   if (result.status < 200 || result.status >= 300) {
-    await FileSystem.deleteAsync(destination, { idempotent: true });
-    throw new Error(`Export failed with HTTP ${result.status}.`);
+    const body = await fileSystem
+      .readAsStringAsync(destination)
+      .catch(() => "");
+    await fileSystem.deleteAsync(destination, { idempotent: true });
+    throw new Error(importResponseError(body, result.status));
   }
   return result.uri;
 }

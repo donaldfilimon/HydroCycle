@@ -150,7 +150,9 @@ export default function WorkbenchScreen({
       });
       simulationCompleted = true;
       if (linkedRun && selectedRunIdRef.current === linkedRun.id) {
-        const refreshed = mapApiTestRun(await getTestRun(linkedRun.id));
+        const refreshed = mapApiTestRun(
+          await getTestRun(linkedRun.id, { signal: controller.signal }),
+        );
         if (
           controller.signal.aborted ||
           generation !== requestGenerationRef.current ||

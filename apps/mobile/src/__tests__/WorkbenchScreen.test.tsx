@@ -269,7 +269,9 @@ describe("mobile Workbench cycle evidence", () => {
     fireEvent.press(screen.getByRole("button", { name: /run simulation/i }));
 
     await waitFor(() =>
-      expect(getTestRunMock).toHaveBeenCalledWith("persisted-run"),
+      expect(getTestRunMock).toHaveBeenCalledWith("persisted-run", {
+        signal: expect.any(AbortSignal),
+      }),
     );
     expect(onSimulationLinked).toHaveBeenCalledWith(
       expect.objectContaining({

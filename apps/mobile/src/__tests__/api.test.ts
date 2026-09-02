@@ -1,5 +1,6 @@
 import {
   deleteTestRun,
+  downloadTestRunExport,
   getTestRun,
   importTestRunFile,
   MAX_IMPORT_BYTES,
@@ -40,9 +41,11 @@ describe("mobile Test Run PATCH", () => {
     });
     const client = {
       GET: get,
-    } as unknown as NonNullable<Parameters<typeof getTestRun>[1]>;
+    } as unknown as NonNullable<
+      NonNullable<Parameters<typeof getTestRun>[1]>["client"]
+    >;
 
-    await expect(getTestRun("run-1", client)).resolves.toBe(document);
+    await expect(getTestRun("run-1", { client })).resolves.toBe(document);
     expect(get).toHaveBeenCalledWith("/api/v1/test-runs/{test_run_id}", {
       params: { path: { test_run_id: "run-1" } },
       signal: expect.any(AbortSignal),
@@ -92,6 +95,41 @@ describe("mobile Test Run PATCH", () => {
         signal: expect.any(AbortSignal),
       }),
     );
+  });
+});
+
+describe("mobile Test Run export", () => {
+  it("surfaces the server's stale-revision detail", async () => {
+    const download = jest.fn().mockResolvedValue({
+      status: 409,
+      uri: "file:///cache/hydrocycle-run-1.json",
+      headers: {},
+      mimeType: "application/json",
+    });
+    const read = jest.fn().mockResolvedValue(
+      JSON.stringify({
+        detail:
+          "Test Run changed since it was loaded; refresh before exporting it",
+      }),
+    );
+    const remove = jest.fn().mockResolvedValue(undefined);
+    const fileSystem = {
+      cacheDirectory: "file:///cache/",
+      deleteAsync: remove,
+      downloadAsync: download,
+      readAsStringAsync: read,
+    } as unknown as NonNullable<
+      NonNullable<Parameters<typeof downloadTestRunExport>[2]>["fileSystem"]
+    >;
+
+    await expect(
+      downloadTestRunExport("run-1", "2026-09-02T10:00:00Z", {
+        fileSystem,
+      }),
+    ).rejects.toThrow("refresh before exporting it");
+    expect(remove).toHaveBeenCalledWith("file:///cache/hydrocycle-run-1.json", {
+      idempotent: true,
+    });
   });
 });
 

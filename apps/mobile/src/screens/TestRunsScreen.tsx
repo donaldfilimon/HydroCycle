@@ -187,9 +187,8 @@ export default function TestRunsScreen({
     (saving: boolean) => {
       if (saving) invalidateLoad();
       setEditorSaving(saving);
-      onBusyChange(saving || creating || operation !== null);
     },
-    [creating, invalidateLoad, onBusyChange, operation],
+    [invalidateLoad],
   );
 
   const selectRun = useCallback(
@@ -582,7 +581,7 @@ export default function TestRunsScreen({
       {selectedRun ? <TestRunDetail run={selectedRun} /> : null}
       {selectedRun?.persisted && !selectedRun.synthetic ? (
         <TestRunEditor
-          key={`${selectedRun.id}:${selectedRun.timestamp}`}
+          key={`${selectedRun.id}:${selectedRun.updatedAt}`}
           run={selectedRun}
           onSaved={acceptSavedRun}
           onDirtyChange={setDirty}

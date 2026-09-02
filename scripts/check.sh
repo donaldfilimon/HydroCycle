@@ -9,6 +9,8 @@ bash scripts/check-model.sh
 bash scripts/check-contracts.sh
 bun run --cwd packages/contracts check
 bun run --cwd packages/view-model check
+bun run --cwd packages/advisor check
+bun run check:gateway
 bun run check:web
 bash scripts/check-mobile.sh
 

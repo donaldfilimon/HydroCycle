@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["file:///Users/donaldfilimon/dev/active/HydroCycle/node_modules/.bun/next%4016.2.11%2Bd8250c1691f7ae7c/node_modules/next/navigation.js"],"sourcesContent":["module.exports = require('./dist/client/components/navigation')\n"],"names":["module","exports"],"mappings":"AAAAA,OAAOC,OAAO","ignoreList":[0]}}]
+}
