@@ -9,7 +9,7 @@ import {
 import type { TestRunView } from "@hydrocycle/view-model";
 import { useObject } from "@ai-sdk/react";
 import { Bot, Send, Square, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useHydroCycle } from "../state/app-state";
 
@@ -136,11 +136,13 @@ export function AdvisorLens({
       (object ? (advisorAnswerSchema.safeParse(object).data ?? null) : null),
     [fixtureAnswer, object],
   );
+  const clearRef = useRef(clear);
+  clearRef.current = clear;
 
   useEffect(() => {
-    clear();
+    clearRef.current();
     setFixtureAnswer(null);
-  }, [clear, state.advisorContextKey]);
+  }, [state.advisorContextKey]);
 
   if (!open) return null;
   async function ask() {

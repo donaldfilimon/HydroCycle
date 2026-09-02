@@ -46,7 +46,11 @@ function configuredModel(): string {
 function advisorPrompt(context: AdvisorContextV1): string {
   return [
     "Answer only from the supplied HydroCycle evidence context.",
-    "Return the requested JSON schema. Every numeric statement must cite a supplied evidence id.",
+    "Return only one JSON object, with no Markdown fence and no preamble.",
+    'Use exactly these top-level keys: "schemaVersion", "provider", "summary", "observations", "limitations", "suggestedEvidenceChecks", and "safetyReminder".',
+    'Set "schemaVersion" to "1" and "provider" to "local-ollama". Each of the four statement arrays contains objects with only "text" and "evidenceRefs".',
+    "Do not repeat the input context or add analysis, route, question, gate, inputs, result, selectedRuns, modelMetadata, or availableEvidence fields.",
+    "Every numeric statement must cite one or more supplied evidence ids.",
     "Hydrogen is the fuel. Water is only a carrier, diluent, phase-change load, or possible thermal working fluid.",
     "Never recommend hardware actuation, ignition, injection, throttle, control-loop, or disposition actions.",
     "A failed gate has no proposed reactive cycle. Describe the motored baseline and evidence gaps only.",
@@ -77,6 +81,7 @@ export async function generateLocalAdvisorAnswer(
       prompt: advisorPrompt(context),
       output: Output.object({ schema: advisorAnswerSchema }),
       maxOutputTokens: 1_500,
+      reasoning: "none",
       temperature: 0,
       maxRetries: 0,
       timeout: { totalMs: 90_000, firstChunkMs: 15_000, chunkMs: 15_000 },

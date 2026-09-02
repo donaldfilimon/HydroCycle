@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="HydroCycle">
-  <rect width="64" height="64" rx="14" fill="#0d1f1c" />
-  <path d="M32 10C25 21 18 29 18 40a14 14 0 0 0 28 0c0-11-7-19-14-30Z" fill="#b9f12e" />
-  <path d="M26 41c4 3 9 3 13-1" fill="none" stroke="#0d1f1c" stroke-linecap="round" stroke-width="4" />
-</svg>
