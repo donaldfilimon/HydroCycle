@@ -14,7 +14,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useHydroCycle } from "../state/app-state";
 
 export function useAdvisorDisclosure() {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const mobile = window.matchMedia("(max-width: 760px)");

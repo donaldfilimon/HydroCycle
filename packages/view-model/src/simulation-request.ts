@@ -14,16 +14,16 @@ export function mayContributeMeasurementEvidence(
 ): run is TestRunView {
   return Boolean(
     fixture === "literature" &&
-    run?.persisted &&
-    !run.synthetic &&
-    ((run.status === "valid" &&
-      (run.totalH2MgL !== null ||
-        run.hydrogenDecaySeries?.length ||
-        run.bubbleDistribution?.length)) ||
-      (run.status === "needs_review" &&
-        run.totalH2MgL === null &&
-        !run.hydrogenDecaySeries?.length &&
-        Boolean(run.bubbleDistribution?.length))),
+      run?.persisted &&
+      !run.synthetic &&
+      ((run.status === "valid" &&
+        (run.totalH2MgL !== null ||
+          run.hydrogenDecaySeries?.length ||
+          run.bubbleDistribution?.length)) ||
+        (run.status === "needs_review" &&
+          run.totalH2MgL === null &&
+          !run.hydrogenDecaySeries?.length &&
+          Boolean(run.bubbleDistribution?.length))),
   );
 }
 

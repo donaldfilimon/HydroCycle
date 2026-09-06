@@ -973,6 +973,12 @@ table,
 .workbench-grid > .advisor-lens .advisor-section p {
   color: #bdc9df;
 }
+.workbench-grid > .advisor-lens > header span {
+  color: #83b8ff;
+}
+.workbench-grid > .advisor-lens .advisor-empty {
+  color: #bdc9df;
+}
 .workbench-grid > .advisor-lens textarea {
   color: #dbe8ff;
   border-color: #375078;
@@ -1696,8 +1702,8 @@ table,
   *::before,
   *::after {
     scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
+    animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0.001ms !important;
   }
 }

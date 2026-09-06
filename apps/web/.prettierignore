@@ -1,4 +1,6 @@
 dist/
 coverage/
+.next/
 playwright-report/
 test-results/
+out/

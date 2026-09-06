@@ -120,7 +120,8 @@ export function TestRunsPage() {
       column.columns([
         column.display({
           id: "select",
-          header: "",
+          header: () => <span className="sr-only">Compare</span>,
+          enableSorting: false,
           cell: ({ row }) => (
             <input
               type="checkbox"
@@ -256,6 +257,7 @@ export function TestRunsPage() {
             ref={fileRef}
             type="file"
             accept=".json,.csv"
+            aria-label="Import Test Run evidence file"
             onChange={(event) => {
               const file = event.target.files?.[0];
               if (file) void importFile(file);
@@ -305,13 +307,15 @@ export function TestRunsPage() {
                   <tr key={group.id}>
                     {group.headers.map((header) => (
                       <th key={header.id}>
-                        <button
-                          onClick={header.column.getToggleSortingHandler()}
-                        >
-                          {header.isPlaceholder ? null : (
+                        {header.isPlaceholder ? null : header.column.getCanSort() ? (
+                          <button
+                            onClick={header.column.getToggleSortingHandler()}
+                          >
                             <table.FlexRender header={header} />
-                          )}
-                        </button>
+                          </button>
+                        ) : (
+                          <table.FlexRender header={header} />
+                        )}
                       </th>
                     ))}
                   </tr>

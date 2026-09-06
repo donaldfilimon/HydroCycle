@@ -3,10 +3,15 @@ import type { components } from "@hydrocycle/contracts";
 export type Screen = "summary" | "workbench" | "test-runs";
 
 export type Scenario =
-  "upstream_vaporized_carrier" | "hydrogen_fuel_with_water_injection";
+  | "upstream_vaporized_carrier"
+  | "hydrogen_fuel_with_water_injection";
 
 export type EvidenceBasis =
-  "measured" | "literature" | "user_assumption" | "derived" | "synthetic";
+  | "measured"
+  | "literature"
+  | "user_assumption"
+  | "derived"
+  | "synthetic";
 
 export type GateFailure =
   | "invalid_data"

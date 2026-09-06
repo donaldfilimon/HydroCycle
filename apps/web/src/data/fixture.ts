@@ -136,9 +136,7 @@ export class FixtureHydroCycleDataSource implements HydroCycleDataSource {
     void source;
     void options;
     return Promise.reject(
-      new Error(
-        this.capabilities.disabledReason ?? "Import is unavailable.",
-      ),
+      new Error(this.capabilities.disabledReason ?? "Import is unavailable."),
     );
   }
 

@@ -69,9 +69,7 @@ export class LocalHydroCycleDataSource implements HydroCycleDataSource {
 
   async simulate(
     input: Parameters<HydroCycleDataSource["simulate"]>[0],
-    options: NonNullable<
-      Parameters<HydroCycleDataSource["simulate"]>[1]
-    > = {},
+    options: NonNullable<Parameters<HydroCycleDataSource["simulate"]>[1]> = {},
   ) {
     const { data, error, response } = await client.POST("/api/v1/simulations", {
       body: simulationRequest(input),

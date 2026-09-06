@@ -3,6 +3,20 @@ import { expect, test } from "@playwright/test";
 
 const routes = ["/summary", "/workbench", "/test-runs"] as const;
 
+function severeViolationSummary(
+  violations: Awaited<ReturnType<AxeBuilder["analyze"]>>["violations"],
+) {
+  return violations
+    .filter((violation) =>
+      ["serious", "critical"].includes(violation.impact ?? ""),
+    )
+    .map((violation) => ({
+      id: violation.id,
+      impact: violation.impact,
+      targets: violation.nodes.flatMap((node) => node.target),
+    }));
+}
+
 test("legacy view links resolve to canonical App Router routes", async ({
   page,
 }) => {
@@ -53,17 +67,29 @@ test("Test Runs provides a semantic ledger and exactly two comparison slots", as
   await page.goto("/test-runs");
   const ledger = page.locator(".ledger-table");
   await expect(ledger).toBeVisible();
+  const newRun = page.getByRole("button", { name: /New run/ });
   const comparisonChecks = page.getByRole("checkbox", {
     name: /for comparison/,
   });
-  await expect(comparisonChecks.first()).toBeVisible();
-  if ((await comparisonChecks.count()) >= 2) {
-    await comparisonChecks.nth(0).check();
-    await comparisonChecks.nth(1).check();
-    await expect(
-      page.getByRole("button", { name: /Compare 2\/2/ }),
-    ).toBeVisible();
+
+  for (const count of [1, 2, 3]) {
+    await newRun.click();
+    await expect(comparisonChecks).toHaveCount(count);
   }
+
+  await comparisonChecks.nth(0).check();
+  await comparisonChecks.nth(1).check();
+  await expect(
+    page.getByRole("button", { name: /Compare 2\/2/ }),
+  ).toBeVisible();
+
+  await comparisonChecks.nth(2).check();
+  await expect(comparisonChecks.nth(0)).not.toBeChecked();
+  await expect(comparisonChecks.nth(1)).toBeChecked();
+  await expect(comparisonChecks.nth(2)).toBeChecked();
+  await expect(
+    page.getByRole("button", { name: /Compare 2\/2/ }),
+  ).toBeVisible();
   await expect(page.getByText(/Missing/).first()).toBeVisible();
 });
 
@@ -73,12 +99,12 @@ for (const route of routes) {
   }) => {
     await page.goto(route);
     await expect(page.locator("main")).toBeVisible();
+    await expect(
+      page.getByRole("complementary", { name: "Advisor lens" }),
+    ).toBeVisible();
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
       .analyze();
-    const severe = results.violations.filter((violation) =>
-      ["serious", "critical"].includes(violation.impact ?? ""),
-    );
-    expect(severe).toEqual([]);
+    expect(severeViolationSummary(results.violations)).toEqual([]);
   });
 }
