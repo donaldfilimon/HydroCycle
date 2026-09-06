@@ -23,16 +23,17 @@ That does **not** install `apps/mobile`, which has its own lockfile (see below).
 
 | Task | Command |
 | --- | --- |
-| Run both dev servers | `bun run dev` (web `127.0.0.1:5173`, API `127.0.0.1:8000`; either process exiting kills the other) |
-| Full gate | `bun run check` — model → contract drift → contracts → view-model → web → mobile |
+| Run all three dev servers | `bun run dev` (`scripts/dev.sh`: web `127.0.0.1:5173`, gateway `127.0.0.1:8787`, API `127.0.0.1:8000`; any process exiting kills the others) |
+| Full gate | `bun run check` (`scripts/check.sh`) — `check-model.sh` → `check-contracts.sh` → `packages/contracts` check → `packages/view-model` check → `packages/advisor` check → `check:gateway` → `check:web` → `check-mobile.sh` |
 | Python only | `bun run check:model` (ruff format + ruff + strict mypy + pytest) |
-| Web only | `bun run check:web` (prettier + eslint `--max-warnings 0` + `tsc -b` + vitest + vite build) |
+| Gateway only | `bun run check:gateway` (`services/gateway`: prettier + `tsc --noEmit` + vitest) |
+| Web only | `bun run check:web` (`apps/web`: `format:check` + `lint` (eslint `--max-warnings 0`) + `typecheck` + `test` + `build:local` + `build:hosted` + `check:hosted-artifact`) |
 | Mobile only | `bun run check:mobile` (typecheck + eslint + jest + a real Expo bundle export) |
 | Contract drift | `bun run contracts:check` |
 | Regenerate contracts | `bun run contracts` |
 | Browser acceptance | `bun run test:e2e` |
 | Refresh fidelity captures | `bun run --cwd apps/web visual:capture` |
-| Static fixture-only build | `bun run build:pages` (`VITE_STATIC_DEMO=true`) |
+| Static fixture-only build | `bun run build:pages` (= `build:hosted`: `HYDROCYCLE_WEB_MODE=hosted HYDROCYCLE_DEPLOY_TARGET=pages next build`, static export under `basePath` `/HydroCycle`) |
 
 Single tests:
 
@@ -42,7 +43,7 @@ cd services/model && uv run --frozen pytest tests/test_physics.py -k retention
 cd services/model && uv run --frozen pytest -m cantera        # Cantera-marked tests
 
 # Web / shared-package component tests (vitest)
-bun run --cwd apps/web test src/test/App.test.tsx
+bun run --cwd apps/web test src/test/unified-data-source.test.ts
 bun run --cwd packages/view-model test tests/fixtures.test.ts
 
 # Mobile tests are jest, not vitest, and run from the app directory
@@ -100,25 +101,42 @@ how tests and e2e get isolated state, so add new stores the same way rather
 than reaching for module globals. `imports.py` validates uploads before any
 write; `exports.py` produces canonical JSON, reviewed CSV, and the CFD-boundary
 document; `test_run_contracts.py` holds the Test Run / measurement documents;
-`orm.py` + `alembic/versions` own persistence.
+`orm.py` + `services/model/alembic/versions` own persistence.
 
 **`packages/view-model/`** (`@hydrocycle/view-model`) — the presentation types
 (`domain.ts`) and deterministic demo fixtures (`fixtures.ts`) that web and
 mobile share. These used to live in `apps/web/src/`; anything still importing
 `../fixtures` or `./domain` from the web app is stale.
 
-**`apps/web/src/`** — no router and no state library. `App.tsx` (~2k lines)
-owns all state and passes it into the three screens; navigation is a `?view=`
-query param plus `popstate`. The UI is fixture-first: it renders
-`makeSimulationFixture(...)` from `@hydrocycle/view-model` immediately, then
-`mergeApiResult(fallback, raw)` — which stayed local to `App.tsx` — overlays
-live API values field by field. So adding a result field means editing three
-places: the view type in `packages/view-model/src/domain.ts`, its fixture value
-in `fixtures.ts`, and the mapper in `App.tsx`. Persisted runs from
-`GET /api/v1/test-runs` are prepended to `demoRuns`; demo/synthetic runs are
-deliberately excluded from measurement counts. Vite proxies `/api` to
-`127.0.0.1:8000`, which is why `createHydroCycleClient()` defaults to an empty
-base URL.
+**`packages/advisor/`** (`@hydrocycle/advisor`) — Zod schemas and constants
+for the read-only advisor: request/answer shapes, evidence references, the
+`local-ollama | guided-fixture` provider enum, and the safety reminder. Shared
+by the gateway and the web app; no runtime of its own.
+
+**`services/gateway/`** (`@hydrocycle/gateway`, Bun, `src/server.ts`) — the
+only origin the browser talks to, bound to `127.0.0.1:8787`. `POST /advisor`
+runs the local advisor (`src/advisor.ts`); every other path goes through
+`src/proxy.ts`, which forwards only an allowlisted set of `/api/v1/*` routes
+(health, model-metadata, simulations, test-runs incl. import/export) to the
+model service at `http://127.0.0.1:8000` with header allowlists and a 90 s
+timeout. Add a new model route to that allowlist or the web app cannot reach it.
+
+**`apps/web/`** (Next 16 App Router) — routes are `app/page.tsx` (redirects a
+legacy `?view=` param to the routes below, otherwise renders Summary),
+`app/summary/page.tsx`, `app/workbench/page.tsx`, and `app/test-runs/page.tsx`;
+each is a thin wrapper around the matching client component in
+`src/features/{summary,workbench,test-runs}/*-page.tsx` (`src/features/shared/`
+holds the charts). `app/layout.tsx` wraps everything in `HydroCycleProviders`
+(`src/state/app-state.tsx`, reducer + TanStack Query) with the runtime config
+from `src/lib/runtime.ts`: `HYDROCYCLE_WEB_MODE=local` selects
+`LocalHydroCycleDataSource` (`src/data/local.ts`), `hosted` selects the
+session-only `FixtureHydroCycleDataSource` (`src/data/fixture.ts`); both
+implement `HydroCycleDataSource` in `src/data/types.ts`. The local source calls
+`createHydroCycleClient("/gateway")` and the advisor lens posts to
+`/gateway/advisor`; in local mode `next.config.ts` rewrites `/gateway/:path*` to
+`http://127.0.0.1:8787/:path*`, so the browser never addresses the model
+service directly. Hosted builds have no rewrite and no live API. The web test is
+`src/test/unified-data-source.test.ts`.
 
 **`apps/mobile/`** (Expo SDK 53, React Native 0.79) — deliberately **not** a
 root workspace member: Metro resolves modules differently from Bun's workspace
