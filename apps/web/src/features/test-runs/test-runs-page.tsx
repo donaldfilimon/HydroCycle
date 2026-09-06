@@ -305,19 +305,23 @@ export function TestRunsPage() {
               <thead>
                 {table.getHeaderGroups().map((group) => (
                   <tr key={group.id}>
-                    {group.headers.map((header) => (
-                      <th key={header.id}>
-                        {header.isPlaceholder ? null : header.column.getCanSort() ? (
-                          <button
-                            onClick={header.column.getToggleSortingHandler()}
-                          >
-                            <table.FlexRender header={header} />
-                          </button>
-                        ) : (
-                          <table.FlexRender header={header} />
-                        )}
-                      </th>
-                    ))}
+                    {group.headers.map((header) => {
+                      if (header.isPlaceholder) return <th key={header.id} />;
+                      const content = <table.FlexRender header={header} />;
+                      return (
+                        <th key={header.id}>
+                          {header.column.getCanSort() ? (
+                            <button
+                              onClick={header.column.getToggleSortingHandler()}
+                            >
+                              {content}
+                            </button>
+                          ) : (
+                            content
+                          )}
+                        </th>
+                      );
+                    })}
                   </tr>
                 ))}
               </thead>
