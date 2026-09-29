@@ -108,6 +108,27 @@ Every persisted result records schema, solver, Python version, `thermo=hydrocycl
 <version>`, `mechanism=none`, and the random seed. No field is dropped because Cantera left the
 runtime.
 
+### 3.8 Foundation conventions
+
+These bind every stage plan built on the frozen foundation (§3.2):
+
+- (a) Every hydrogen state (`h2_dissolved`, `h2_bubble`, `h2_free`) is costed at gaseous H2
+  enthalpy. The dissolution enthalpy is neglected [P], and no stage may add it by hand
+  (model spec rule 7).
+- (b) Model spec §2's "H(mass added)" is the stage diagnostic key `_H_added_J`. Energy terms may
+  be negative only where the physics says so, for example heat gained from ambient.
+- (c) `thermo` holds liquid cp constant at its 298.15 K value. The engine and phase plans must
+  replace it above about 450 K (error about 1.5% at 450 K, about 6% at 550 K; liquid is
+  reachable up to T_sat of about 584 K at 100 bar). They must also bracket any bisection so
+  that `thermo.h_liquid_water_*` is never called above 647 K while liquid mass is nonzero.
+- (d) The uncertainty and pipeline plans must promote module `DEFAULTS` into `P0`, or fold the
+  effective `DEFAULTS` into the fingerprint, before any sweep or Monte Carlo run. Reason:
+  `ParameterSet.with_values` rejects names outside `P0`, and the fingerprint excludes `DEFAULTS`.
+- (e) `PhysicsConflict` is not picklable (its three-argument `__init__` does not match
+  `args`), so process-parallel Monte Carlo must handle that, for example by catching it
+  in the worker and returning its fields.
+- (f) `Stream.as_dict` uses the keys `T_K` and `p_Pa` for the attributes `t_k` and `p_pa`.
+
 ## 4. Sub-project 2: the twin data contract
 
 One contract, two halves, emitted by the model and read by every renderer.
