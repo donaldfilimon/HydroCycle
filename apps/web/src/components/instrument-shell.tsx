@@ -5,6 +5,7 @@ import {
   Box,
   Beaker,
   BookOpen,
+  Box,
   Database,
   Gauge,
   Settings2,
@@ -19,6 +20,7 @@ import { useHydroCycle } from "../state/app-state";
 const routes = [
   { href: "/summary", label: "Summary", icon: Gauge },
   { href: "/workbench", label: "Workbench", icon: Beaker },
+  { href: "/cad", label: "CAD", icon: Box },
   { href: "/test-runs", label: "Test Runs", icon: Activity },
   { href: "/twin", label: "Digital Twin", icon: Box },
 ] as const;
@@ -26,7 +28,8 @@ const routes = [
 export function InstrumentShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { runtime } = useHydroCycle();
-  const workbench = pathname.endsWith("/workbench");
+  const workbench =
+    pathname.endsWith("/workbench") || pathname.endsWith("/cad");
   return (
     <div
       className={`instrument-shell ${workbench ? "instrument-shell--dark" : ""}`}
@@ -82,7 +85,11 @@ export function InstrumentShell({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
-      <nav className="mobile-nav" aria-label="Mobile navigation">
+      <nav
+        className="mobile-nav"
+        aria-label="Mobile navigation"
+        style={{ gridTemplateColumns: `repeat(${routes.length}, 1fr)` }}
+      >
         {routes.map(({ href, label, icon: Icon }) => {
           const active = pathname.endsWith(href);
           return (
