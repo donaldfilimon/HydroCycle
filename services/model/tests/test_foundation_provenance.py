@@ -47,3 +47,20 @@ def test_hazard_tbd_is_a_singleton_that_is_never_a_number() -> None:
     assert repr(HAZARD_TBD) == "HAZARD_TBD"
     with pytest.raises(TypeError):
         float(HAZARD_TBD)  # type: ignore[arg-type]
+
+
+def test_q_stores_an_integer_value_as_a_float() -> None:
+    q = Q(3000, "rpm", Tag.P)
+    assert isinstance(q.value, float)
+    assert q.value == 3000.0
+
+
+def test_q_rejects_a_bool_value() -> None:
+    with pytest.raises(TypeError, match="bool"):
+        Q(True, "1", Tag.P)  # type: ignore[arg-type]
+
+
+def test_diagnostic_coerces_its_value_to_float() -> None:
+    value = diagnostic(3, "J", Tag.CALC)["value"]
+    assert isinstance(value, float)
+    assert value == 3.0

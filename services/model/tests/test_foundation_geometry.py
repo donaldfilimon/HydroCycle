@@ -33,15 +33,15 @@ def test_wall_area_grows_from_tdc_to_bdc() -> None:
 
 
 @pytest.mark.parametrize(
-    "kwargs",
+    ("kwargs", "fragment"),
     [
-        {"rod_m": 0.043},  # rod not longer than crank radius
-        {"compression_ratio": 1.0},
-        {"bore_m": 0.0},
-        {"displacement_m3": -1.0e-4},
+        ({"rod_m": 0.043}, "rod_m must be longer than the crank radius"),
+        ({"compression_ratio": 1.0}, "compression_ratio must exceed 1"),
+        ({"bore_m": 0.0}, "bore_m must be positive and finite"),
+        ({"displacement_m3": -1.0e-4}, "displacement_m3 must be positive and finite"),
     ],
 )
-def test_impossible_geometry_raises(kwargs: dict[str, float]) -> None:
+def test_impossible_geometry_raises(kwargs: dict[str, float], fragment: str) -> None:
     base = {
         "bore_m": 0.086,
         "stroke_m": 0.086,
@@ -49,7 +49,7 @@ def test_impossible_geometry_raises(kwargs: dict[str, float]) -> None:
         "compression_ratio": 10.5,
         "displacement_m3": 5.0e-4,
     }
-    with pytest.raises(ValueError, match=r".*"):
+    with pytest.raises(ValueError, match=fragment):
         Geometry(**(base | kwargs))
 
 

@@ -76,3 +76,24 @@ def test_energy_ledger_infinite_input_raises() -> None:
             zeros(ENERGY_IN) | {"hydrogen_chemical": float("inf")},
             zeros(ENERGY_OUT),
         )
+
+
+@pytest.mark.parametrize(
+    ("numerator", "denominator", "fragment"),
+    [
+        (float("nan"), 80.0, "numerator must be finite"),
+        (20.0, float("inf"), "denominator must be finite"),
+        (20.0, float("nan"), "denominator must be finite"),
+        (20.0, -80.0, "denominator must be non-negative"),
+    ],
+)
+def test_efficiency_rejects_non_finite_or_negative_denominators(
+    numerator: float, denominator: float, fragment: str
+) -> None:
+    with pytest.raises(ValueError, match=fragment):
+        Efficiency.ratio("eta_engine", numerator, denominator, "d")
+
+
+def test_zero_denominator_with_a_nonzero_numerator_is_still_undefined() -> None:
+    eff = Efficiency.ratio("eta_engine", 5.0, 0.0, "d")
+    assert (eff.value, eff.flag) == (None, UNDEFINED_FLAG)

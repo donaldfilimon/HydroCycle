@@ -105,6 +105,7 @@ _EXTRAPOLATION_FLOOR_K: Final = 200.0  # low polynomials are used down to here, 
 
 H_F_LIQUID_WATER: Final = -285_830.0  # J/mol at 298.15 K, CODATA [LIT]
 CP_LIQUID_WATER_MOLAR: Final = 75.327  # J/(mol K) at 298.15 K [LIT], held constant [P]
+RHO_LIQUID_WATER: Final = 997.05  # kg/m3 at 298.15 K [LIT], held constant [P]
 
 _T_CRIT: Final = 647.096  # K
 _P_CRIT: Final = 22.064e6  # Pa

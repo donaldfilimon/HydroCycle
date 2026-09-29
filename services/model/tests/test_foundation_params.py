@@ -52,3 +52,9 @@ def test_quantities_must_be_q() -> None:
     with pytest.raises(TypeError):
         ParameterSet({"x": 1.0}, {})  # type: ignore[dict-item]
     assert ParameterSet({"x": Q(1.0, "1", Tag.P)}, {}).values() == {"x": 1.0}
+
+
+def test_an_integer_override_fingerprints_like_its_float() -> None:
+    as_int = P0.with_values({"engine_speed_rpm": 3000})
+    as_float = P0.with_values({"engine_speed_rpm": 3000.0})
+    assert as_int.fingerprint() == as_float.fingerprint()

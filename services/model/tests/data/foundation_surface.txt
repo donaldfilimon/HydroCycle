@@ -13,6 +13,7 @@ thermo.CP_LIQUID_WATER_MOLAR = 75.327
 thermo.H_F_LIQUID_WATER = -285830.0
 thermo.LHV_H2 = 119959829.77278483
 thermo.MOLAR_MASS = [('H2', 0.00201588), ('H2O', 0.01801528), ('N2', 0.0280134), ('O2', 0.0319988)]
+thermo.RHO_LIQUID_WATER = 997.05
 thermo.R_U = 8.314462618
 thermo.T_REF = 298.15
 thermo.cp_molar(species: 'str', t_k: 'float') -> 'float'
@@ -52,6 +53,7 @@ state.H2_STATES = ('h2_dissolved', 'h2_bubble', 'h2_free')
 state.MASS_TOLERANCE = 1e-12
 state.SPECIES = ('water_bulk', 'water_aerosol', 'water_vapor', 'h2_dissolved', 'h2_bubble', 'h2_free', 'o2', 'n2')
 state.StageResult(component_id: str, inlet: Stream, outlet: Stream, side_streams: Mapping[str, Stream] = factory dict, energy_in_j: Mapping[str, float] = factory dict, work_out_j: float = 0.0, diagnostics: Mapping[str, object] = factory dict)
+state.StageResult.as_dict(self) -> 'dict[str, object]'
 state.StageResult.check(self) -> 'None'
 state.StageResult.energy_residual(self) -> 'float'
 state.StageResult.h2_residual(self) -> 'float'

@@ -109,6 +109,12 @@ class Efficiency:
 
     @classmethod
     def ratio(cls, name: str, numerator: float, denominator: float, definition: str) -> Efficiency:
+        if not isfinite(numerator):
+            raise ValueError(f"{name} numerator must be finite, got {numerator!r}")
+        if not isfinite(denominator):
+            raise ValueError(f"{name} denominator must be finite, got {denominator!r}")
+        if denominator < 0.0:
+            raise ValueError(f"{name} denominator must be non-negative, got {denominator!r}")
         if denominator == 0.0:
             return cls(name, None, numerator, denominator, definition, UNDEFINED_FLAG)
         flag = NEGATIVE_FLAG if numerator < 0.0 else None

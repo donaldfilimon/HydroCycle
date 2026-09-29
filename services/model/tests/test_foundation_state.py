@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import math
 
 import pytest
@@ -131,3 +132,37 @@ def test_check_treats_a_non_finite_residual_as_a_conflict() -> None:
     object.__setattr__(result, "work_out_j", math.nan)
     with pytest.raises(PhysicsConflict, match="energy"):
         result.check()
+
+
+@pytest.mark.parametrize("edges", [(0.0, 1.0), (-1.0, 1.0), (math.nan, 1.0), (1.0, math.inf)])
+def test_bins_reject_non_finite_or_non_positive_edges(edges: tuple[float, float]) -> None:
+    with pytest.raises(ValueError, match="finite and strictly positive"):
+        Bins(edges, (1.0,), "per_cycle")
+
+
+def test_stage_result_as_dict_is_json_ready() -> None:
+    inlet = water("in", 1.0e-3, h2=2.0e-9)
+    vent = Stream("vent", 298.15, 1.0e5, {"h2_free": 0.5e-9})
+    outlet = water("out", 1.0e-3, h2=1.5e-9)
+    result = StageResult(
+        "NBG-104",
+        inlet,
+        outlet,
+        side_streams={"nbg_vent": vent},
+        energy_in_j={"pump_electrical": 0.0},
+        diagnostics={"note": "vent", "_heat_to_ambient_J": 0.0},
+    )
+    d = result.as_dict()
+    assert d["component_id"] == "NBG-104"
+    assert d["inlet"] == inlet.as_dict()
+    assert d["outlet"] == outlet.as_dict()
+    assert d["side_streams"] == {"nbg_vent": vent.as_dict()}
+    assert d["energy_in_j"] == {"pump_electrical": 0.0}
+    assert d["work_out_j"] == 0.0
+    assert d["diagnostics"] == {"note": "vent", "_heat_to_ambient_J": 0.0}
+    assert d["residuals"] == {
+        "mass": result.mass_residual(),
+        "h2": result.h2_residual(),
+        "energy": result.energy_residual(),
+    }
+    assert json.loads(json.dumps(d)) == d

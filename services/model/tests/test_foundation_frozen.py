@@ -138,7 +138,7 @@ assert all("hydrocycle." + n in sys.modules for n in {list(FOUNDATION)!r})
 print("CLEAN")
 """
     result = subprocess.run(
-        [sys.executable, "-c", code], capture_output=True, text=True, check=False
+        [sys.executable, "-c", code], capture_output=True, text=True, check=False, timeout=60
     )
     assert result.returncode == 0, result.stderr + result.stdout
     assert "CLEAN" in result.stdout, result.stdout

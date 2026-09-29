@@ -37,6 +37,8 @@ class Bins:
             raise ValueError(f"basis must be one of {BASES}, got {self.basis!r}")
         if len(self.edges_m) != len(self.counts) + 1:
             raise ValueError("edges_m must have exactly one more entry than counts")
+        if any(not (isfinite(e) and e > 0.0) for e in self.edges_m):
+            raise ValueError("edges_m must be finite and strictly positive")
         if any(b <= a for a, b in pairwise(self.edges_m)):
             raise ValueError("edges_m must be strictly increasing")
         if any(not (isfinite(c) and c >= 0.0) for c in self.counts):
@@ -205,3 +207,19 @@ class StageResult:
         energy = self.energy_residual()
         if not abs(energy) <= ENERGY_TOLERANCE:
             raise PhysicsConflict(f"{self.component_id} energy", "stage energy balance", energy)
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "component_id": self.component_id,
+            "inlet": self.inlet.as_dict(),
+            "outlet": self.outlet.as_dict(),
+            "side_streams": {name: s.as_dict() for name, s in self.side_streams.items()},
+            "energy_in_j": dict(self.energy_in_j),
+            "work_out_j": self.work_out_j,
+            "diagnostics": dict(self.diagnostics),
+            "residuals": {
+                "mass": self.mass_residual(),
+                "h2": self.h2_residual(),
+                "energy": self.energy_residual(),
+            },
+        }

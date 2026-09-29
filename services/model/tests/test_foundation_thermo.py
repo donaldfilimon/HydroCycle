@@ -76,3 +76,7 @@ def test_saturation_and_latent_heat_match_cantera_water(t_k: float) -> None:
     water.TQ = t_k, 1.0
     assert thermo.p_sat(t_k) == pytest.approx(p, rel=5e-3)
     assert thermo.h_fg(t_k) == pytest.approx(water.enthalpy_mass - h_liquid, rel=1.5e-2)
+
+
+def test_liquid_water_density_is_the_spec_constant() -> None:
+    assert thermo.RHO_LIQUID_WATER == 997.05

@@ -28,6 +28,10 @@ class Q:
     note: str = ""
 
     def __post_init__(self) -> None:
+        raw: object = self.value
+        if isinstance(raw, bool) or not isinstance(raw, (int, float)):
+            raise TypeError(f"Q value must be a real number, not {type(raw).__name__}")
+        object.__setattr__(self, "value", float(raw))
         if not isfinite(self.value):
             raise ValueError(f"Q value must be finite, got {self.value!r}")
         if not self.unit:
@@ -37,7 +41,7 @@ class Q:
 def diagnostic(value: float, unit: str, tag: Tag, note: str = "") -> dict[str, float | str]:
     """A stage diagnostic in the spec's shape."""
 
-    return {"value": value, "unit": unit, "tag": tag.value, "note": note}
+    return {"value": float(value), "unit": unit, "tag": tag.value, "note": note}
 
 
 class PhysicsConflict(Exception):  # noqa: N818
