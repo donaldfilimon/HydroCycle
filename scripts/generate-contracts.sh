@@ -13,6 +13,8 @@ mkdir -p "$OUTPUT_DIRECTORY/src" "$OUTPUT_DIRECTORY/fixtures"
   uv run --frozen python scripts/export_openapi.py "$OUTPUT_DIRECTORY/openapi.json"
   uv run --frozen python "$CONTRACT_DIRECTORY/scripts/export_fixtures.py" \
     "$OUTPUT_DIRECTORY/fixtures"
+  uv run --frozen python "$REPOSITORY_ROOT/scripts/export-twin.py" \
+    "$OUTPUT_DIRECTORY/fixtures/twin-reference.json"
 )
 
 (

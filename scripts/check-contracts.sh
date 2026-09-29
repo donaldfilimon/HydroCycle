@@ -13,6 +13,7 @@ trap cleanup EXIT INT TERM
 bash "$REPOSITORY_ROOT/scripts/generate-contracts.sh" "$TEMPORARY_DIRECTORY"
 
 ARTIFACTS=(
+  "fixtures/twin-reference.json"
   "openapi.json"
   "src/api.generated.ts"
   "fixtures/simulation-input.default.json"

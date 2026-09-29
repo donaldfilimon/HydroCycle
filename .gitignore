@@ -43,3 +43,7 @@ qa/
 
 # Isolated continuation worktrees
 .worktrees/
+
+# Rust twin build outputs
+crates/hydrocycle-twin/target/
+apps/web/public/twin-gpu/

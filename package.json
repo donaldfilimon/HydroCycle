@@ -33,6 +33,9 @@
     "contracts": "bash scripts/generate-contracts.sh",
     "contracts:check": "bash scripts/check-contracts.sh",
     "test:e2e:install": "bun run --cwd apps/web test:e2e:install",
-    "test:e2e": "bun run --cwd apps/web test:e2e"
+    "test:e2e": "bun run --cwd apps/web test:e2e",
+    "build:twin": "bash scripts/build-twin.sh",
+    "check:twin": "bash scripts/check-twin.sh",
+    "dev:twin": "bash scripts/build-twin.sh && HYDROCYCLE_WEB_MODE=hosted HYDROCYCLE_DEPLOY_TARGET=sites NEXT_TELEMETRY_DISABLED=1 bun run --cwd apps/web next dev --hostname 127.0.0.1 --port 5186"
   }
 }

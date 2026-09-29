@@ -168,3 +168,12 @@ must be merged back into this checkout's default branch, the worktree
 removed, and the branch deleted, before pushing and before the task is
 called done. Full policy: `~/.claude/CLAUDE.md` (*Git discipline*).
 <!-- /machine-git-policy -->
+
+## Custom digital twin
+
+The additive Rust renderer lives in `crates/hydrocycle-twin`; see its README for
+native winit and browser WebGPU commands. `bun run dev:twin` builds and serves
+the fixture-mode `/twin` route on `127.0.0.1:5186`. `bun run check:twin` is part
+of the root gate. `bun run contracts` also regenerates the neutral
+`packages/contracts/fixtures/twin-reference.json` from the Python authority.
+The browser uses precomputed transforms; it does not replace the model solver.

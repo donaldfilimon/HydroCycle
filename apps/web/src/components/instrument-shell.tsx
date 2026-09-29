@@ -2,6 +2,7 @@
 
 import {
   Activity,
+  Box,
   Beaker,
   BookOpen,
   Database,
@@ -19,6 +20,7 @@ const routes = [
   { href: "/summary", label: "Summary", icon: Gauge },
   { href: "/workbench", label: "Workbench", icon: Beaker },
   { href: "/test-runs", label: "Test Runs", icon: Activity },
+  { href: "/twin", label: "Digital Twin", icon: Box },
 ] as const;
 
 export function InstrumentShell({ children }: { children: ReactNode }) {

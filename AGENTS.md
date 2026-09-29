@@ -10,6 +10,9 @@ fluid. Never describe water as contributing chemical energy.
 
 - `apps/web`: Next.js 16 App Router + React 19 + strict TypeScript, managed
   with Bun 1.4. Local mode uses the gateway; hosted mode is fixture-only.
+- `crates/hydrocycle-twin`: custom Rust wgpu renderer, winit native target,
+  wasm-bindgen browser target. Consumes Python-generated twin frames; no client
+  scientific solver. `bun run dev:twin` serves the fixture shell at `127.0.0.1:5186/twin`.
 - `apps/mobile`: Expo SDK 53 + React Native client. Not a root workspace
   member; it keeps its own lockfile because Metro and Bun resolve differently.
 - `apps/site`: fixture-only hosted preview. Outside the root gate.
@@ -84,3 +87,16 @@ must be merged back into this checkout's default branch, the worktree
 removed, and the branch deleted, before pushing and before the task is
 called done. Full policy: `~/.claude/CLAUDE.md` (*Git discipline*).
 <!-- /machine-git-policy -->
+
+## Digital twin
+
+- `bun run build:twin` needs `nightly-2026-09-01`, its `wasm32-unknown-unknown`
+  target, and `wasm-bindgen-cli` 0.2.129. Generated browser files are ignored;
+  build before starting the twin or producing web artifacts.
+- `bun run check:twin` checks formatting, strict Clippy, Rust tests and WASM build;
+  it is included in the root gate. Native GPU smoke is separate and needs a display.
+- `services/model/src/hydrocycle/twin.py` owns kinematic frames, stage/variant
+  metadata and null inventory/energy ledger. Regenerate with `bun run contracts`.
+- `apps/web/src/features/twin` is the accessible control/inspector shell.
+  GPU geometry is conceptual except supplied engine kinematics; glyphs never
+  establish particle trajectories, concentration, operating settings or viability.

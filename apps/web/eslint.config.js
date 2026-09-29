@@ -12,6 +12,7 @@ export default tseslint.config(
       ".next",
       ".vinext",
       "coverage",
+      "public/twin-gpu",
       "playwright-report",
       "test-results",
     ],

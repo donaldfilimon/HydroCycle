@@ -1446,7 +1446,7 @@ table,
     z-index: 100;
     display: grid;
     height: 64px;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     border-top: 1px solid #1f3e6d;
     background: #031126;
   }

@@ -1,0 +1,76 @@
+{
+  "assembly": {
+    "all_connections_within_variant": true,
+    "all_variant_stages_declared": true,
+    "scope": "Five bounded conceptual research layouts, not all possible designs",
+    "stage_count": 15,
+    "variant_count": 5
+  },
+  "cross_renderer_validation": {
+    "blender_geometry_parity": null,
+    "browser_rendered_geometry_parity": null,
+    "reason": "A shared manifest establishes intended source consistency only. This diagnostic does not measure rendered browser coordinates or independently compare Blender.",
+    "shared_source": "Python-generated twin-reference.json"
+  },
+  "displacement": {
+    "basis": "Bore-derived geometric displacement; supplied drawing dimensions unvalidated",
+    "geometric_cc": 499.9981025034988,
+    "geometric_minus_nominal_cc": -0.001897496501214846,
+    "nominal_cc": 500.0
+  },
+  "geometry_errors": {
+    "bdc_volume_absolute_error_cc": 5.684341886080802e-14,
+    "interpretation": "Floating-point closure against the supplied ideal geometry. These errors do not measure machining tolerance or physical model validity. Exported volume comparison reuses the authoritative solver and is not independent.",
+    "max_crank_radius_error_mm": 7.105427357601002e-15,
+    "max_exported_volume_vs_python_solver_error_cc": 0.0,
+    "max_rod_length_closure_error_mm": 2.842170943040401e-14,
+    "max_tdc_volume_absolute_error_cc": 7.105427357601002e-15,
+    "reference_stroke_mm": 86.0759,
+    "stroke_range_absolute_error_mm": 1.4210854715202004e-14,
+    "stroke_range_mm": 86.07589999999999
+  },
+  "ledgers": {
+    "balance_status": "not_evaluable",
+    "energy_j": {
+      "hydrogen_chemical": null,
+      "input_electricity": null,
+      "phase_change": null,
+      "recovered_heat": null,
+      "shaft_work": null
+    },
+    "hydrogen_mg": {
+      "bubble_contained": null,
+      "dissolved": null,
+      "free": null,
+      "transferred": null
+    }
+  },
+  "legacy_comparison": {
+    "angle_deg": -10,
+    "difference_percent": 1.8151410308775293,
+    "explanation": "Legacy harmonic travel omits connecting-rod obliquity. Preserve the discrepancy; do not tune dimensions to match it. The legacy value uses nominal 500 cc; the exact value uses bore-derived 499.9981025 cc displacement.",
+    "legacy_harmonic_cc": 59.35361730250355,
+    "slider_crank_cc": 60.43096916347132
+  },
+  "physical_mass_energy_residuals": null,
+  "physical_mass_energy_residuals_reason": "Inventories and energy measurements are unknown; physical conservation cannot be evaluated. No synthetic simulation residual is substituted for measured evidence.",
+  "physical_predictive_accuracy": null,
+  "physical_predictive_accuracy_reason": "No calibrated held-out measurements or validated physical experimental results were supplied for this twin. Numerical closure is not predictive accuracy.",
+  "reference_manifest": {
+    "committed_fixture_matches_generator": true,
+    "schema_version": "hydrocycle-twin/1.0.0",
+    "sha256": "1f8688a68554194994263c49a8bbc7fad44761bfd3ea4021fd32002726069647"
+  },
+  "sampling": {
+    "all_numeric_frame_values_finite": true,
+    "angle_max_deg": 360,
+    "angle_min_deg": 0,
+    "continuous_angle_error_bound": null,
+    "continuous_angle_error_bound_reason": "Only the 361 exported samples were evaluated",
+    "covers_every_integer_degree_including_both_endpoints": true,
+    "frame_count": 361,
+    "step_deg": 1
+  },
+  "schema_version": "hydrocycle-twin-diagnostics/1.0.0",
+  "scope": "Deterministic numerical geometry diagnostics, not physical predictive accuracy"
+}

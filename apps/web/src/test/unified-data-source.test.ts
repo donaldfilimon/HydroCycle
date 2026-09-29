@@ -33,20 +33,29 @@ describe("hosted fixture data source", () => {
         expected_updated_at: "2000-01-01T00:00:00Z",
         status: "valid",
       }),
-    ).rejects.toThrow(/changed/i);
+    ).rejects.toHaveProperty(
+      "message",
+      "Session Test Run changed; refresh before saving the edit.",
+    );
     const updated = await source.patchTestRun(created.id, {
       expected_updated_at: created.updatedAt,
       status: "valid",
     });
     expect(updated.status).toBe("valid");
     source.resetSession();
-    await expect(source.getTestRun(created.id)).rejects.toThrow(/not found/i);
+    await expect(source.getTestRun(created.id)).rejects.toHaveProperty(
+      "message",
+      "Fixture Test Run was not found.",
+    );
   });
 
   it("refuses raw file import without probing a local service", async () => {
     const source = new FixtureHydroCycleDataSource();
     await expect(
       source.importTestRun({ file: new File(["{}"], "run.json") }),
-    ).rejects.toThrow(/local validated model service/i);
+    ).rejects.toHaveProperty(
+      "message",
+      "Raw file import requires the local validated model service.",
+    );
   });
 });
