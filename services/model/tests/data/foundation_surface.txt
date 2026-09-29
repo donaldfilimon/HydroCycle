@@ -1,7 +1,7 @@
-provenance.HAZARD_TBD = HazardTBD
+provenance.HAZARD_TBD = HAZARD_TBD
 provenance.HazardTBD class
 provenance.PhysicsConflict class
-provenance.Q(value: float, unit: str, tag: Tag, note: str)
+provenance.Q(value: float, unit: str, tag: Tag, note: str = '')
 provenance.Tag class
 provenance.Tag.LIT = 'LIT'
 provenance.Tag.CALC = 'CALC'
@@ -9,12 +9,12 @@ provenance.Tag.MEAS = 'MEAS'
 provenance.Tag.P = 'P'
 provenance.Tag.I = 'I'
 provenance.diagnostic(value: 'float', unit: 'str', tag: 'Tag', note: 'str' = '') -> 'dict[str, float | str]'
-thermo.CP_LIQUID_WATER_MOLAR = float
-thermo.H_F_LIQUID_WATER = float
-thermo.LHV_H2 = float
-thermo.MOLAR_MASS = dict
-thermo.R_U = float
-thermo.T_REF = float
+thermo.CP_LIQUID_WATER_MOLAR = 75.327
+thermo.H_F_LIQUID_WATER = -285830.0
+thermo.LHV_H2 = 119959829.77278483
+thermo.MOLAR_MASS = [('H2', 0.00201588), ('H2O', 0.01801528), ('N2', 0.0280134), ('O2', 0.0319988)]
+thermo.R_U = 8.314462618
+thermo.T_REF = 298.15
 thermo.cp_molar(species: 'str', t_k: 'float') -> 'float'
 thermo.h_fg(t_k: 'float') -> 'float'
 thermo.h_liquid_water_mass(t_k: 'float') -> 'float'
@@ -33,8 +33,8 @@ geometry.Geometry.piston_travel_m(self, theta_deg: 'float') -> 'float'
 geometry.Geometry.volume_m3(self, theta_deg: 'float') -> 'float'
 geometry.Geometry.wall_area_m2(self, theta_deg: 'float') -> 'float'
 geometry.gate1_audit(g: 'Geometry') -> 'dict[str, dict[str, float | str]]'
-params.P0 = ParameterSet
-params.ParameterSet(quantities: Mapping[str, Q], options: Mapping[str, str])
+params.P0 = ParameterSet fingerprint 255382d142faa4d511db14f163fa5c398fe176cfa0ae803fc4cb7225fb411fb2
+params.ParameterSet(quantities: Mapping[str, Q], options: Mapping[str, str] = factory dict)
 params.ParameterSet.fingerprint(self) -> 'str'
 params.ParameterSet.values(self) -> 'dict[str, float]'
 params.ParameterSet.with_options(self, overrides: 'Mapping[str, str]') -> 'ParameterSet'
@@ -46,17 +46,17 @@ state.Bins.centers_m(self) -> 'tuple[float, ...]'
 state.Bins.lognormal(cls, *, d50_m: 'float', gsd: 'float', total: 'float', basis: 'str', k: 'int' = 32, span_sigma: 'float' = 3.5) -> 'Bins'
 state.Bins.total(self) -> 'float'
 state.Bins.volume_sum_m3(self) -> 'float'
-state.ENERGY_TOLERANCE = float
+state.ENERGY_TOLERANCE = 1e-09
 state.GAS_SPECIES = ('o2', 'n2')
 state.H2_STATES = ('h2_dissolved', 'h2_bubble', 'h2_free')
-state.MASS_TOLERANCE = float
+state.MASS_TOLERANCE = 1e-12
 state.SPECIES = ('water_bulk', 'water_aerosol', 'water_vapor', 'h2_dissolved', 'h2_bubble', 'h2_free', 'o2', 'n2')
-state.StageResult(component_id: str, inlet: Stream, outlet: Stream, side_streams: Mapping[str, Stream], energy_in_j: Mapping[str, float], work_out_j: float, diagnostics: Mapping[str, object])
+state.StageResult(component_id: str, inlet: Stream, outlet: Stream, side_streams: Mapping[str, Stream] = factory dict, energy_in_j: Mapping[str, float] = factory dict, work_out_j: float = 0.0, diagnostics: Mapping[str, object] = factory dict)
 state.StageResult.check(self) -> 'None'
 state.StageResult.energy_residual(self) -> 'float'
 state.StageResult.h2_residual(self) -> 'float'
 state.StageResult.mass_residual(self) -> 'float'
-state.Stream(name: str, t_k: float, p_pa: float, masses_kg: Mapping[str, float], bubbles: Bins | None, droplets: Bins | None)
+state.Stream(name: str, t_k: float, p_pa: float, masses_kg: Mapping[str, float], bubbles: Bins | None = None, droplets: Bins | None = None)
 state.Stream.as_dict(self) -> 'dict[str, object]'
 state.Stream.enthalpy_j(self) -> 'float'
 state.Stream.h2_mass(self) -> 'float'
