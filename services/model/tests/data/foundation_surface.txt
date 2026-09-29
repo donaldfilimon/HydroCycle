@@ -1,0 +1,78 @@
+provenance.HAZARD_TBD = HazardTBD
+provenance.HazardTBD class
+provenance.PhysicsConflict class
+provenance.Q(value: float, unit: str, tag: Tag, note: str)
+provenance.Tag class
+provenance.Tag.LIT = 'LIT'
+provenance.Tag.CALC = 'CALC'
+provenance.Tag.MEAS = 'MEAS'
+provenance.Tag.P = 'P'
+provenance.Tag.I = 'I'
+provenance.diagnostic(value: 'float', unit: 'str', tag: 'Tag', note: 'str' = '') -> 'dict[str, float | str]'
+thermo.CP_LIQUID_WATER_MOLAR = float
+thermo.H_F_LIQUID_WATER = float
+thermo.LHV_H2 = float
+thermo.MOLAR_MASS = dict
+thermo.R_U = float
+thermo.T_REF = float
+thermo.cp_molar(species: 'str', t_k: 'float') -> 'float'
+thermo.h_fg(t_k: 'float') -> 'float'
+thermo.h_liquid_water_mass(t_k: 'float') -> 'float'
+thermo.h_liquid_water_molar(t_k: 'float') -> 'float'
+thermo.h_mass(species: 'str', t_k: 'float') -> 'float'
+thermo.h_molar(species: 'str', t_k: 'float') -> 'float'
+thermo.p_sat(t_k: 'float') -> 'float'
+thermo.t_sat(p_pa: 'float') -> 'float'
+thermo.u_molar(species: 'str', t_k: 'float') -> 'float'
+geometry.Geometry(bore_m: float, stroke_m: float, rod_m: float, compression_ratio: float, displacement_m3: float)
+geometry.Geometry.clearance_m3 property
+geometry.Geometry.crank_radius_m property
+geometry.Geometry.pin_height_m(self, theta_deg: 'float') -> 'float'
+geometry.Geometry.piston_area_m2 property
+geometry.Geometry.piston_travel_m(self, theta_deg: 'float') -> 'float'
+geometry.Geometry.volume_m3(self, theta_deg: 'float') -> 'float'
+geometry.Geometry.wall_area_m2(self, theta_deg: 'float') -> 'float'
+geometry.gate1_audit(g: 'Geometry') -> 'dict[str, dict[str, float | str]]'
+params.P0 = ParameterSet
+params.ParameterSet(quantities: Mapping[str, Q], options: Mapping[str, str])
+params.ParameterSet.fingerprint(self) -> 'str'
+params.ParameterSet.values(self) -> 'dict[str, float]'
+params.ParameterSet.with_options(self, overrides: 'Mapping[str, str]') -> 'ParameterSet'
+params.ParameterSet.with_values(self, overrides: 'Mapping[str, float]') -> 'ParameterSet'
+state.BASES = ('per_m3_liquid', 'per_cycle')
+state.Bins(edges_m: tuple[float, ...], counts: tuple[float, ...], basis: str)
+state.Bins.as_dict(self) -> 'dict[str, object]'
+state.Bins.centers_m(self) -> 'tuple[float, ...]'
+state.Bins.lognormal(cls, *, d50_m: 'float', gsd: 'float', total: 'float', basis: 'str', k: 'int' = 32, span_sigma: 'float' = 3.5) -> 'Bins'
+state.Bins.total(self) -> 'float'
+state.Bins.volume_sum_m3(self) -> 'float'
+state.ENERGY_TOLERANCE = float
+state.GAS_SPECIES = ('o2', 'n2')
+state.H2_STATES = ('h2_dissolved', 'h2_bubble', 'h2_free')
+state.MASS_TOLERANCE = float
+state.SPECIES = ('water_bulk', 'water_aerosol', 'water_vapor', 'h2_dissolved', 'h2_bubble', 'h2_free', 'o2', 'n2')
+state.StageResult(component_id: str, inlet: Stream, outlet: Stream, side_streams: Mapping[str, Stream], energy_in_j: Mapping[str, float], work_out_j: float, diagnostics: Mapping[str, object])
+state.StageResult.check(self) -> 'None'
+state.StageResult.energy_residual(self) -> 'float'
+state.StageResult.h2_residual(self) -> 'float'
+state.StageResult.mass_residual(self) -> 'float'
+state.Stream(name: str, t_k: float, p_pa: float, masses_kg: Mapping[str, float], bubbles: Bins | None, droplets: Bins | None)
+state.Stream.as_dict(self) -> 'dict[str, object]'
+state.Stream.enthalpy_j(self) -> 'float'
+state.Stream.h2_mass(self) -> 'float'
+state.Stream.total_mass(self) -> 'float'
+state.WATER_STATES = ('water_bulk', 'water_aerosol', 'water_vapor')
+ledger.ENERGY_IN = ('hydrogen_chemical', 'ultrasonic_electrical', 'pump_electrical', 'ancillary_electrical', 'thermal_preconditioning', 'inlet_sensible')
+ledger.ENERGY_OUT = ('indicated_work_net', 'cooling_wall_heat', 'ultrasonic_ambient_heat', 'ancillary_heat', 'vented_hydrogen_chemical', 'exhaust_residual_chemical', 'exhaust_latent', 'exhaust_sensible', 'return_liquid_sensible')
+ledger.Efficiency(name: str, value: float | None, numerator: float, denominator: float, definition: str, flag: str | None)
+ledger.Efficiency.ratio(cls, name: 'str', numerator: 'float', denominator: 'float', definition: 'str') -> 'Efficiency'
+ledger.EnergyLedger(inputs: Mapping[str, float], outputs: Mapping[str, float])
+ledger.EnergyLedger.check(self, tol: 'float' = 1e-09) -> 'None'
+ledger.EnergyLedger.residual_rel(self) -> 'float'
+ledger.EnergyLedger.total_in(self) -> 'float'
+ledger.EnergyLedger.total_out(self) -> 'float'
+ledger.MassLedger(rows: Mapping[str, tuple[float, float]])
+ledger.MassLedger.check(self, tol: 'float' = 1e-12) -> 'None'
+ledger.MassLedger.residual_rel(self, name: 'str') -> 'float'
+ledger.NEGATIVE_FLAG = 'NEGATIVE: the modelled engine absorbs work'
+ledger.UNDEFINED_FLAG = 'UNDEFINED: zero denominator'
