@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { URL } from "node:url";
+import { resolve } from "node:path";
 import { runInNewContext } from "node:vm";
 
 import { describe, expect, it } from "vitest";
@@ -21,12 +21,15 @@ interface CadModel {
   toOBJ: (scene: Scene) => string;
 }
 
+// Not `new URL(..., import.meta.url)`: under the suite's jsdom environment that
+// URL is http:, not file:, and readFileSync rejects it.
 const html = readFileSync(
-  new URL("../../public/hydrocycle-cad.html", import.meta.url),
+  resolve(__dirname, "../../public/hydrocycle-cad.html"),
   "utf8",
 );
-const source =
-  /<script id="hydrocycle-model-source">([\s\S]*?)<\/script>/.exec(html)?.[1];
+const source = /<script id="hydrocycle-model-source">([\s\S]*?)<\/script>/.exec(
+  html,
+)?.[1];
 if (!source) throw new Error("Published CAD document has no geometry model.");
 const sandbox = { module: { exports: {} as unknown } };
 runInNewContext(source, sandbox);

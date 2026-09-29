@@ -2,7 +2,6 @@
 
 import {
   Activity,
-  Box,
   Beaker,
   BookOpen,
   Box,
