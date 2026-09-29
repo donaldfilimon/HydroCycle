@@ -101,9 +101,7 @@ def render_surface() -> str:
                 lines.append(f"{name}.{attr}{inspect.signature(obj)}")
             elif isinstance(obj, ParameterSet):
                 lines.append(f"{name}.{attr} = ParameterSet fingerprint {obj.fingerprint()}")
-            elif isinstance(obj, HazardTBD):
-                lines.append(f"{name}.{attr} = {obj!r}")
-            elif isinstance(obj, (str, bool, int, float, tuple)):
+            elif isinstance(obj, (HazardTBD, str, bool, int, float, tuple)):
                 lines.append(f"{name}.{attr} = {obj!r}")
             elif isinstance(obj, dict):
                 lines.append(f"{name}.{attr} = {sorted(obj.items())!r}")
@@ -142,4 +140,5 @@ print("CLEAN")
     result = subprocess.run(
         [sys.executable, "-c", code], capture_output=True, text=True, check=False
     )
-    assert result.returncode == 0 and "CLEAN" in result.stdout, result.stderr + result.stdout
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert "CLEAN" in result.stdout, result.stdout
