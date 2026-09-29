@@ -130,6 +130,10 @@ class Stream:
         }
 
 
+_NON_NEGATIVE_DIAGNOSTICS: Final = ("_mass_added_kg", "_h2_added_kg", "_h2_reacted_kg")
+_NUMERIC_DIAGNOSTICS: Final = (*_NON_NEGATIVE_DIAGNOSTICS, "_H_added_J", "_heat_to_ambient_J")
+
+
 def _relative(residual: float, scale: float) -> float:
     return residual / scale if scale > 0.0 else residual
 
@@ -143,6 +147,23 @@ class StageResult:
     energy_in_j: Mapping[str, float] = field(default_factory=dict)
     work_out_j: float = 0.0
     diagnostics: Mapping[str, object] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if not isfinite(self.work_out_j):
+            raise ValueError(f"work_out_j must be finite, got {self.work_out_j!r}")
+        for name, joules in self.energy_in_j.items():
+            if not isfinite(joules):
+                raise ValueError(f"energy_in_j[{name!r}] must be finite, got {joules!r}")
+        for key in _NUMERIC_DIAGNOSTICS:
+            if key not in self.diagnostics:
+                continue
+            value = self.diagnostics[key]
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise ValueError(f"diagnostic {key} must be a number, got {value!r}")
+            if not isfinite(value):
+                raise ValueError(f"diagnostic {key} must be finite, got {value!r}")
+            if key in _NON_NEGATIVE_DIAGNOSTICS and value < 0.0:
+                raise ValueError(f"diagnostic {key} must be non-negative, got {value!r}")
 
     def _number(self, key: str) -> float:
         value = self.diagnostics.get(key, 0.0)
@@ -176,11 +197,11 @@ class StageResult:
 
     def check(self) -> None:
         mass = self.mass_residual()
-        if abs(mass) > MASS_TOLERANCE:
+        if not abs(mass) <= MASS_TOLERANCE:
             raise PhysicsConflict(f"{self.component_id} mass", "no stage creates mass", mass)
         h2 = self.h2_residual()
-        if abs(h2) > MASS_TOLERANCE:
+        if not abs(h2) <= MASS_TOLERANCE:
             raise PhysicsConflict(f"{self.component_id} hydrogen", "no stage creates hydrogen", h2)
         energy = self.energy_residual()
-        if abs(energy) > ENERGY_TOLERANCE:
+        if not abs(energy) <= ENERGY_TOLERANCE:
             raise PhysicsConflict(f"{self.component_id} energy", "stage energy balance", energy)

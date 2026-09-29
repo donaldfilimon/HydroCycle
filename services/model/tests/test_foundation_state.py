@@ -92,3 +92,42 @@ def test_energy_residual_counts_inputs_work_and_ambient_heat() -> None:
     )
     assert abs(result.energy_residual()) < 1e-12
     result.check()
+
+
+@pytest.mark.parametrize("bad", [math.nan, math.inf, -math.inf])
+def test_stage_results_reject_non_finite_work_and_energy_inputs(bad: float) -> None:
+    inlet = water("in", 1.0e-3)
+    outlet = water("out", 1.0e-3)
+    with pytest.raises(ValueError, match="work_out_j must be finite"):
+        StageResult("PMP-103", inlet, outlet, work_out_j=bad)
+    with pytest.raises(ValueError, match="energy_in_j"):
+        StageResult("PMP-103", inlet, outlet, energy_in_j={"pump_electrical": bad})
+
+
+@pytest.mark.parametrize("key", ["_mass_added_kg", "_h2_added_kg", "_h2_reacted_kg", "_H_added_J"])
+@pytest.mark.parametrize("bad", [math.nan, math.inf])
+def test_stage_results_reject_non_finite_diagnostics(key: str, bad: float) -> None:
+    inlet = water("in", 1.0e-3, h2=2.0e-9)
+    with pytest.raises(ValueError, match="must be finite"):
+        StageResult("ENG-601", inlet, inlet, diagnostics={key: bad})
+
+
+def test_negative_reacted_hydrogen_is_rejected() -> None:
+    inlet = water("in", 1.0e-3, h2=2.0e-9)
+    with pytest.raises(ValueError, match="non-negative"):
+        StageResult("ENG-601", inlet, inlet, diagnostics={"_h2_reacted_kg": -1.0e-9})
+
+
+def test_a_bool_diagnostic_is_not_a_number() -> None:
+    inlet = water("in", 1.0e-3)
+    with pytest.raises(ValueError, match="must be a number"):
+        StageResult("ENG-601", inlet, inlet, diagnostics={"_h2_reacted_kg": True})
+
+
+def test_check_treats_a_non_finite_residual_as_a_conflict() -> None:
+    # Construction rejects non-finite inputs, so force NaN through a stream that bypasses it.
+    inlet = water("in", 1.0e-3, h2=2.0e-9)
+    result = StageResult("NBG-104", inlet, inlet)
+    object.__setattr__(result, "work_out_j", math.nan)
+    with pytest.raises(PhysicsConflict, match="energy"):
+        result.check()
