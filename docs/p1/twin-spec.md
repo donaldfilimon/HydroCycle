@@ -4,6 +4,13 @@
 > (module paths, invariant 4, the Rust/WebGPU twin) is in
 > `docs/superpowers/specs/2026-09-29-hydrocycle-p1-design.md`, which takes precedence where
 > they differ.
+>
+> **Superseded in part (2026-09-29, Donald: Blender is replaced by the browser `/cad`
+> workspace).** Every Blender-specific part is superseded: the §1 rows naming Geometry Nodes,
+> `data_bake.py` and `hc_panel.py`; §2 (build rules); §4 (the `blender/` module list); and the
+> Blender mechanics in §5. §3 (honest visualisation rules) and the measurable intent of §5
+> (envelope, kinematics at 24 crank angles, data read-back, honesty tests) apply to every
+> renderer, the Rust/WebGPU twin and `/cad` alike. §6 stands.
 
 Binding contract for every module under `blender/`. Data definitions live in
 `blender/twin_contract.py`; this document says how to build to them.

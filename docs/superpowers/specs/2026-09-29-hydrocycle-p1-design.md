@@ -32,13 +32,14 @@ machine. What does exist:
    commit green on `bun run check`.
 3. **Cantera is a test-time oracle only.** The same applies to numpy and scipy. Runtime model
    code is standard library, float64.
-4. **Both renderers, one contract.** Blender 5.2.2 (the P1 twin spec) is the authoring,
-   verification and stills renderer; the Rust wgpu/WebGPU twin draws the same contract live on
-   web and native.
+4. **Two renderers, one contract, no Blender** (revised 2026-09-29 15:1x, superseding the
+   first draft's Blender renderer). The Rust wgpu/WebGPU twin draws the contract live on web
+   and native; the browser `/cad` workspace (`93e9cba`) is the concept-geometry renderer
+   (cutaways, exploded views, OBJ/JSON export). There is no `blender/` tree.
 5. **`AGENTS.md` invariant 4 is amended, tightly scoped** (text in section 7).
 6. **`ideal_complete` is kept, fenced** against invariant 1 (section 3.4).
-7. Web keeps bounded synchronous runs (no job queue). Phone shows Blender stills plus plots,
-   not live 3D.
+7. Web keeps bounded synchronous runs (no job queue). Phone shows the process schematic and
+   crank-angle plots, not 3D.
 
 ## 3. Sub-project 1: the model
 
@@ -124,14 +125,15 @@ at the engine step (theta, V, p, T, phase masses, `x_burned`, and precomputed pi
 crank transforms), plus ledgers and gates. Values are float64 in JSON. A renderer may cast to
 float32 for geometry; any number it shows as text comes from the float64 value.
 
-**Kinematics:** clients draw the precomputed transforms, so no client derives physics. Blender's
-Geometry Nodes may reproduce the slider-crank, as the twin spec requires, but only as a
-reproduction that `verify_twin.py` checks against the contract to 0.01 mm at 24 crank angles.
+**Kinematics:** the Rust twin draws the precomputed transforms, so it derives no physics.
+`/cad` keeps its client-side slider-crank as a *reproduction* only: it never supplies a
+displayed thermodynamic number, and a test cross-checks it against the contract's geometry at
+24 crank angles (0.01 mm, 1e-4 relative), the same rule the first draft applied to Blender's
+Geometry Nodes.
 
 **Codegen:** `bun run contracts` emits TypeScript types into `packages/contracts` and a JSON
 Schema; a drift test pins the Rust `serde` structs in `crates/hydrocycle-twin` to that schema.
-Blender's `data_bake.py` reads the JSON directly. `twin.py`'s existing `TwinManifest` evolves
-into this contract rather than being duplicated.
+`twin.py`'s existing `TwinManifest` evolves into this contract rather than being duplicated.
 
 **Honesty is data plus tests.** Every renderer carries the same three checks: zero
 reaction-zone geometry when `x_burned = 0`; no vapour proxy at USC-401; the fixture label
@@ -142,17 +144,20 @@ present when `is_fixture = 1`.
 **Rust wgpu / WebGPU (`crates/hydrocycle-twin`):** draws `TwinRun` in native and browser
 builds; `bun run check:twin` stays in the root gate.
 
-**Blender (`blender/` at the repository root):** the modules in twin spec section 4, built to
-its build rules and verification. Its headless verify becomes a root-gate stage that runs
-`blender -b --factory-startup --disable-autoexec` and reads explicit PASS or FAIL markers
-(twin spec rule 9). When Blender 5.2.2 is absent the stage prints
-`SKIPPED: blender 5.2.2 not found` and the gate's verdict names the skip; it is never a silent
-pass. `render_twin.py` writes the ten stills, each stamped with the `parameter_fingerprint` it
-was rendered from.
+**Browser `/cad` (`apps/web/public/hydrocycle-cad.html`, route `apps/web/app/cad`):** a
+sandboxed, dependency-free concept-geometry workspace (WebGL with a Canvas 3D fallback). Its
+existing checks stay: 14 in `scripts/test-cad-model.cjs` against the shipped document and 6 in
+`apps/web/src/test/cad-document.test.ts`. When the twin contract lands, `/cad` reads component
+IDs, positions, sizes and the honesty strings from the generated contract JSON instead of
+constants embedded in the HTML; until then it stays labelled "independent concept geometry,
+not a thermodynamic solver", as it is today. Its `null` hydrogen mass, vapour fraction and
+shaft power stay `null`. The twin spec's honesty rules (§3) and verification (§5) apply to it
+as to every renderer.
 
-The P0 differences in twin spec section 6 stay visible in `verify_twin.py`'s report. The
-engine-position question (conditioning deck versus separate test article) remains an owner
-decision; P1 follows the STEP position and marks HC-IF-601 as the boundary.
+The P0 differences in twin spec section 6 stay visible, reported by the `/cad` and contract
+tests (both deck heights; the retained legacy −10° volume discrepancy, 60.431 cc against
+59.354). The engine-position question (conditioning deck versus separate test article)
+remains an owner decision; P1 follows the STEP position and marks HC-IF-601 as the boundary.
 
 ## 6. Sub-project 4: clients
 
@@ -191,13 +196,11 @@ The August Expo spec's network rules stand: live data only from the iOS Simulato
 
 - **Role.** A read-and-inspect companion: Summary, Process, Ledgers and Runs render the same
   `packages/view-model` presentation types as the web. The phone derives no number.
-- **Twin.** The ten Blender stills ship as assets beside a crank-angle scrubber over the
-  `TwinRun` traces. The screen states that the views are rendered, not live. When a still's
-  `parameter_fingerprint` differs from the current run's, the screen shows `STALE RENDER`
-  rather than pairing a picture with the wrong numbers.
+- **Twin.** No 3D on the phone. The twin screen shows the process schematic plus crank-angle
+  plots over the `TwinRun` traces with a scrubber, every value read from the run.
 - **Status.** The same banner rules as the web; always `TEST FIXTURE, NOT A MODEL RUN` on a
   physical device.
-- **Tests.** Jest pins the honesty rendering and the stale-render check; `check:mobile` still
+- **Tests.** Jest pins the honesty rendering; `check:mobile` still
   ends with real iOS and Android `expo export` runs.
 
 ## 7. Invariant amendments
@@ -223,9 +226,10 @@ Invariant 1 gains one sentence:
 
 1. Model: foundation, then stage migration (sub-project 1).
 2. Twin contract (sub-project 2).
-3. Rust/WebGPU twin and the web app, in parallel (sub-projects 3 and 4.1).
-4. Blender tree (sub-project 3).
-5. Phone (sub-project 4.2), last, because it consumes the Blender stills.
+3. Rust/WebGPU twin, `/cad` alignment to the contract, and the web app, in parallel
+   (sub-projects 3 and 4.1).
+4. Phone (sub-project 4.2), last, because it renders the same view-model types the web
+   settles.
 
 Each step gets its own implementation plan, and `bun run check` is green before the next
 begins.
