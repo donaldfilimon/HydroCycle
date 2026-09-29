@@ -6,6 +6,7 @@ gaseous H2 enthalpy; the dissolution enthalpy is neglected [P].
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from itertools import pairwise
@@ -24,6 +25,12 @@ SPECIES: Final = WATER_STATES + H2_STATES + GAS_SPECIES
 BASES: Final = ("per_m3_liquid", "per_cycle")
 MASS_TOLERANCE: Final = 1e-12
 ENERGY_TOLERANCE: Final = 1e-9
+# The energy residual is a difference of absolute enthalpies (about 15.87 kJ per gram of liquid
+# water, mostly formation enthalpy), so its rounding noise is about n * eps * S_abs for n summed
+# terms. Flooring the scale at _ENERGY_NOISE_FACTOR * eps * S_abs / ENERGY_TOLERANCE keeps that
+# noise ratio below ENERGY_TOLERANCE for up to 64 terms, so conserving stages always pass. For
+# 1 g of water the floor is about 0.45 J (detectable leak about 4.5e-10 J).
+_ENERGY_NOISE_FACTOR: Final = 64
 
 
 @dataclass(frozen=True, slots=True)
@@ -121,6 +128,11 @@ class Stream:
     def enthalpy_j(self) -> float:
         return sum(_species_enthalpy_j(s, kg, self.t_k) for s, kg in self.masses_kg.items())
 
+    def reference_enthalpy_j(self) -> float:
+        """Enthalpy at thermo.T_REF with every species in its stored phase."""
+
+        return sum(_species_enthalpy_j(s, kg, thermo.T_REF) for s, kg in self.masses_kg.items())
+
     def as_dict(self) -> dict[str, object]:
         return {
             "name": self.name,
@@ -195,7 +207,29 @@ class StageResult:
             + self.work_out_j
             + self._number("_heat_to_ambient_J")
         )
-        return _relative(h_in - h_out, abs(h_in) + abs(h_out))
+        return _relative(h_in - h_out, self._energy_scale())
+
+    def _energy_scale(self) -> float:
+        """Reference-relative magnitude of the balance, floored at the rounding-noise level."""
+
+        streams = (self.inlet, self.outlet, *self.side_streams.values())
+        added = self._number("_H_added_J")
+        delta_ref = (
+            self.inlet.reference_enthalpy_j()
+            - self.outlet.reference_enthalpy_j()
+            - sum(s.reference_enthalpy_j() for s in self.side_streams.values())
+        )
+        reference_relative = (
+            sum(abs(s.enthalpy_j() - s.reference_enthalpy_j()) for s in streams)
+            + sum(abs(v) for v in self.energy_in_j.values())
+            + abs(self.work_out_j)
+            + abs(self._number("_heat_to_ambient_J"))
+            + abs(added)
+            + abs(delta_ref)
+        )
+        s_abs = sum(abs(s.enthalpy_j()) for s in streams) + abs(added)
+        floor = _ENERGY_NOISE_FACTOR * sys.float_info.epsilon * s_abs / ENERGY_TOLERANCE
+        return max(reference_relative, floor)
 
     def check(self) -> None:
         mass = self.mass_residual()

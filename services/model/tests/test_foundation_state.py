@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import math
+import random
 
 import pytest
 
@@ -166,3 +167,75 @@ def test_stage_result_as_dict_is_json_ready() -> None:
         "energy": result.energy_residual(),
     }
     assert json.loads(json.dumps(d)) == d
+
+
+def _warmed_gram(leak_j: float) -> StageResult:
+    inlet = water("in", 1.0e-3)
+    outlet = water("out", 1.0e-3, t_k=299.15)
+    rise = outlet.enthalpy_j() - inlet.enthalpy_j()
+    return StageResult("PMP-103", inlet, outlet, energy_in_j={"pump_electrical": rise + leak_j})
+
+
+def test_a_warmed_gram_of_water_that_balances_passes() -> None:
+    _warmed_gram(0.0).check()
+
+
+def test_a_one_microjoule_leak_on_a_gram_of_water_raises() -> None:
+    # Before the reference-relative scale, this leak passed (the scale was |H_in| + |H_out|).
+    with pytest.raises(PhysicsConflict, match="energy"):
+        _warmed_gram(1.0e-6).check()
+
+
+def test_a_reacting_stage_with_its_heat_accounted_for_passes() -> None:
+    """Legitimate chemistry is not failed by the energy check.
+
+    The reaction heat is closed by _heat_to_ambient_J, which already carries the scale on its
+    own (about 0.12 J), so this passes with or without the |dH_ref| term. It shows that a
+    reacting stage is not rejected; it does not prove that the dH_ref term is necessary.
+    """
+    inlet = Stream("in", 400.0, 1.0e5, {"h2_free": 2.0e-9, "o2": 16.0e-9})
+    outlet = Stream("out", 400.0, 1.0e5, {"h2_free": 1.0e-9, "o2": 8.06e-9, "water_vapor": 8.94e-9})
+    heat = inlet.enthalpy_j() - outlet.enthalpy_j()
+    assert heat > 0.1  # about 0.12 J released by 1 ng of H2
+    StageResult(
+        "ENG-601",
+        inlet,
+        outlet,
+        diagnostics={"_h2_reacted_kg": 1.0e-9, "_heat_to_ambient_J": heat},
+    ).check()
+
+
+def _shuffled(rng: random.Random, masses: dict[str, float]) -> dict[str, float]:
+    items = list(masses.items())
+    rng.shuffle(items)
+    return dict(items)
+
+
+def test_randomised_conserving_stages_pass_and_leaks_are_caught() -> None:
+    rng = random.Random(20260929)
+    for _ in range(600):
+        water_kg = rng.uniform(1.0e-4, 2.0e-3)
+        h2_kg = rng.uniform(1.0e-9, 1.0e-8)
+        vented = rng.uniform(0.1, 0.9) * h2_kg
+        t_k = rng.choice([thermo.T_REF, thermo.T_REF, 350.0])
+        inlet = Stream(
+            "in", t_k, 1.0e5, _shuffled(rng, {"water_bulk": water_kg, "h2_dissolved": h2_kg})
+        )
+        outlet = Stream(
+            "out",
+            t_k,
+            1.0e5,
+            _shuffled(rng, {"water_bulk": water_kg, "h2_dissolved": h2_kg - vented}),
+        )
+        parts = rng.randint(1, 3)  # split the vent into side streams to vary the summation
+        vents = {
+            f"vent{i}": Stream(f"vent{i}", t_k, 1.0e5, {"h2_free": vented / parts})
+            for i in range(parts)
+        }
+        StageResult("NBG-104", inlet, outlet, side_streams=vents).check()
+        leaky = StageResult(
+            "NBG-104", inlet, outlet, side_streams=vents, energy_in_j={"pump_electrical": 1.0e-6}
+        )
+        if water_kg <= 1.0e-3:
+            with pytest.raises(PhysicsConflict, match="energy"):
+                leaky.check()

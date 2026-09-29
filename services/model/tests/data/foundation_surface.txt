@@ -62,6 +62,7 @@ state.Stream(name: str, t_k: float, p_pa: float, masses_kg: Mapping[str, float],
 state.Stream.as_dict(self) -> 'dict[str, object]'
 state.Stream.enthalpy_j(self) -> 'float'
 state.Stream.h2_mass(self) -> 'float'
+state.Stream.reference_enthalpy_j(self) -> 'float'
 state.Stream.total_mass(self) -> 'float'
 state.WATER_STATES = ('water_bulk', 'water_aerosol', 'water_vapor')
 ledger.ENERGY_IN = ('hydrogen_chemical', 'ultrasonic_electrical', 'pump_electrical', 'ancillary_electrical', 'thermal_preconditioning', 'inlet_sensible')
