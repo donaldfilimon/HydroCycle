@@ -29,12 +29,19 @@ fluid. Never describe water as contributing chemical energy.
 ## Hard invariants
 
 1. A failed feasibility gate returns a motored baseline and sensitivities, but
-   no proposed reactive cycle.
+   no proposed reactive cycle. The `ideal_complete` scenario is not a proposed
+   cycle: it runs only when explicitly requested, is never persisted or exported
+   as a proposal, and every value it produces is labelled `IDEAL, NOT PHYSICAL`.
 2. Measured total hydrogen replaces derived dissolved-plus-bubble loading; it
    must never be double counted.
 3. Missing measurements remain `null`, never numeric zero.
 4. The 0D model is homogeneous and single-zone. Do not render flame fronts,
-   velocity fields, particle trajectories, or CFD contours.
+   velocity fields, particle trajectories, or CFD contours. Two exceptions, both
+   drawn only from model output: a uniform whole-chamber tint scaled by the
+   baked `x_burned` at the current crank angle (no front, no shape, no motion),
+   and static proxies for bubbles, droplets, vapour and hydrogen that never move
+   along a path, whose count never feeds a number, and which always appear with
+   `VISUALIZATION NOT TO SCALE`.
 5. V1 is read-only with respect to hardware. Do not add actuator, ignition,
    injector, throttle, or command endpoints.
 6. Every persisted result records schema, solver, Python, Cantera, mechanism,

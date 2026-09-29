@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 code, model behavior, imports, persistence, or visual design. It carries the
 seven hard invariants (water contributes no chemical energy, failed gates
 return motored baselines only, nulls stay null, single-zone 0D with no CFD
-rendering, hardware read-only, reproducibility metadata on every persisted
+rendering beyond two scoped exceptions, hardware read-only, reproducibility metadata on every persisted
 result, `127.0.0.1` binding). This file does not repeat them; it covers
 commands, architecture, and the workflow traps.
 
