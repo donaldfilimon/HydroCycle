@@ -5,3 +5,6 @@ playwright-report/
 test-results/
 out/
 public/twin-gpu/
+
+# Preserve the supplied single-file teaching document.
+public/hydrogen-cycle.html

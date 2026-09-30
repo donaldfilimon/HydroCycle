@@ -1,0 +1,720 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>HC-IF-601 Hydrogen Cycle</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one dark instrument bench. 3D rig + readout rail, transport bar, grouped parameter deck, status flags, verification tables, ten plot tiles, then the derivation in run order. */
+:root{
+  --bg:#14161b; --panel:#2b2e35; --panel-2:#363a42; --line:#4a4f59;
+  --fg:#e9e7e1; --muted:#a7a9ad; --peach:#f0c9a8; --ice:#cfe3ee; --fixture:#f2b39b; --model:#c9d86f; --rep:#c8b6f0; --warn:#f2a35c; --bad:#e0655c; --ok:#8fd9b6; --pin:#8a8f99;
+  --sans:"Jost",ui-sans-serif,system-ui,"Gill Sans","Helvetica Neue",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.5;padding-block:0 56px;padding-inline:clamp(16px,3vw,40px)}
+h1,h2,h3{margin:0;text-wrap:balance;font-weight:500;letter-spacing:.01em}
+h1{font-size:clamp(22px,3vw,34px)}
+h2{font-size:20px;margin-block:36px 12px;border-top:1px solid var(--line);padding-top:14px}
+h3{font-size:15px;color:var(--peach)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.tag{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:3px;background:var(--panel-2);color:var(--fixture);border:1px solid var(--line);white-space:nowrap}
+.tag.model{color:var(--model)} .tag.rep{color:var(--rep)} .tag.meas{color:var(--ok)} .tag.pin{color:var(--pin)}
+header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px;padding-block:22px 14px}
+header p{margin:4px 0 0;color:var(--muted);max-width:66ch}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;margin-bottom:12px}
+nav.toc a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line)}
+nav.toc a:hover{color:var(--fg)}
+.bench{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px}
+@media (max-width:860px){.bench{grid-template-columns:minmax(0,1fr)}}
+.stage{position:relative;background:var(--panel);border:1px solid var(--line);aspect-ratio:16/10;max-width:100%;min-width:0;overflow:hidden;touch-action:none}
+.stage canvas{display:block;width:100%;height:100%}
+.stage .plate{position:absolute;left:12px;top:12px;font-family:var(--mono);font-size:11px;line-height:1.45;color:var(--fg);background:rgba(20,22,27,.8);padding:8px 10px;border:1px solid var(--line);max-width:min(320px,72%);pointer-events:none}
+.stage .hint{position:absolute;right:12px;bottom:10px;font-family:var(--mono);font-size:11px;color:var(--muted);pointer-events:none}
+.stage .views{position:absolute;right:10px;top:10px;display:flex;gap:4px}
+.stage .views button{padding:3px 8px;font-size:12px}
+.colorbar{position:absolute;left:12px;bottom:12px;width:14px;height:120px;border:1px solid var(--line);background:linear-gradient(to top,#3b57d6,#7fc4e6,#e8e2b0,#f2a35c,#d9322e);pointer-events:none}
+.colorbar i{position:absolute;left:-4px;right:-4px;height:3px;background:#fff;box-shadow:0 0 0 1px #000}
+.colorbar b{position:absolute;left:20px;font-family:var(--mono);font-size:10px;color:var(--muted);font-weight:400;white-space:nowrap}
+.rail{display:flex;flex-direction:column;gap:10px;min-width:0}
+.readouts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+.readouts div{background:var(--panel);padding:7px 10px;min-width:0}
+.readouts .k{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.readouts .v{font-family:var(--mono);font-size:14.5px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.readouts .v small{font-size:11px;color:var(--muted)}
+.transport{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.transport .sep{width:1px;height:22px;background:var(--line)}
+button{font:inherit;font-weight:500;background:var(--panel-2);color:var(--fg);border:1px solid var(--line);padding:6px 14px;cursor:pointer;border-radius:3px}
+button:hover{background:#41464f}
+button.on{border-color:var(--peach);color:var(--peach)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--peach);outline-offset:2px}
+.deck{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:12px}
+.group{background:var(--panel);border:1px solid var(--line);padding:12px 14px;min-width:0}
+.group h3{font-size:12px;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.ctl{display:grid;grid-template-columns:1fr auto;gap:0 8px;align-items:center;min-width:0;margin-bottom:6px}
+.ctl label{font-size:13px;color:var(--muted)}
+.ctl output{font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums;color:var(--fg)}
+.ctl input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--peach);margin:0}
+.ctl.tog{grid-template-columns:auto 1fr;gap:8px;margin:4px 0}
+.ctl.tog input{accent-color:var(--peach);width:16px;height:16px}
+.flags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.flag{font-family:var(--mono);font-size:12px;padding:6px 10px;border:1px solid var(--line);background:var(--panel);display:flex;gap:8px;align-items:center;min-width:0}
+.flag i{width:9px;height:9px;border-radius:50%;background:var(--ok);flex:none}
+.flag.warn i{background:var(--warn)} .flag.bad i{background:var(--bad)} .flag.off i{background:var(--pin)}
+.tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-top:12px}
+.tbl{background:var(--panel);border:1px solid var(--line);padding:12px 16px;min-width:0}
+.tbl .hd{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.tbl .row{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums;display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:10px;border-bottom:1px dashed var(--line);padding:4px 0}
+.tbl .row.two{grid-template-columns:1.6fr 1fr}
+.tbl .row span:nth-child(2){color:var(--rep)} .tbl .row span:nth-child(3){color:var(--ice)}
+.tbl .row.two span:nth-child(2){color:var(--ice)}
+.tbl .row.h span{color:var(--muted)!important;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+.plots{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-top:14px}
+.plot{background:var(--panel);border:1px solid var(--line);padding:10px 10px 6px;min-width:0}
+.plot .t{font-size:15px}
+.plot .s{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--fixture);text-transform:uppercase}
+.plot .r{font-family:var(--mono);font-size:12px;color:var(--fg);min-height:1.4em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plot canvas{display:block;width:100%;height:210px;max-width:100%}
+.math{max-width:74ch}
+.math p{margin:8px 0}
+.math p.note{color:var(--muted);font-size:14px}
+.eq{font-family:var(--mono);font-size:13.5px;background:var(--panel);border-left:3px solid var(--peach);padding:10px 14px;margin:10px 0;overflow-x:auto;white-space:pre;line-height:1.7}
+.sym{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;font-size:14px;margin:8px 0}
+.sym code{font-family:var(--mono);color:var(--ice);font-size:13px}
+ol.steps{padding-left:1.2em;margin:0}
+ol.steps>li{margin:26px 0}
+ol.steps>li::marker{font-family:var(--mono);color:var(--peach)}
+ul.flat{margin:6px 0;padding-left:1.1em}
+ul.flat li{margin:3px 0}
+code{font-family:var(--mono);font-size:.92em;color:var(--ice)}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--panel-2);border:1px solid var(--line);padding:8px 14px;font-family:var(--mono);font-size:12px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+body{font-size:1rem}
+.ctl label,.ctl output,.flag,.tbl .row,.plot .r{font-size:.875rem}
+.readouts .k,.plot .s,.eyebrow,.tag,nav.toc{font-size:.75rem}
+.deck{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}
+.tables,.plots{grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr))}
+button{min-height:44px}input[type=range]{min-height:32px}
+@media(max-width:540px){
+ .stage{aspect-ratio:1/1.15}.stage .plate{top:62px;max-width:calc(100% - 24px);font-size:.75rem}
+ .stage .hint{font-size:.75rem;max-width:60%;text-align:right}
+ .stage .views{left:10px;right:auto;flex-wrap:wrap}
+ .tbl{padding:10px}.tbl .row{gap:6px;overflow-wrap:anywhere}
+ .readouts .v{white-space:normal;overflow-wrap:anywhere}
+ .transport{gap:6px}.transport input[type=range]{max-width:100%}
+ .plot .r{white-space:normal}.sym{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+
+<header>
+  <div>
+    <div class="eyebrow">HC-IF-601 · single-cylinder hydrogen fixture · zero-dimensional cycle model</div>
+    <h1>Hydrogen cycle, from crank angle to work</h1>
+    <p>Independent teaching model · not the HydroCycle feasibility solver. Illustrative outputs, not engine validation or operating limits. Hydrogen supplies the chemical energy; water supplies none.</p>
+    <p>A slider-crank drives the volume, a Wiebe curve releases the hydrogen's energy, Woschni convection leaks some of it to the walls, the first law turns the rest into pressure, pressure becomes torque through the rod geometry, and torque integrates into work. Every number on this page is <span class="tag model">model</span> output; nothing is measured.</p>
+  </div>
+  <nav class="toc">
+    <a href="#rig">rig</a><a href="#params">parameters</a><a href="#verify">verification</a><a href="#plots">plots</a><a href="#math">math</a><a href="#limits">limits</a>
+  </nav>
+</header>
+
+<section class="bench" id="rig">
+  <div class="stage" id="stage">
+    <div class="plate" id="plate"></div>
+    <div class="views"><button type="button" data-view="iso">iso</button><button type="button" data-view="side">side</button><button type="button" data-view="front">front</button><button type="button" id="section">section</button></div>
+    <div class="colorbar" aria-hidden="true"><i id="cbmark" style="bottom:0"></i><b style="top:-4px">2500 K</b><b style="bottom:-4px">250 K</b></div>
+    <div class="hint">drag · orbit &nbsp; wheel · zoom &nbsp; space · play &nbsp; ← → · step</div>
+  </div>
+  <aside class="rail">
+    <div class="readouts" id="readouts"></div>
+    <div class="ctl" style="background:var(--panel);border:1px solid var(--line);padding:10px 12px;margin:0">
+      <label for="theta">Crank angle θ</label><output id="theta_o">0°</output>
+      <input id="theta" type="range" min="-360" max="360" step="0.5" value="-10">
+    </div>
+    <div class="ctl" style="background:var(--panel);border:1px solid var(--line);padding:10px 12px;margin:0">
+      <label for="speed">Playback rate</label><output id="speed_o"></output>
+      <input id="speed" type="range" min="0.05" max="2" step="0.05" value="0.4">
+    </div>
+  </aside>
+</section>
+
+<div class="transport">
+  <button id="play" type="button">Pause</button>
+  <button id="stepb" type="button" title="step −0.5°">−0.5°</button>
+  <button id="stepf" type="button" title="step +0.5°">+0.5°</button>
+  <span class="sep"></span>
+  <button id="preset_fixture" type="button">Fixture defaults</button>
+  <button id="preset_fired" type="button">Fired baseline</button>
+  <button id="preset_lean" type="button">Lean H₂ (φ 0.45)</button>
+  <span class="sep"></span>
+  <button id="pin" type="button">Pin this run</button>
+  <button id="unpin" type="button" hidden>Clear pin</button>
+  <button id="csv" type="button">Copy run as CSV</button>
+</div>
+
+<div class="deck" id="params"></div>
+
+<div class="flags" id="flags"></div>
+
+<div class="tables" id="verify">
+  <div class="tbl" id="check"></div>
+  <div class="tbl" id="energy"></div>
+  <div class="tbl" id="identities"></div>
+</div>
+
+<div class="plots" id="plots"></div>
+
+<h2 id="math">The math, in the order the model runs it</h2>
+<div class="math">
+<div class="sym">
+  <code>B, S</code><span>bore and stroke (m)</span>
+  <code>r = S/2, l</code><span>crank radius and connecting-rod length (m); <code>l/r</code> is the rod ratio</span>
+  <code>A = πB²/4</code><span>piston area (m²)</span>
+  <code>V_d = A·S, V_c = V_d/(CR−1)</code><span>displaced and clearance volume (m³)</span>
+  <code>θ</code><span>crank angle, 0° at firing TDC; one four-stroke cycle spans −360° … +360°</span>
+  <code>N, ω = 2πN/60</code><span>engine speed (rev/min) and angular speed (rad/s); <code>dt = dθ/(6N)</code> seconds per degree</span>
+  <code>φ</code><span>fuel–air equivalence ratio; φ = 0 is the unfired fixture run</span>
+  <code>IVC, EVO</code><span>intake-valve close and exhaust-valve open angles; the closed system exists between them</span>
+</div>
+
+<ol class="steps">
+<li>
+<h3>Slider-crank kinematics</h3>
+<p>The piston pin sits on the rod, the rod on the crank pin. Project both onto the bore axis. With the rod angle β defined by <code>sin β = (r/l) sin θ</code>, the piston distance from TDC is</p>
+<div class="eq">s(θ) = r(1 − cos θ) + l(1 − cos β) = r(1 − cos θ) + l − √(l² − r² sin²θ)</div>
+<p>The renders labelled "legacy display fixture (infinite rod)" drop the rod term, which is the same as letting <code>l → ∞</code> so that β → 0:</p>
+<div class="eq">s_legacy(θ) = r(1 − cos θ)</div>
+<p>The difference peaks at ±90° with value <code>l − √(l² − r²) ≈ r²/(2l)</code>. For the fixture (r = 43 mm, l/r = 3.5) that is 6.3 mm of travel, so the curves look alike on a plot and differ where it matters: volume at a given angle.</p>
+<p>Differentiating once and twice with respect to θ (radians) gives the speed and acceleration shape functions the torque model needs:</p>
+<div class="eq">ds/dθ   = r sin θ · [1 + r cos θ / √(l² − r² sin²θ)]
+d²s/dθ² = r cos θ + r²(cos 2θ)/√(l² − r² sin²θ) + r⁴ sin²θ cos²θ /(l² − r² sin²θ)^(3/2)
+
+v_p = ω · ds/dθ         a_p = ω² · d²s/dθ²         S̄_p = 2 S N / 60</div>
+<p>The second-order term in <code>d²s/dθ²</code> is what makes piston acceleration asymmetric between TDC and BDC (larger at TDC), a feature the infinite-rod model cannot show. The page evaluates <code>d²s/dθ²</code> by central difference of the analytic first derivative.</p>
+</li>
+
+<li>
+<h3>Cylinder volume and its rate</h3>
+<div class="eq">V(θ)  = V_c + A·s(θ)
+dV/dθ = A · ds/dθ</div>
+<p>At θ = −10° the fixture gives V = 60.43 cc against V_legacy = 59.35 cc, a 1.08 cc gap (1.78 %). A 1.8 % volume error at spark becomes a 2.4 % pressure error under n = 1.35, because p scales as V<sup>−n</sup>. The check table above recomputes these to four digits.</p>
+</li>
+
+<li>
+<h3>Trapped charge at intake-valve close</h3>
+<p>Up to IVC the cylinder is open to the manifold and held at intake pressure and charge temperature; mass is whatever fits. At IVC it is frozen:</p>
+<div class="eq">n_total = p_in · V(IVC) / (R_u · T_0)          R_u = 8.314 J/(mol·K)</div>
+<p>Hydrogen burns as <code>H₂ + ½(O₂ + 3.76 N₂)</code>, so one mole of H₂ needs 2.38 mol of air. The hydrogen mole fraction and the masses follow from φ:</p>
+<div class="eq">y_H2   = φ / (φ + 2.38)
+m_H2   = y_H2 · n_total · 0.002016 kg/mol
+m_air  = (1 − y_H2) · n_total · 0.02897 kg/mol
+M_mix  = y_H2·2.016 + (1 − y_H2)·28.97  g/mol      R_mix = R_u / M_mix</div>
+<p>Hydrogen takes up volume: at φ = 1 it is 30 % of the charge by moles, the volumetric-efficiency penalty of port-injected H₂. Available heat is limited by whichever runs out first (stoichiometric air–fuel ratio 34.3 by mass, lower heating value 120 MJ/kg):</p>
+<div class="eq">Q_total = min(m_H2, m_air / 34.3) · 120×10⁶ J/kg</div>
+</li>
+
+<li>
+<h3>Burn fraction, Wiebe form</h3>
+<p>Rather than resolving a flame, the model prescribes the mass fraction burned after spark θ₀ over a burn duration Δθ:</p>
+<div class="eq">x_b(θ) = 1 − exp[ −a · ((θ − θ₀)/Δθ)^(m+1) ]       a = 6.908, m = 2
+dQ_c   = Q_total · (x_b(θ + dθ) − x_b(θ))
+dx_b/dθ = a(m+1)/Δθ · ((θ−θ₀)/Δθ)^m · (1 − x_b)</div>
+<p>a = 6.908 makes x_b = 0.999 at the end of Δθ. m = 2 gives the usual S-curve. With φ = 0, Q_total is zero and this step does nothing, which is the "NO IGNITION IN THIS RUN: x_burned = 0" state of the fixture renders. Hydrogen's laminar flame speed is roughly five to eight times gasoline's at stoichiometry, so Δθ for H₂ is short (20–40°) near φ = 1 and stretches out lean; the slider spans that range but does not compute it.</p>
+</li>
+
+<li>
+<h3>Wall heat transfer, Woschni correlation</h3>
+<p>When the heat-loss toggle is on, convection to the walls is added with Woschni's 1967 correlation. Units: p in kPa, B in m, T in K, w in m/s; h comes out in W/(m²·K).</p>
+<div class="eq">h  = 3.26 · B^−0.2 · p^0.8 · T^−0.55 · w^0.8
+w  = C₁ · S̄_p + C₂ · (V_d T_r / (p_r V_r)) · (p − p_motored)
+     C₁ = 2.28,  C₂ = 0 during compression, 3.24×10⁻³ after spark
+p_motored = p_r · (V_r / V)^γ          reference state r taken at IVC
+
+A_wall = 2A + πB·(s + h_c)             head + crown + exposed liner
+dQ_w   = h · A_wall · (T − T_wall) · dt</div>
+<p>The C₂ term is Woschni's way of saying combustion-driven turbulence raises the gas velocity in proportion to how far pressure has risen above the motored trace. It is why heat loss is dominated by the 40° after spark, and why the energy-balance table shows Q_wall as a meaningful fraction of Q_total when the toggle is on.</p>
+</li>
+
+<li>
+<h3>First law on the closed cylinder</h3>
+<p>Between IVC and EVO the cylinder is a closed system. Energy in from combustion, energy out to the walls and through the piston, ideal gas with ratio of specific heats γ:</p>
+<div class="eq">dU = dQ_c − dQ_w − p dV,   U = p V / (γ − 1)
+
+dp/dθ = (γ − 1)/V · (dQ_c/dθ − dQ_w/dθ)  −  γ · (p/V) · dV/dθ</div>
+<p>With dQ = 0 the second term alone integrates to <code>p V^γ = const</code>, so the unfired fixture is exactly a polytropic compression with n = γ = 1.35, which reproduces 19.98 bar at −10° from 1 bar at BDC. Temperature is read off the gas law, not integrated separately:</p>
+<div class="eq">T = p V / (m_total · R_mix)</div>
+<p>When the variable-γ toggle is on, γ follows a linear fit in temperature, <code>γ(T) = 1.40 − 6.0×10⁻⁵ (T − 300)</code>, clamped to [1.25, 1.40], evaluated at the start of each step. That is a coarse stand-in for the real drop in γ as vibrational modes and dissociation switch on; it lowers peak pressure and peak temperature relative to a constant γ of 1.35; toggle it with the fired preset loaded to see by how much.</p>
+<p>Integration steps dθ = 0.5°: the adiabatic part is applied exactly as <code>p_i = p_{i−1}·(V_{i−1}/V_i)^γ</code>, then the step's net heat is added as <code>(γ−1)·(dQ_c − dQ_w)/V_i</code>; work uses trapezoidal p. During intake p is held at p_in; at EVO pressure drops to p_ex in one step and temperature follows an isentropic blowdown, <code>T_ex = T · (p_ex/p)^((γ−1)/γ)</code>, then stays there through the exhaust stroke.</p>
+</li>
+
+<li>
+<h3>Gas force to crank torque</h3>
+<p>The force on the piston crown is gas pressure minus crankcase pressure (taken as 1 bar) over the piston area. It travels down the rod, tilted by β, and acts on the crank pin at radius r. Resolving:</p>
+<div class="eq">F_gas   = (p − p_crankcase) · A
+F_rod   = F / cos β                         (rod carries more than the axial force)
+τ       = F_rod · r · sin(θ + β) = F · r · sin(θ + β) / cos β
+
+τ_gas   uses F = F_gas
+τ_net   uses F = F_gas − m_recip · a_p         m_recip = piston + pin + small end</div>
+<p>The inertia term is why net torque at high speed swings negative around TDC even while gas pressure is high: the piston is being decelerated by the rod. The mean of τ over 720° must equal W_cycle / 4π, and the identities table checks that.</p>
+</li>
+
+<li>
+<h3>Work, mean effective pressure, efficiency</h3>
+<div class="eq">W(θ)   = ∫ p dV             cumulative from −360°, trapezoidal p
+W_closed = W(EVO) − W(IVC)   gross indicated work
+W_pump   = W_cycle − W_closed  intake + exhaust strokes
+IMEP   = W_cycle / V_d
+τ̄      = W_cycle / 4π
+P_ind  = W_cycle · N / 120    (one power stroke per two revolutions)
+η_ind  = W_cycle / Q_total    (defined only when Q_total &gt; 0)</div>
+<p>Sign convention matches the fixture plot: the intake stroke at 1 bar adds +50 J (p ΔV with ΔV = +500 cc), compression subtracts, so the unfired trace reaches about −136 J at −10°. With p_ex above p_in the pumping loop is negative.</p>
+</li>
+
+<li>
+<h3>Closing the energy balance</h3>
+<p>Over the closed period the first law must hold in integrated form, and the table above reports each term and the residual:</p>
+<div class="eq">Q_released − W_closed − Q_wall − ΔU = residual
+ΔU = Σ m · c_v(T_i) · (T_i − T_{i−1}),      c_v = R_mix / (γ(T) − 1)</div>
+<p>ΔU is summed step by step with the same c_v the integrator used, because with a temperature-dependent γ the shortcut <code>U = pV/(γ−1)</code> is not a state function and would misreport the balance by about 5 % of Q. Done this way, the residual is only the difference between the exact adiabatic step and trapezoidal work, well under 1 % of Q in every preset; the table shows the live value.</p>
+</li>
+
+<li>
+<h3>Two hydrogen-specific checks</h3>
+<p>The flags row above evaluates two things the physical fixture exists to look at, in the crudest form that is still a real criterion:</p>
+<ul class="flat">
+  <li><strong>Illustrative pre-ignition temperature comparison, not a validated safety limit.</strong> The unburned charge temperature at spark is compared with hydrogen's autoignition temperature, about 858 K in air. Hydrogen's minimum ignition energy is 0.02 mJ, an order of magnitude below gasoline's, so hot spots (exhaust valve, deposits) ignite it well before that temperature; the flag is a floor, not a guarantee.</li>
+  <li><strong>Illustrative thermal NOx flag, not a validated emissions or safety limit.</strong> Zeldovich NO formation becomes fast above roughly 1800 K. If peak bulk temperature exceeds that, the flag turns amber; a single-zone bulk temperature under-reads the burned-zone temperature by several hundred kelvin, so the real threshold is crossed earlier than this flag suggests. Lean operation (φ ≈ 0.4–0.5) is where H₂ engines sit for exactly this reason.</li>
+</ul>
+</li>
+</ol>
+</div>
+
+<h2 id="limits">What is modelled, what is not</h2>
+<div class="math">
+<div class="sym">
+  <code>modelled</code><span>finite-rod kinematics; ideal-gas mixture with H₂ volume displacement; Wiebe burn; Woschni convection (toggle); linear γ(T) (toggle); IVC/EVO timing; isentropic blowdown; gas and inertia torque; energy audit</span>
+  <code>not modelled</code><span>flame propagation and knock or pre-ignition chemistry; two-zone burned/unburned temperatures; residual gas and valve flow; crevice and blow-by mass loss; dissociation and species-resolved properties; NOx kinetics; friction (all outputs are indicated, not brake); crankshaft torsional dynamics; the ultrasonic conditioning stage shown in the USC render set, which is a separate sub-assembly with no instrument specified</span>
+  <code>numerics</code><span>dθ = 0.5°, 1441 samples per cycle; exact adiabatic step plus explicit heat term; trapezoidal work; central-difference acceleration</span>
+  <code>provenance</code><span><span class="tag model">model</span> computed here · <span class="tag rep">reported</span> read from the HC-IF-601 render deck · <span class="tag meas">measured</span> none on this page · <span class="tag pin">pinned</span> a previous model run held for comparison</span>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+const RU=8.314, M_H2=2.016e-3, M_AIR=28.97e-3, LHV=120e6, AFR=34.3, A_WIEBE=6.908, M_WIEBE=2, P_CRANK=1e5;
+const T_AUTOIGN=858, T_NOX=1800;
+const DTH=0.5, TH0=-360, TH1=360, NPT=Math.round((TH1-TH0)/DTH)+1;
+const D2R=Math.PI/180;
+
+const defaults={bore:86.04,stroke:86,cr:10,rodratio:3.5,phi:0,spark:-10,burn:40,ivc:-180,evo:180,gamma:1.35,vargamma:0,heatloss:0,twall:450,pin:1.0,pex:1.05,t0:353,rpm:1500,mrecip:0.45};
+const presets={
+  fixture:defaults,
+  fired:Object.assign({},defaults,{phi:0.8,spark:-15,burn:35,heatloss:1,vargamma:1,rpm:2000}),
+  lean:Object.assign({},defaults,{phi:0.45,spark:-22,burn:50,heatloss:1,vargamma:1,rpm:2000,cr:11}),
+};
+const groups=[
+  ['Geometry',[
+    ['bore','Bore B','mm',60,110,0.01],
+    ['stroke','Stroke S','mm',60,110,0.5],
+    ['cr','Compression ratio','',6,16,0.1],
+    ['rodratio','Rod ratio l / r','',2.5,6,0.05],
+    ['mrecip','Reciprocating mass','kg',0.2,1.2,0.01]]],
+  ['Charge and timing',[
+    ['phi','Equivalence ratio φ','',0,1.2,0.01],
+    ['pin','Intake pressure','bar',0.5,2.5,0.01],
+    ['pex','Exhaust pressure','bar',0.9,1.5,0.01],
+    ['t0','Charge temperature T₀','K',280,450,1],
+    ['ivc','Intake valve close','° ATDC',-220,-120,1],
+    ['evo','Exhaust valve open','° ATDC',120,180,1]]],
+  ['Combustion',[
+    ['spark','Spark θ₀','° ATDC',-45,10,0.5],
+    ['burn','Burn duration Δθ','°',10,90,1],
+    ['rpm','Engine speed N','rev/min',300,6000,50]]],
+  ['Gas and heat transfer',[
+    ['gamma','γ (constant mode; = polytropic n unfired)','',1.25,1.4,0.005],
+    ['vargamma','Variable γ(T), linear fit','toggle'],
+    ['heatloss','Woschni wall heat loss','toggle'],
+    ['twall','Wall temperature','K',350,600,5]]],
+];
+const P=Object.assign({},defaults);
+
+/* ---------- simulation ---------- */
+const gammaOf=T=>Math.max(1.25,Math.min(1.40,1.40-6.0e-5*(T-300)));
+function simulate(P){
+  const B=P.bore/1000,S=P.stroke/1000,r=S/2,l=P.rodratio*r,A=Math.PI*B*B/4;
+  const Vd=A*S,Vc=Vd/(P.cr-1),hc=Vc/A,pin=P.pin*1e5,pex=P.pex*1e5,N=P.rpm,om=2*Math.PI*N/60,dt=DTH/(6*N),Spm=2*S*N/60;
+  const F=()=>new Float64Array(NPT);
+  const th=F(),V=F(),Vl=F(),s=F(),ds=F(),d2s=F(),p=F(),T=F(),xb=F(),W=F(),dQc=F(),dQw=F(),tqG=F(),tqN=F(),vp=F(),ap=F(),gam=F();
+  const sOf=t=>{const a=t*D2R;return r*(1-Math.cos(a))+l-Math.sqrt(l*l-r*r*Math.sin(a)**2);};
+  const dsOf=t=>{const a=t*D2R,q=Math.sqrt(l*l-r*r*Math.sin(a)**2);return r*Math.sin(a)*(1+r*Math.cos(a)/q);};
+  for(let i=0;i<NPT;i++){th[i]=TH0+i*DTH;s[i]=sOf(th[i]);V[i]=Vc+A*s[i];Vl[i]=Vc+A*r*(1-Math.cos(th[i]*D2R));ds[i]=dsOf(th[i]);}
+  for(let i=0;i<NPT;i++){const a=i?ds[i-1]:dsOf(TH0-DTH),b=i<NPT-1?ds[i+1]:dsOf(TH1+DTH);d2s[i]=(b-a)/(2*DTH*D2R);}
+  const wiebe=t=>{if(P.phi<=0||t<P.spark)return 0;const x=(t-P.spark)/P.burn;return 1-Math.exp(-A_WIEBE*Math.pow(x,M_WIEBE+1));};
+  const iIVC=idxOf(P.ivc),iEVO=idxOf(P.evo);
+  // trapped charge
+  const nTot=pin*V[iIVC]/(RU*P.t0);
+  const y=P.phi>0?P.phi/(P.phi+2.38):0;
+  const mH2=y*nTot*M_H2,mAir=(1-y)*nTot*M_AIR,Mmix=y*M_H2+(1-y)*M_AIR,Rmix=RU/Mmix,mTot=nTot*Mmix;
+  const Qtot=Math.min(mH2,mAir/AFR)*LHV;
+  const pref=pin,Tref=P.t0,Vref=V[iIVC];
+  let Wc=0,pc=pin,Tc=P.t0,Tex=null,Qw=0,Tspark=null,dU=0;
+  for(let i=0;i<NPT;i++){
+    const t=th[i];
+    let g=P.vargamma?gammaOf(Tc):P.gamma;
+    if(i>0){
+      const dV=V[i]-V[i-1];
+      if(i<=iIVC){pc=pin;Tc=P.t0;Wc+=pc*dV;}
+      else if(i<=iEVO){
+        const qc=Qtot*(wiebe(t)-wiebe(th[i-1]));
+        let qw=0;
+        if(P.heatloss){
+          const pmot=pref*Math.pow(Vref/V[i-1],g);
+          const C2=t>P.spark?3.24e-3:0;
+          const w=Math.max(0.1,2.28*Spm+C2*(Vd*Tref/(pref*Vref))*(pc-pmot));
+          const h=3.26*Math.pow(B,-0.2)*Math.pow(pc/1000,0.8)*Math.pow(Tc,-0.55)*Math.pow(w,0.8);
+          const Aw=2*A+Math.PI*B*(s[i]+hc);
+          qw=h*Aw*(Tc-P.twall)*dt;
+        }
+        const pPrev=pc,Tprev=Tc;pc=pc*Math.pow(V[i-1]/V[i],g)+(g-1)/V[i]*(qc-qw);
+        Wc+=0.5*(pPrev+pc)*dV;Tc=pc*V[i]/(mTot*Rmix);Qw+=qw;dQc[i]=qc/DTH;dQw[i]=qw/DTH;
+        dU+=mTot*Rmix/(g-1)*(Tc-Tprev);
+        if(i===iEVO){Tex=Tc*Math.pow(pex/pc,(g-1)/g);}
+      } else {pc=pex;Tc=Tex;Wc+=pc*dV;}
+    }
+    if(Tspark===null&&t>=P.spark)Tspark=Tc;
+    p[i]=pc;T[i]=Tc;gam[i]=g;xb[i]=i>iIVC&&i<=iEVO?wiebe(t):(i>iEVO?wiebe(th[iEVO]):0);W[i]=Wc;
+    const a=t*D2R,sb=(r/l)*Math.sin(a),cb=Math.sqrt(1-sb*sb),lever=r*(Math.sin(a)*cb+Math.cos(a)*sb)/cb;
+    vp[i]=om*ds[i];ap[i]=om*om*d2s[i];
+    const Fg=(pc-P_CRANK)*A;tqG[i]=Fg*lever;tqN[i]=(Fg-P.mrecip*ap[i])*lever;
+  }
+  let pmax=0,ipmax=0,tmax=0,vmax=0,amax=0,tqmax=0,tqsum=0;
+  for(let i=0;i<NPT;i++){if(p[i]>pmax){pmax=p[i];ipmax=i;}tmax=Math.max(tmax,T[i]);vmax=Math.max(vmax,Math.abs(vp[i]));amax=Math.max(amax,Math.abs(ap[i]));tqmax=Math.max(tqmax,Math.abs(tqN[i]));if(i)tqsum+=tqN[i];}
+  const Wclosed=W[iEVO]-W[iIVC],Qrel=Qtot*wiebe(th[iEVO]);
+  return {th,V,Vl,s,ds,d2s,p,T,xb,W,dQc,dQw,tqG,tqN,vp,ap,gam,Vd,Vc,A,r,l,B,S,hc,mH2,mAir,mTot,Rmix,Qtot,Qrel,Qw,Wcycle:Wc,Wclosed,Wpump:Wc-Wclosed,imep:Wc/Vd,eta:Qtot>0?Wc/Qtot:NaN,
+    pmax,thpmax:th[ipmax],tmax,vmax,amax,tqmax,tqmean:tqsum/(NPT-1),Spm,Tspark,dU,resid:Qrel-Wclosed-Qw-dU,iIVC,iEVO,P:Object.assign({},P)};
+}
+function idxOf(t){return Math.max(0,Math.min(NPT-1,Math.round((t-TH0)/DTH)));}
+let R=simulate(P),Rpin=null;
+
+/* ---------- parameter deck ---------- */
+const deck=document.getElementById('params');const inputs={},showInputs={};
+groups.forEach(([name,items])=>{
+  const g=document.createElement('div');g.className='group';g.innerHTML=`<h3>${name}</h3>`;deck.appendChild(g);
+  items.forEach(([k,label,unit,min,max,step])=>{
+    const d=document.createElement('div');
+    if(unit==='toggle'){d.className='ctl tog';d.innerHTML=`<input id="c_${k}" type="checkbox" ${P[k]?'checked':''}><label for="c_${k}">${label}</label>`;
+      const inp=d.querySelector('input');inputs[k]=inp;inp.addEventListener('change',()=>{P[k]=inp.checked?1:0;scheduleRerun();});}
+    else{d.className='ctl';d.innerHTML=`<label for="c_${k}">${label}</label><output id="o_${k}"></output><input id="c_${k}" type="range" min="${min}" max="${max}" step="${step}" value="${P[k]}">`;
+      const inp=d.querySelector('input'),out=d.querySelector('output');inputs[k]=inp;
+      const dec=step<0.01?3:step<0.1?2:step<1?1:0;const show=()=>{out.textContent=(+inp.value).toFixed(dec)+(unit?' '+unit:'');};
+      inp.addEventListener('input',()=>{P[k]=+inp.value;show();scheduleRerun();});showInputs[k]=show;show();}
+    g.appendChild(d);
+  });
+});
+function applyPreset(q){Object.assign(P,q);for(const k in inputs){const inp=inputs[k];if(inp.type==='checkbox'){inp.checked=!!P[k];}else{inp.value=P[k];showInputs[k]();}}scheduleRerun();}
+document.getElementById('preset_fixture').addEventListener('click',()=>applyPreset(presets.fixture));
+document.getElementById('preset_fired').addEventListener('click',()=>applyPreset(presets.fired));
+document.getElementById('preset_lean').addEventListener('click',()=>applyPreset(presets.lean));
+
+/* ---------- transport ---------- */
+let theta=-10,playing=true;
+const thetaIn=document.getElementById('theta'),thetaOut=document.getElementById('theta_o');
+thetaIn.addEventListener('input',()=>{theta=+thetaIn.value;setPlaying(false);});
+const speedIn=document.getElementById('speed'),speedOut=document.getElementById('speed_o');
+const showSpeed=()=>speedOut.textContent=(+speedIn.value).toFixed(2)+'× (1× = real time)';speedIn.addEventListener('input',showSpeed);showSpeed();
+const playBtn=document.getElementById('play');
+function setPlaying(v){playing=v;playBtn.textContent=playing?'Pause':'Play';}
+playBtn.addEventListener('click',()=>setPlaying(!playing));
+const step=d=>{theta=Math.max(-360,Math.min(360,theta+d));thetaIn.value=theta;setPlaying(false);};
+document.getElementById('stepb').addEventListener('click',()=>step(-0.5));
+document.getElementById('stepf').addEventListener('click',()=>step(0.5));
+window.addEventListener('keydown',e=>{if(/INPUT|BUTTON|TEXTAREA/.test(document.activeElement.tagName))return;
+  if(e.code==='Space'){e.preventDefault();setPlaying(!playing);}else if(e.key==='ArrowLeft'){step(e.shiftKey?-5:-0.5);}else if(e.key==='ArrowRight'){step(e.shiftKey?5:0.5);}});
+const pinBtn=document.getElementById('pin'),unpinBtn=document.getElementById('unpin');
+pinBtn.addEventListener('click',()=>{Rpin=R;pinBtn.textContent='Pinned: '+describe(R.P);pinBtn.classList.add('on');unpinBtn.hidden=false;drawPlots();});
+unpinBtn.addEventListener('click',()=>{Rpin=null;pinBtn.textContent='Pin this run';pinBtn.classList.remove('on');unpinBtn.hidden=true;drawPlots();});
+const describe=q=>q.phi>0?`φ ${q.phi.toFixed(2)}, θ₀ ${q.spark}°, CR ${q.cr.toFixed(1)}${q.heatloss?', Woschni':''}`:`unfired, CR ${q.cr.toFixed(1)}, n ${q.gamma}`;
+const toast=document.getElementById('toast');let toastT;
+function say(msg){toast.textContent=msg;toast.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>toast.classList.remove('show'),1800);}
+document.getElementById('csv').addEventListener('click',()=>{
+  const cols=['theta_deg','V_cc','V_legacy_cc','p_bar','T_K','x_b','W_J','dQc_J_per_deg','dQw_J_per_deg','torque_gas_Nm','torque_net_Nm','piston_speed_m_s','piston_accel_m_s2','gamma'];
+  const rows=[cols.join(',')];
+  for(let i=0;i<NPT;i++)rows.push([R.th[i],R.V[i]*1e6,R.Vl[i]*1e6,R.p[i]/1e5,R.T[i],R.xb[i],R.W[i],R.dQc[i],R.dQw[i],R.tqG[i],R.tqN[i],R.vp[i],R.ap[i],R.gam[i]].map(v=>+v.toPrecision(7)).join(','));
+  const text='# HC-IF-601 zero-dimensional cycle model, MODEL OUTPUT NOT MEASURED\n# '+JSON.stringify(R.P)+'\n'+rows.join('\n');
+  const done=()=>say('Run copied as CSV (1441 rows)');
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done).catch(()=>fallback(text,done));}else fallback(text,done);
+  function fallback(t,cb){const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');cb();}catch(e){say('Copy blocked by the viewer');}document.body.removeChild(ta);}
+});
+
+/* ---------- readouts ---------- */
+const roDefs=[['V','Cylinder volume'],['Vl','Legacy volume'],['p','Pressure'],['T','Gas temperature'],['xb','Mass fraction burned'],['tq','Net torque'],['vp','Piston speed'],['W','Cumulative work'],['Wc','Work per cycle'],['imep','IMEP'],['Pind','Indicated power'],['eta','Indicated efficiency']];
+const ro=document.getElementById('readouts');const roEls={};
+roDefs.forEach(([k,label])=>{const d=document.createElement('div');d.innerHTML=`<div class="k">${label}</div><div class="v" id="ro_${k}">–</div>`;ro.appendChild(d);roEls[k]=d.querySelector('.v');});
+const fmt=(x,d)=>Number.isFinite(x)?x.toFixed(d):'–';
+const plate=document.getElementById('plate'),cbmark=document.getElementById('cbmark');
+const phase=t=>t<=P.ivc?'intake':t<=0?'compression':t<=P.evo?'expansion':'exhaust';
+function updateReadouts(){
+  const i=idxOf(theta);
+  roEls.V.innerHTML=fmt(R.V[i]*1e6,2)+' <small>cc</small>';
+  roEls.Vl.innerHTML=fmt(R.Vl[i]*1e6,2)+' <small>cc · Δ '+fmt((R.V[i]-R.Vl[i])*1e6,2)+'</small>';
+  roEls.p.innerHTML=fmt(R.p[i]/1e5,2)+' <small>bar</small>';
+  roEls.T.innerHTML=fmt(R.T[i],0)+' <small>K · γ '+fmt(R.gam[i],3)+'</small>';
+  roEls.xb.innerHTML=fmt(R.xb[i],3);
+  roEls.tq.innerHTML=fmt(R.tqN[i],1)+' <small>N·m · gas '+fmt(R.tqG[i],1)+'</small>';
+  roEls.vp.innerHTML=fmt(R.vp[i],2)+' <small>m/s · '+fmt(R.ap[i]/9.81,0)+' g</small>';
+  roEls.W.innerHTML=fmt(R.W[i],2)+' <small>J</small>';
+  roEls.Wc.innerHTML=fmt(R.Wcycle,1)+' <small>J · pump '+fmt(R.Wpump,1)+'</small>';
+  roEls.imep.innerHTML=fmt(R.imep/1e5,2)+' <small>bar</small>';
+  roEls.Pind.innerHTML=fmt(R.Wcycle*P.rpm/120/1000,2)+' <small>kW · τ̄ '+fmt(R.tqmean,1)+' N·m</small>';
+  roEls.eta.innerHTML=Number.isFinite(R.eta)?fmt(R.eta*100,1)+' <small>%</small>':'– <small>unfired</small>';
+  thetaOut.textContent=theta.toFixed(1)+'°';
+  plate.innerHTML=`MODEL RUN, NOT MEASURED<br>${P.phi>0?'φ = '+P.phi.toFixed(2)+', spark '+P.spark+'° ATDC, Δθ '+P.burn+'°':'NO IGNITION IN THIS RUN: x_burned = 0'}<br>${P.heatloss?'Woschni heat loss on':'adiabatic walls'} · ${P.vargamma?'γ(T)':'γ = '+P.gamma}<br>N ${P.rpm} rev/min · S̄_p ${fmt(R.Spm,1)} m/s<br>θ = ${theta.toFixed(1)}° · ${phase(theta)}`;
+  cbmark.style.bottom=(Math.max(0,Math.min(1,(R.T[i]-250)/2250))*100)+'%';
+}
+
+/* ---------- flags ---------- */
+const flags=document.getElementById('flags');
+function updateFlags(){
+  const f=[];
+  if(P.phi>0){const m=T_AUTOIGN-R.Tspark;f.push([m>150?'':m>50?'warn':'bad',`illustrative temperature margin (not a safety limit): unburned T at spark ${fmt(R.Tspark,0)} K vs H₂ autoignition ${T_AUTOIGN} K (${m>=0?'+':''}${fmt(m,0)} K)`]);}
+  else f.push(['off',`pre-ignition: unfired run, compression T at TDC ${fmt(R.T[idxOf(0)],0)} K`]);
+  f.push([R.tmax>T_NOX?'warn':P.phi>0?'':'off',`illustrative NOx temperature flag: peak bulk T ${fmt(R.tmax,0)} K ${R.tmax>T_NOX?'above':'below'} ${T_NOX} K`]);
+  f.push([R.pmax/1e5>120?'bad':R.pmax/1e5>90?'warn':'',`peak cylinder pressure ${fmt(R.pmax/1e5,1)} bar at ${fmt(R.thpmax,1)}°`]);
+  f.push([R.Spm>18?'warn':'',`mean piston speed ${fmt(R.Spm,1)} m/s, peak ${fmt(R.vmax,1)} m/s, peak accel ${fmt(R.amax/9.81,0)} g`]);
+  if(P.phi>1)f.push(['warn','φ > 1: oxygen-limited, unburned H₂ leaves in the exhaust']);
+  if(P.spark+P.burn>P.evo)f.push(['warn','burn not finished at EVO: released heat truncated']);
+  flags.innerHTML=f.map(([c,t])=>`<div class="flag ${c}"><i></i><span>${t}</span></div>`).join('');
+}
+
+/* ---------- verification tables ---------- */
+const check=document.getElementById('check'),energy=document.getElementById('energy'),ident=document.getElementById('identities');
+function updateTables(){
+  const i=idxOf(-10);
+  const isFixture=Object.keys(defaults).every(k=>Math.abs(P[k]-defaults[k])<1e-9);
+  const rows=[['V at −10°','60.43 cc',fmt(R.V[i]*1e6,2)+' cc'],['V legacy at −10°','59.35 cc',fmt(R.Vl[i]*1e6,2)+' cc'],
+    ['V − V legacy','1.0776 cc (1.78 %)',fmt((R.V[i]-R.Vl[i])*1e6,4)+' cc ('+fmt((R.V[i]-R.Vl[i])/R.V[i]*100,2)+' %)'],
+    ['p at −10°','19.98 bar',fmt(R.p[i]/1e5,2)+' bar'],['W at −10°','−136.34 J',fmt(R.W[i],2)+' J'],['m H₂ at −10°','0.000 µg',R.mH2>=1e-6?fmt(R.mH2*1e6,3)+' mg':fmt(R.mH2*1e9,3)+' µg'],
+    ['charge T','353 K',P.t0+' K'],['V range','55.6 – 555.6 cc',fmt(R.Vc*1e6,1)+' – '+fmt((R.Vc+R.Vd)*1e6,1)+' cc']];
+  check.innerHTML=`<div class="hd"><span class="eyebrow">Fixture check at θ = −10°</span>${isFixture?'':'<span class="tag" style="color:var(--muted)">parameters differ from fixture</span>'}</div><div class="row h"><span>quantity</span><span>reported</span><span>model</span></div>`+rows.map(([k,a,b])=>`<div class="row"><span>${k}</span><span>${a}</span><span>${b}</span></div>`).join('');
+  const Q=R.Qrel,pct=x=>Q>0?' ('+fmt(x/Q*100,1)+' %)':'';
+  energy.innerHTML=`<div class="hd"><span class="eyebrow">Energy balance, IVC → EVO</span><span class="tag model">model</span></div>
+    <div class="row two"><span>Q released</span><span>${fmt(Q,1)} J</span></div>
+    <div class="row two"><span>W closed (gross indicated)</span><span>${fmt(R.Wclosed,1)} J${pct(R.Wclosed)}</span></div>
+    <div class="row two"><span>Q wall (Woschni${P.heatloss?'':', off'})</span><span>${fmt(R.Qw,1)} J${pct(R.Qw)}</span></div>
+    <div class="row two"><span>ΔU = Σ m c_v(T) dT</span><span>${fmt(R.dU,1)} J${pct(R.dU)}</span></div>
+    <div class="row two"><span>residual Q − W − Q_w − ΔU</span><span>${fmt(R.resid,2)} J${pct(R.resid)}</span></div>
+    <div class="row two"><span>W pumping (open strokes)</span><span>${fmt(R.Wpump,1)} J</span></div>
+    <div class="row two"><span>H₂ trapped / air trapped</span><span>${fmt(R.mH2*1e6,3)} mg / ${fmt(R.mAir*1e6,1)} mg</span></div>`;
+  const Vspan=(Math.max(...R.V)-Math.min(...R.V))*1e6;
+  ident.innerHTML=`<div class="hd"><span class="eyebrow">Identities</span><span class="tag model">model</span></div>
+    <div class="row two"><span>max V − min V vs V_d</span><span>${fmt(Vspan,3)} vs ${fmt(R.Vd*1e6,3)} cc</span></div>
+    <div class="row two"><span>mean τ_net vs W_cycle / 4π</span><span>${fmt(R.tqmean,3)} vs ${fmt(R.Wcycle/(4*Math.PI),3)} N·m</span></div>
+    <div class="row two"><span>p(V) unfired slope, log-log</span><span>${(()=>{const a=idxOf(-150),b=idxOf(-20);return fmt(Math.log(R.p[b]/R.p[a])/Math.log(R.V[a]/R.V[b]),4);})()} vs γ ${P.vargamma?'(T)':P.gamma}</span></div>
+    <div class="row two"><span>rod-term peak, s − s_legacy</span><span>${fmt((R.l-Math.sqrt(R.l*R.l-R.r*R.r))*1000,2)} mm at ±90°</span></div>
+    <div class="row two"><span>y_H2 by moles</span><span>${fmt(P.phi>0?P.phi/(P.phi+2.38)*100:0,1)} %</span></div>
+    <div class="row two"><span>samples per cycle</span><span>${NPT} at ${DTH}°</span></div>`;
+}
+
+/* ---------- plots ---------- */
+const plotDefs=[
+  {id:'V',title:'Cylinder volume: slider-crank vs legacy',x:'crank angle (deg)',y:'V (cc)',series:(Q,i)=>[Q.V[i]*1e6,Q.Vl[i]*1e6],names:['slider-crank','legacy (infinite rod)'],cols:['#cfe3ee','#f2b39b'],readout:(Q,i)=>`V = ${fmt(Q.V[i]*1e6,2)} cc, V legacy = ${fmt(Q.Vl[i]*1e6,2)} cc`},
+  {id:'PV',title:'P–V diagram',x:'V (cc), log scale',y:'p (bar), log scale',pv:true,readout:(Q,i)=>`p = ${fmt(Q.p[i]/1e5,2)} bar, V = ${fmt(Q.V[i]*1e6,2)} cc`},
+  {id:'p',title:'Pressure',x:'crank angle (deg)',y:'p (bar)',series:(Q,i)=>[Q.p[i]/1e5],names:['p'],cols:['#cfe3ee'],readout:(Q,i)=>`p = ${fmt(Q.p[i]/1e5,2)} bar, peak ${fmt(Q.pmax/1e5,1)} bar at ${fmt(Q.thpmax,1)}°`},
+  {id:'T',title:'Gas temperature',x:'crank angle (deg)',y:'T (K)',series:(Q,i)=>[Q.T[i]],names:['T bulk'],cols:['#f0c9a8'],readout:(Q,i)=>`T = ${fmt(Q.T[i],0)} K, peak ${fmt(Q.tmax,0)} K`,hlines:[[T_NOX,'Illustrative NOx 1800 K'],[T_AUTOIGN,'Illustrative H₂ 858 K']]},
+  {id:'xb',title:'Hydrogen burn',x:'crank angle (deg)',y:'x_b',series:(Q,i)=>[Q.xb[i]],names:['mass fraction burned'],cols:['#c9d86f'],readout:(Q,i)=>`x_b = ${fmt(Q.xb[i],3)}, Q total = ${fmt(Q.Qtot,1)} J`,ylim:[0,1]},
+  {id:'hr',title:'Heat release and wall loss rate',x:'crank angle (deg)',y:'J / deg',series:(Q,i)=>[Q.dQc[i],Q.dQw[i]],names:['combustion','wall loss'],cols:['#c9d86f','#e0655c'],readout:(Q,i)=>`dQ_c = ${fmt(Q.dQc[i],2)} J/°, dQ_w = ${fmt(Q.dQw[i],3)} J/°, Q_w total ${fmt(Q.Qw,1)} J`},
+  {id:'W',title:'Cumulative work',x:'crank angle (deg)',y:'W (J)',series:(Q,i)=>[Q.W[i]],names:['W'],cols:['#cfe3ee'],readout:(Q,i)=>`W = ${fmt(Q.W[i],2)} J, cycle ${fmt(Q.Wcycle,1)} J, IMEP ${fmt(Q.imep/1e5,2)} bar`},
+  {id:'tq',title:'Crank torque',x:'crank angle (deg)',y:'τ (N·m)',series:(Q,i)=>[Q.tqG[i],Q.tqN[i]],names:['gas','net (with inertia)'],cols:['#f2b39b','#cfe3ee'],readout:(Q,i)=>`τ_gas = ${fmt(Q.tqG[i],1)}, τ_net = ${fmt(Q.tqN[i],1)} N·m, mean ${fmt(Q.tqmean,1)}`},
+  {id:'vp',title:'Piston speed',x:'crank angle (deg)',y:'v (m/s)',series:(Q,i)=>[Q.vp[i]],names:['v_p'],cols:['#cfe3ee'],readout:(Q,i)=>`v = ${fmt(Q.vp[i],2)} m/s, mean ${fmt(Q.Spm,2)}, peak ${fmt(Q.vmax,2)}`},
+  {id:'ap',title:'Piston acceleration',x:'crank angle (deg)',y:'a (g)',series:(Q,i)=>[Q.ap[i]/9.81],names:['a_p'],cols:['#f0c9a8'],readout:(Q,i)=>`a = ${fmt(Q.ap[i]/9.81,0)} g, inertia force ${fmt(-Q.P.mrecip*Q.ap[i]/1000,2)} kN`},
+];
+const plotsEl=document.getElementById('plots');
+plotDefs.forEach(d=>{const w=document.createElement('div');w.className='plot';w.innerHTML=`<div class="t">${d.title}</div><div class="s">model run · not measured</div><div class="r"></div><canvas></canvas>`;plotsEl.appendChild(w);d.cv=w.querySelector('canvas');d.ro=w.querySelector('.r');});
+
+function drawPlot(d){
+  const cv=d.cv,dpr=Math.min(2,window.devicePixelRatio||1),w=cv.clientWidth,h=cv.clientHeight;
+  if(!w)return;if(cv.width!==w*dpr||cv.height!==h*dpr){cv.width=w*dpr;cv.height=h*dpr;}
+  const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);
+  const ml=52,mr=10,mt=8,mb=34,pw=w-ml-mr,ph=h-mt-mb;
+  c.font='11px "IBM Plex Mono",monospace';c.fillStyle='#a7a9ad';c.strokeStyle='#4a4f59';c.lineWidth=1;
+  const i0=idxOf(theta);const runs=Rpin?[Rpin,R]:[R];
+  let pts=[];
+  if(d.pv){
+    const lx=v=>Math.log10(v);let vmin=Infinity,vmax=0,pmin=Infinity,pmax=0;
+    runs.forEach(Q=>{vmin=Math.min(vmin,lx(Q.Vc*1e6));vmax=Math.max(vmax,lx((Q.Vc+Q.Vd)*1e6));for(let i=0;i<NPT;i++){pmin=Math.min(pmin,Q.p[i]);pmax=Math.max(pmax,Q.p[i]);}});
+    const ymin=lx(pmin/1e5)-0.05,ymax=lx(pmax/1e5)+0.05;
+    const xs=v=>ml+(lx(v)-vmin)/(vmax-vmin)*pw,ys=p=>mt+ph-(lx(p)-ymin)/(ymax-ymin)*ph;
+    for(let k=0;k<=4;k++){const gv=Math.pow(10,vmin+(vmax-vmin)*k/4),gp=Math.pow(10,ymin+(ymax-ymin)*k/4),X=xs(gv),Y=ys(gp);
+      c.beginPath();c.moveTo(X,mt);c.lineTo(X,mt+ph);c.stroke();c.beginPath();c.moveTo(ml,Y);c.lineTo(ml+pw,Y);c.stroke();
+      c.textAlign='center';c.fillText(gv.toFixed(1),X,mt+ph+14);c.textAlign='right';c.fillText(gp.toFixed(2),ml-5,Y+4);}
+    runs.forEach((Q,ri)=>{const pinned=Rpin&&ri===0;c.strokeStyle=pinned?'#8a8f99':'#cfe3ee';c.lineWidth=pinned?1.2:1.6;c.setLineDash(pinned?[4,3]:[]);c.beginPath();
+      for(let i=0;i<NPT;i++){const X=xs(Q.V[i]*1e6),Y=ys(Q.p[i]/1e5);i?c.lineTo(X,Y):c.moveTo(X,Y);}c.stroke();c.setLineDash([]);});
+    if(Rpin){c.fillStyle='#8a8f99';c.textAlign='left';c.fillText('pinned, dashed',ml+6,mt+12);}
+    pts=[[xs(R.V[i0]*1e6),ys(R.p[i0]/1e5)]];
+  } else {
+    let ymin=Infinity,ymax=-Infinity;const n=d.series(R,0).length;
+    runs.forEach(Q=>{for(let i=0;i<NPT;i++){const v=d.series(Q,i);for(const q of v){if(Number.isFinite(q)){ymin=Math.min(ymin,q);ymax=Math.max(ymax,q);}}}});
+    if(d.hlines)d.hlines.forEach(([v])=>{if(v<ymax*1.6){ymax=Math.max(ymax,v);}});
+    if(d.ylim){ymin=d.ylim[0];ymax=d.ylim[1];}
+    if(ymax-ymin<1e-9){ymax=ymin+1;}
+    const pad=(ymax-ymin)*0.05;if(!d.ylim){ymin-=pad;ymax+=pad;}
+    const xs=t=>ml+(t-TH0)/(TH1-TH0)*pw,ys=v=>mt+ph-(v-ymin)/(ymax-ymin)*ph;
+    // phase bands: closed period shaded
+    c.fillStyle='rgba(207,227,238,0.05)';c.fillRect(xs(P.ivc),mt,xs(P.evo)-xs(P.ivc),ph);
+    for(let t=-360;t<=360;t+=180){const X=xs(t);c.beginPath();c.moveTo(X,mt);c.lineTo(X,mt+ph);c.stroke();c.textAlign='center';c.fillStyle='#a7a9ad';c.fillText(t,X,mt+ph+14);}
+    for(let k=0;k<=4;k++){const v=ymin+(ymax-ymin)*k/4,Y=ys(v);c.beginPath();c.moveTo(ml,Y);c.lineTo(ml+pw,Y);c.stroke();c.textAlign='right';c.fillText(Math.abs(v)>=100?v.toFixed(0):Math.abs(v)>=10?v.toFixed(1):v.toFixed(2),ml-5,Y+4);}
+    c.strokeStyle='#8a8f99';c.beginPath();c.moveTo(xs(0),mt);c.lineTo(xs(0),mt+ph);c.stroke();
+    if(P.phi>0){c.strokeStyle='#c9d86f';c.setLineDash([2,3]);c.beginPath();c.moveTo(xs(P.spark),mt);c.lineTo(xs(P.spark),mt+ph);c.stroke();c.setLineDash([]);}
+    if(d.hlines)d.hlines.forEach(([v,lab])=>{if(v>=ymin&&v<=ymax){const Y=ys(v);c.strokeStyle='#f2a35c';c.setLineDash([3,3]);c.beginPath();c.moveTo(ml,Y);c.lineTo(ml+pw,Y);c.stroke();c.setLineDash([]);c.fillStyle='#f2a35c';c.textAlign='right';c.fillText(lab,ml+pw-4,Y-3);}});
+    runs.forEach((Q,ri)=>{const pinned=Rpin&&ri===0;
+      for(let k=0;k<n;k++){c.strokeStyle=pinned?'#8a8f99':d.cols[k];c.lineWidth=pinned?1.2:1.6;c.setLineDash(pinned?[4,3]:[]);c.beginPath();
+        for(let i=0;i<NPT;i++){const X=xs(Q.th[i]),Y=ys(d.series(Q,i)[k]);i?c.lineTo(X,Y):c.moveTo(X,Y);}c.stroke();c.setLineDash([]);}});
+    for(let k=0;k<n;k++){c.fillStyle=d.cols[k];c.textAlign=k?'right':'left';c.fillText(d.names[k],k?ml+pw-4:ml+6,mt+12);}
+    pts=d.series(R,i0).map(v=>[xs(R.th[i0]),ys(v)]);
+  }
+  c.fillStyle='#a7a9ad';c.textAlign='center';c.fillText(d.x,ml+pw/2,h-4);
+  c.save();c.translate(12,mt+ph/2);c.rotate(-Math.PI/2);c.fillText(d.y,0,0);c.restore();
+  pts.forEach(([X,Y])=>{if(Number.isFinite(Y)){c.beginPath();c.arc(X,Y,4,0,Math.PI*2);c.fillStyle='#fff';c.fill();}});
+  d.ro.textContent=d.readout(R,i0);
+}
+function drawPlots(){plotDefs.forEach(drawPlot);}
+
+/* ---------- three.js scene ---------- */
+const stage=document.getElementById('stage');
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
+renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));renderer.setClearColor(0x14161b);renderer.localClippingEnabled=true;
+stage.insertBefore(renderer.domElement,stage.firstChild);
+const scene=new THREE.Scene();scene.fog=new THREE.Fog(0x14161b,700,1500);
+const camera=new THREE.PerspectiveCamera(38,16/10,1,3000);
+scene.add(new THREE.HemisphereLight(0xdfe6ee,0x22252b,0.9));
+const key=new THREE.DirectionalLight(0xffffff,0.8);key.position.set(220,320,260);scene.add(key);
+const fill=new THREE.DirectionalLight(0xcfe3ee,0.3);fill.position.set(-260,120,-160);scene.add(fill);
+const sectionPlane=new THREE.Plane(new THREE.Vector3(0,0,-1),0);let sectionOn=false;
+const mSteel=new THREE.MeshStandardMaterial({color:0xb9bcc2,metalness:0.85,roughness:0.35});
+const mPiston=new THREE.MeshStandardMaterial({color:0xb9bcc2,metalness:0.85,roughness:0.35});
+const mDark=new THREE.MeshStandardMaterial({color:0x3a3d44,metalness:0.6,roughness:0.5});
+const mBlock=new THREE.MeshStandardMaterial({color:0xaeb4bd,transparent:true,opacity:0.22,roughness:0.6,depthWrite:false});
+const mBore=new THREE.MeshStandardMaterial({color:0xdfe6ee,transparent:true,opacity:0.28,side:THREE.DoubleSide,roughness:0.3,depthWrite:false});
+const mGas=new THREE.MeshStandardMaterial({color:0x6f9be8,transparent:true,opacity:0.55,roughness:1,depthWrite:false,side:THREE.DoubleSide});
+const mSpark=new THREE.MeshStandardMaterial({color:0xf2a35c,emissive:0xf2a35c,emissiveIntensity:0,roughness:0.6});
+const mDeck=new THREE.MeshStandardMaterial({color:0xf2b39b,transparent:true,opacity:0.7});
+const clippables=[mBlock,mBore,mGas,mPiston];
+function setSection(on){sectionOn=on;clippables.forEach(m=>{m.clippingPlanes=on?[sectionPlane]:[];m.needsUpdate=true;});document.getElementById('section').classList.toggle('on',on);}
+document.getElementById('section').addEventListener('click',()=>setSection(!sectionOn));
+
+function makeLabel(text,scale){const cv=document.createElement('canvas');cv.width=512;cv.height=96;const c=cv.getContext('2d');c.fillStyle='rgba(20,22,27,0.85)';c.fillRect(0,0,512,96);c.strokeStyle='#4a4f59';c.lineWidth=3;c.strokeRect(1.5,1.5,509,93);c.font='500 40px Jost, Gill Sans, sans-serif';c.fillStyle='#e9e7e1';c.textAlign='center';c.textBaseline='middle';c.fillText(text,256,50);
+  const tex=new THREE.CanvasTexture(cv);tex.minFilter=THREE.LinearFilter;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,depthTest:false,transparent:true}));sp.scale.set(scale,scale*96/512,1);return sp;}
+
+const rig=new THREE.Group();scene.add(rig);
+let geo={};
+const target=new THREE.Vector3(0,120,0);
+function buildRig(){
+  // Keep reusable materials and ArrowHelper's shared geometry alive.
+  const sharedMaterials=new Set([mSteel,mPiston,mDark,mBlock,mBore,mGas,mSpark,mDeck]);
+  const sharedGeometry=new Set(geo.force?[geo.force.line.geometry,geo.force.cone.geometry]:[]);
+  const geometries=new Set(),materials=new Set(),textures=new Set();
+  rig.traverse(o=>{if(o.geometry&&!sharedGeometry.has(o.geometry))geometries.add(o.geometry);
+    for(const m of (Array.isArray(o.material)?o.material:o.material?[o.material]:[])){
+      if(!sharedMaterials.has(m)){materials.add(m);if(m.map)textures.add(m.map);}
+    }});
+  geometries.forEach(g=>g.dispose());textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());
+  rig.clear();
+  const B=R.B*1000,S=R.S*1000,r=R.r*1000,l=R.l*1000,hc=R.hc*1000,hp=0.55*B;
+  const pinOffset=hp*0.35,D=r+l+hc+hp-pinOffset;geo={B,S,r,l,hc,deck:D,hp,pinOffset};
+  const blockH=S+l*0.3+hc+hp+20;
+  const block=new THREE.Mesh(new THREE.BoxGeometry(B*1.9,blockH,B*1.9),mBlock);block.position.y=D-blockH/2+hc+6;rig.add(block);
+  const bore=new THREE.Mesh(new THREE.CylinderGeometry(B/2+0.6,B/2+0.6,S+hp+hc+6,64,1,true),mBore);bore.position.y=D-(S+hp+hc+6)/2+hc+3;rig.add(bore);
+  const head=new THREE.Mesh(new THREE.BoxGeometry(B*1.9,B*0.55,B*1.9),mBlock);head.position.y=D+B*0.275+0.5;rig.add(head);
+  geo.valves=[0,1].map(k=>{const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(3,3,B*0.9,16),mSteel);stem.position.y=B*0.45;const hd=new THREE.Mesh(new THREE.CylinderGeometry(B*0.19,B*0.16,4,32),mSteel);g.add(stem,hd);g.position.set((k?1:-1)*B*0.24,D,0);rig.add(g);
+    const lab=makeLabel(k?'EXHAUST':'INTAKE',54);lab.position.set((k?1:-1)*B*0.34,D+B*0.62,0);rig.add(lab);return g;});
+  geo.spark=new THREE.Mesh(new THREE.SphereGeometry(3.5,16,12),mSpark);geo.spark.position.set(0,D-2,B*0.28);rig.add(geo.spark);
+  const plug=new THREE.Mesh(new THREE.CylinderGeometry(3,3,B*0.5,12),mDark);plug.position.set(0,D+B*0.25,B*0.28);rig.add(plug);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(B*1.0,0.8,8,80),mDeck);ring.rotation.x=Math.PI/2;ring.position.y=D;rig.add(ring);
+  const deckLab=makeLabel('FIRE DECK',60);deckLab.position.set(-B*1.25,D+6,0);rig.add(deckLab);
+  const tdcLab=makeLabel('TDC',34);tdcLab.position.set(B*1.25,D-hc,0);rig.add(tdcLab);
+  const bdcLab=makeLabel('BDC',34);bdcLab.position.set(B*1.25,D-hc-S,0);rig.add(bdcLab);
+  geo.piston=new THREE.Group();
+  const pb=new THREE.Mesh(new THREE.CylinderGeometry(B/2-0.8,B/2-0.8,hp,64),mPiston);pb.position.y=hp/2;
+  const crown=new THREE.Mesh(new THREE.CylinderGeometry(B/2-0.8,B/2-0.8,1,64),mDark);crown.position.y=hp-0.5;
+  const pinM=new THREE.Mesh(new THREE.CylinderGeometry(6,6,B*0.9,20),mDark);pinM.rotation.x=Math.PI/2;pinM.position.y=hp*0.35;
+  geo.piston.add(pb,crown,pinM);rig.add(geo.piston);
+  geo.rod=new THREE.Mesh(new THREE.CylinderGeometry(7,9,l,20),mSteel);rig.add(geo.rod);
+  const web=new THREE.Mesh(new THREE.CylinderGeometry(r*1.35,r*1.35,B*0.45,64),mDark);web.rotation.x=Math.PI/2;
+  const cpin=new THREE.Mesh(new THREE.CylinderGeometry(8,8,B*0.65,20),mSteel);cpin.rotation.x=Math.PI/2;cpin.position.y=r;
+  const main=new THREE.Mesh(new THREE.CylinderGeometry(10,10,B*1.2,20),mSteel);main.rotation.x=Math.PI/2;
+  geo.crank=new THREE.Group();geo.crank.add(web,cpin,main);rig.add(geo.crank);
+  const crankcase=new THREE.Mesh(new THREE.BoxGeometry(B*2.4,r*3.2,B*1.6),mBlock);rig.add(crankcase);
+  geo.gas=new THREE.Mesh(new THREE.CylinderGeometry(B/2-1.2,B/2-1.2,1,64),mGas);rig.add(geo.gas);
+  const N=0;geo.pbase=[];for(let i=0;i<N;i++){const a=Math.random()*Math.PI*2,rr=Math.sqrt(Math.random())*(B/2-4);geo.pbase.push([rr*Math.cos(a),Math.random(),rr*Math.sin(a)]);}
+  geo.pgeo=new THREE.BufferGeometry();geo.pgeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*3),3));
+  geo.pts=new THREE.Points(geo.pgeo,new THREE.PointsMaterial({color:0xffffff,size:2.2,sizeAttenuation:true,transparent:true,opacity:0.9}));rig.add(geo.pts);
+  geo.force=new THREE.ArrowHelper(new THREE.Vector3(0,-1,0),new THREE.Vector3(0,D,0),20,0xf2b39b,10,6);rig.add(geo.force);
+  geo.torque=new THREE.Mesh(new THREE.TorusGeometry(r*1.6,1.6,8,192,Math.PI*2),[new THREE.MeshBasicMaterial({color:0xcfe3ee})]);geo.torque.position.z=B*0.75;rig.add(geo.torque);
+  const bench=new THREE.Mesh(new THREE.BoxGeometry(B*5,6,B*3.2),new THREE.MeshStandardMaterial({color:0x5a5e66,roughness:0.9}));bench.position.y=-r*1.6-3;rig.add(bench);
+  const plate=makeLabel('MODEL RUN · NOT MEASURED',150);plate.position.set(0,-r*1.6+18,B*1.5);rig.add(plate);
+  target.set(0,(D+r*1.6)/2-r*1.6,0);
+}
+let az=0.55,el=0.32,dist=560;
+const views={iso:[0.55,0.32,560],side:[Math.PI/2,0.04,540],front:[0,0.04,540]};
+document.querySelectorAll('.views button[data-view]').forEach(b=>b.addEventListener('click',()=>{[az,el,dist]=views[b.dataset.view];}));
+function placeCamera(){camera.position.set(target.x+dist*Math.cos(el)*Math.sin(az),target.y+dist*Math.sin(el),target.z+dist*Math.cos(el)*Math.cos(az));camera.lookAt(target);}
+let drag=null,pinchD=null;
+stage.addEventListener('pointerdown',e=>{if(e.target.tagName==='BUTTON')return;drag={x:e.clientX,y:e.clientY};stage.setPointerCapture(e.pointerId);});
+stage.addEventListener('pointermove',e=>{if(!drag)return;az-=(e.clientX-drag.x)*0.006;el=Math.max(-0.2,Math.min(1.3,el+(e.clientY-drag.y)*0.006));drag={x:e.clientX,y:e.clientY};});
+stage.addEventListener('pointerup',()=>drag=null);stage.addEventListener('pointercancel',()=>drag=null);
+stage.addEventListener('wheel',e=>{e.preventDefault();dist=Math.max(200,Math.min(1400,dist*(1+e.deltaY*0.001)));},{passive:false});
+stage.addEventListener('touchmove',e=>{if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);if(pinchD)dist=Math.max(200,Math.min(1400,dist*pinchD/d));pinchD=d;}},{passive:true});
+stage.addEventListener('touchend',()=>pinchD=null);
+
+const tempColor=(()=>{const stops=[[250,0x3b57d6],[800,0x7fc4e6],[1400,0xe8e2b0],[2000,0xf2a35c],[2500,0xd9322e]].map(([t,c])=>[t,new THREE.Color(c)]);const out=new THREE.Color();
+  return T=>{if(T<=stops[0][0])return out.copy(stops[0][1]);for(let i=1;i<stops.length;i++){if(T<=stops[i][0]){const f=(T-stops[i-1][0])/(stops[i][0]-stops[i-1][0]);return out.copy(stops[i-1][1]).lerp(stops[i][1],f);}}return out.copy(stops[stops.length-1][1]);};})();
+const up=new THREE.Vector3(0,1,0),tmpV=new THREE.Vector3(),white=new THREE.Color(0xffffff);
+function poseRig(){
+  const i=idxOf(theta),a=theta*D2R,{r,l,deck,hp}=geo;
+  const pinY=r*Math.cos(a)+Math.sqrt(l*l-r*r*Math.sin(a)*Math.sin(a));
+  const crankPin=new THREE.Vector3(r*Math.sin(a),r*Math.cos(a),0),pin=new THREE.Vector3(0,pinY,0);
+  geo.crank.rotation.z=-a;
+  geo.piston.position.y=pinY-geo.pinOffset;
+  tmpV.subVectors(pin,crankPin).normalize();geo.rod.quaternion.setFromUnitVectors(up,tmpV);geo.rod.position.lerpVectors(crankPin,pin,0.5);
+  const crownY=pinY-geo.pinOffset+hp,h=Math.max(0.5,deck-crownY);
+  geo.gas.scale.y=h;geo.gas.position.y=crownY+h/2;
+  const T=R.T[i];mGas.color.copy(tempColor(T));mGas.opacity=0.35+0.45*Math.min(1,(R.p[i]/1e5)/40);
+  const arr=geo.pgeo.attributes.position.array;
+  for(let k=0;k<geo.pbase.length;k++){const b=geo.pbase[k];arr[3*k]=b[0];arr[3*k+1]=crownY+b[1]*h;arr[3*k+2]=b[2];}
+  geo.pgeo.attributes.position.needsUpdate=true;geo.pts.material.color.copy(tempColor(T)).lerp(white,0.6);
+  const t=theta;const lift=(t0,t1)=>t>t0&&t<t1?Math.sin((t-t0)/(t1-t0)*Math.PI):0;
+  geo.valves[0].position.y=deck-lift(-360,P.ivc)*geo.B*0.1;geo.valves[1].position.y=deck-lift(P.evo,360)*geo.B*0.1;
+  const ds=t-P.spark;mSpark.emissiveIntensity=P.phi>0&&ds>=0&&ds<12?2.5*(1-ds/12):0;geo.spark.scale.setScalar(1+mSpark.emissiveIntensity*0.6);
+  const pb=R.p[i]/1e5;geo.force.visible=pb>1.3;geo.force.setLength(Math.min(160,8+pb*1.6),10,6);geo.force.position.y=crownY;
+  const tq=R.tqN[i],arc=Math.min(Math.PI*1.6,Math.abs(tq)/Math.max(50,R.tqmax)*Math.PI*1.6);
+  geo.torque.visible=arc>0.03;if(arc>0.03){const segments=Math.max(1,Math.round(arc/(Math.PI*2)*192));const g=geo.torque.geometry;g.clearGroups();for(let band=0;band<8;band++)g.addGroup(band*192*6,segments*6,0);geo.torque.rotation.z=tq>0?-Math.PI/2-arc:-Math.PI/2;geo.torque.material[0].color.set(tq>0?0xcfe3ee:0xe0655c);}
+}
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+new ResizeObserver(()=>{resize();drawPlots();}).observe(stage);
+window.addEventListener('resize',drawPlots);
+
+let last=performance.now(),lastPlot=0;
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000);last=now;
+  if(playing){const degPerSec=P.rpm*6*(+speedIn.value)*(reduced?0.25:1);theta+=degPerSec*dt;while(theta>360)theta-=720;thetaIn.value=theta.toFixed(1);}
+  poseRig();placeCamera();renderer.render(scene,camera);updateReadouts();
+  if(now-lastPlot>66){drawPlots();lastPlot=now;}
+  requestAnimationFrame(frame);
+}
+let pendingRerun=0;
+function scheduleRerun(){if(!pendingRerun)pendingRerun=requestAnimationFrame(()=>{pendingRerun=0;rerun();});}
+function rerun(){R=simulate(P);
+  if(geo.B!==R.B*1000||geo.S!==R.S*1000||geo.l!==R.l*1000||geo.hc!==R.hc*1000)buildRig();
+  updateTables();updateFlags();drawPlots();}
+buildRig();updateTables();updateFlags();resize();drawPlots();requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>
