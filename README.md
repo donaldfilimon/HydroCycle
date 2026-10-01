@@ -306,3 +306,15 @@ registers no live adapter. The UI labels the **Live DAQ connector** as
 `ControlSink`, command dispatcher, actuator, ignition, injector, or throttle
 endpoint. Closed-loop control is explicitly outside this repository’s v1
 authorization and validation scope.
+
+## Independent HC-IF-601 teaching document
+
+The supplied interactive [Hydrogen Cycle document](apps/web/public/hydrogen-cycle.html)
+is served at `/hydrogen-cycle.html` (under `/HydroCycle` on GitHub Pages).
+It preserves the crank-angle derivation, plots, energy audit, and model-only
+provenance of the source teaching material. It is an independent illustrative
+browser calculation, not the Python/Cantera feasibility solver or a validated
+engine model. It does not change the main application's scientific contracts.
+Autoignition and NOx temperature markers are illustrative, not safety limits.
+
+Run its focused model regressions with `node scripts/test-hydrogen-cycle.cjs`.
