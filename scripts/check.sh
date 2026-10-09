@@ -12,6 +12,7 @@ bun run --cwd packages/view-model check
 bun run --cwd packages/advisor check
 bun run check:gateway
 bash scripts/check-twin.sh
+bun run test:cad
 bun run check:web
 bash scripts/check-mobile.sh
 

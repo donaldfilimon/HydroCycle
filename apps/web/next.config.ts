@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const mode = process.env.HYDROCYCLE_WEB_MODE === "hosted" ? "hosted" : "local";
 const target = process.env.HYDROCYCLE_DEPLOY_TARGET ?? "local";
 const pages = mode === "hosted" && target === "pages";
+const staticExport = mode === "hosted" && (pages || target === "sites-static");
 const localRouting: Pick<NextConfig, "rewrites"> =
   mode === "local"
     ? {
@@ -18,8 +19,8 @@ const localRouting: Pick<NextConfig, "rewrites"> =
     : {};
 
 const nextConfig: NextConfig = {
-  output: pages ? "export" : undefined,
-  trailingSlash: pages,
+  output: staticExport ? "export" : undefined,
+  trailingSlash: staticExport,
   basePath: pages ? "/HydroCycle" : "",
   assetPrefix: pages ? "/HydroCycle" : undefined,
   reactStrictMode: true,

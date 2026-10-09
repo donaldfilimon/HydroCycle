@@ -36,6 +36,9 @@
     "test:e2e": "bun run --cwd apps/web test:e2e",
     "build:twin": "bash scripts/build-twin.sh",
     "check:twin": "bash scripts/check-twin.sh",
-    "dev:twin": "bash scripts/build-twin.sh && HYDROCYCLE_WEB_MODE=hosted HYDROCYCLE_DEPLOY_TARGET=sites NEXT_TELEMETRY_DISABLED=1 bun run --cwd apps/web next dev --hostname 127.0.0.1 --port 5186"
+    "dev:twin": "bash scripts/build-twin.sh && HYDROCYCLE_WEB_MODE=hosted HYDROCYCLE_DEPLOY_TARGET=sites NEXT_TELEMETRY_DISABLED=1 bun run --cwd apps/web next dev --hostname 127.0.0.1 --port 5186",
+    "test:cad": "node --test scripts/test-cad-model.cjs",
+    "test:cad:browser": "bun run --cwd apps/web playwright test --config playwright.cad.config.ts",
+    "build:sites:static": "HYDROCYCLE_WEB_MODE=hosted HYDROCYCLE_DEPLOY_TARGET=sites-static NEXT_TELEMETRY_DISABLED=1 bun run --cwd apps/web next build"
   }
 }

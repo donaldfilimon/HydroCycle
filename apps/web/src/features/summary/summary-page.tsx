@@ -17,6 +17,7 @@ import {
   useAdvisorDisclosure,
 } from "../../components/advisor-lens";
 import { useHydroCycle } from "../../state/app-state";
+import { LocalModelResults } from "./local-model-results";
 
 function value(value: number | null, digits = 2): string {
   return value === null ? "Missing" : value.toFixed(digits);
@@ -228,6 +229,7 @@ export function SummaryPage() {
               </p>
             </article>
           </section>
+          <LocalModelResults />
           <footer className="summary-actions">
             <Link href="/workbench">
               <span>OPEN IN WORKBENCH</span>

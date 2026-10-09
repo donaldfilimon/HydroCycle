@@ -10,18 +10,32 @@
 
 @media(max-width:600px){.marker:not(.selected){display:none}}
 
+
+/* Engineering inspection layout: reserved title band, legible stage navigation,
+   and a separate evidence surface that never substitutes a missing measurement. */
+:root{--muted:#adbed2}.workspace{grid-template-columns:230px minmax(0,1fr) 290px;min-height:820px;height:calc(100dvh - 109px)}
+.model-title{top:18px;left:22px}.model-title h1{font-size:20px;margin:8px 0}.model-title>span{color:#b1c9dd}.view-legend{color:#c0d0df}.axis{display:none}
+.inspection-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 18px;border-bottom:1px solid var(--line);font-size:11px;color:#c1d1e4;background:#0e1e30}.inspection-bar select{color:#e5f4ff;background:#172b41;border:1px solid #4c637c;border-radius:4px;padding:7px;font:inherit}.inspection-bar label{display:flex;align-items:center;gap:7px}.inspection-bar input{width:90px;accent-color:var(--cyan)}.inspection-bar button{padding:7px 10px}.view-options,.view-buttons{flex-wrap:wrap}.view-toolbar{height:auto;min-height:53px;padding-block:8px;flex-wrap:wrap}
+.group-heading{font:10px ui-monospace,monospace;letter-spacing:1px;color:#a6bdcf;margin:18px 4px 9px}.assembly-row button[aria-pressed=true]{color:#9cfff2}.component-list{padding:8px 0 4px 17px;color:#bdcddd;font-size:11px;line-height:1.9;border-left:1px solid #37506a;margin-left:9px}.component-list li::marker{color:#64d8dc}.process-strip{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:5px;padding:10px;background:#0c192b}.process-strip button{padding:8px 3px;font:10px ui-monospace,monospace;min-height:46px}.process-strip button span{display:block;color:#a8bfd2;font-size:9px;margin-top:5px}.process-strip button[aria-pressed=true]{border-color:var(--cyan);background:#12404a;color:#bcfff4}.process-strip button[aria-pressed=true] span{color:#bcfff4}
+.symbol-notice{position:absolute;right:16px;top:19px;max-width:170px;font:9px ui-monospace,monospace;line-height:1.7;color:#cfc0ff;padding:7px 9px;background:#101b30d9;border:1px solid #4c4668;pointer-events:none}.selection-status{position:absolute;top:83px;left:22px;color:#9adfdf;font:10px ui-monospace,monospace;max-width:80%;pointer-events:none}.marker{font-size:10px;min-height:28px}.section-head h3{color:#c9d9e9}.mechanism-readouts svg{height:76px;min-width:180px}.mechanism-readouts text{font-size:8px;fill:#c1d1e1}.mechanism-readouts{gap:17px;flex-wrap:wrap}.mechanism-readouts>div{flex:1}.mechanism-readouts span{color:#b5c8da;font-size:9px}.small{color:#bbcee1}.motion-tools{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}.motion-tools button{font-size:10px}.motion-tools label{font-size:10px;color:#b5c8da;display:flex;align-items:center;gap:8px}.motion-tools select{background:#132238;color:#dce9f8;border:1px solid #40546b;border-radius:4px;padding:6px}.evidence{padding:22px;border-top:1px solid var(--line);background:#091421}.evidence-heading{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}.evidence-heading h2{font-size:16px;margin:0}.badge{font:10px ui-monospace,monospace;color:#ecd69b;background:#382e19;padding:6px 8px;border:1px solid #6b5930;border-radius:3px}.evidence-heading .buttons{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr 1.25fr;gap:18px}.evidence article{border:1px solid #2d4258;border-radius:7px;padding:18px;min-width:0;background:#0e1c2d}.evidence h3{font-size:12px;margin:0 0 14px}.ledger{margin:0}.ledger>div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-top:1px solid #22364b;padding:9px 0;font-size:11px}.ledger dt{color:#b3c5d9}.ledger dd{margin:0;font-family:ui-monospace,monospace;text-align:right;overflow-wrap:anywhere}.evidence .mini-note{color:#b1c5da}.pv-chart{width:100%;height:145px}.pv-chart path{fill:none;stroke:#8faefa;stroke-width:2}.pv-chart text{fill:#c3d5e7;font:10px ui-monospace,monospace}.pv-chart .axes{stroke:#60758b;stroke-width:1}.pv-chart circle{fill:#f1ce83}.result-meta{white-space:pre-wrap;overflow-wrap:anywhere;font:10px/1.8 ui-monospace,monospace;color:#b9cee1}.result-sample{width:100%;accent-color:#8faefa}.evidence [hidden]{display:none!important}.evidence-status{font-size:11px;color:#cedcec;line-height:1.7}.tree-panel,.inspector{scrollbar-width:thin}.mini-note{color:#aebfd3}.result-label{font-size:11px;color:#c6d5e5}
+@media(max-width:1200px){.workspace{grid-template-columns:200px minmax(0,1fr) 260px}.symbol-notice{top:auto;bottom:55px;right:12px;font-size:8px}.model-title h1{font-size:18px}.mechanism-readouts strong{font-size:17px}}
+@media(max-width:960px){.workspace{grid-template-columns:190px minmax(0,1fr);height:auto;min-height:0}.center{height:890px}.tree-panel{height:890px}.inspector{display:block}.evidence-grid{grid-template-columns:1fr 1fr}.evidence-grid article:last-child{grid-column:1/-1}.component-list{columns:2}.mechanism-readouts svg{max-width:none}}
+@media(max-width:620px){.workspace{display:flex}.center{height:860px}.tree-panel{height:auto}.theatre{min-height:335px}.model-title h1{font-size:18px}.selection-status{top:82px;font-size:9px}.inspection-bar{padding:8px 10px;gap:8px;font-size:10px}.inspection-bar input{width:70px}.process-strip{grid-template-columns:repeat(4,minmax(0,1fr));padding:8px}.process-strip button{font-size:11px;min-height:44px}.mechanism-readouts svg{display:block;flex-basis:100%;width:100%;max-width:none;height:68px}.mechanism-readouts{gap:10px}.mechanism-readouts strong{font-size:16px}.mechanism-readouts span{font-size:8px}.evidence{padding:18px 14px}.evidence-grid{grid-template-columns:1fr}.evidence-grid article:last-child{grid-column:auto}.evidence-heading .buttons{margin-left:0}.symbol-notice{bottom:62px}.view-legend{font-size:9px}.view-buttons button,.view-options button{min-height:36px}.tree-actions button,.exports button{min-height:44px}.component-list{columns:1}.assembly-row button{min-height:44px}.evidence-heading h2{font-size:15px}}
+
+@media(max-width:620px){.tree-panel .group-heading{grid-column:1/-1;margin-top:14px}}
+button:disabled{opacity:.5;cursor:default}
 </style>
 </head>
 <body>
 <a href="#viewport" class="skip">Skip to 3D viewport</a>
-<header class="topbar"><div class="brand"><svg viewBox="0 0 34 34" aria-hidden="true"><path d="M3 21q7-17 14 0t14 0M3 13q7-17 14 0t14 0"/></svg><div><strong>HYDROCYCLE</strong><span>CAD workspace</span></div></div><div class="scope">P1 CONCEPT <i></i> GEOMETRY ONLY</div><div class="exports"><button id="import">Import JSON</button><button id="save">Save JSON</button><button id="obj" class="primary">Export visible OBJ <span aria-hidden="true">↗</span></button><input id="file" type="file" accept=".json,application/json" hidden></div></header>
+<header class="topbar"><div class="brand"><svg viewBox="0 0 34 34" aria-hidden="true"><path d="M3 21q7-17 14 0t14 0M3 13q7-17 14 0t14 0"/></svg><div><strong>HYDROCYCLE</strong><span>CAD workspace</span></div></div><div class="scope">P2 CONCEPT <i></i> GEOMETRY ONLY</div><div class="exports"><button id="import">Import JSON</button><button id="save">Save JSON</button><button id="obj" class="primary">Export visible OBJ <span aria-hidden="true">↗</span></button><input id="file" type="file" accept=".json,application/json" hidden></div></header>
 <div class="workspace">
 <aside class="tree-panel"><div class="panel-heading"><h2>ASSEMBLY</h2><span>08 stages</span></div><div id="assembly"></div><div class="tree-actions"><button id="show-all">Show all</button><button id="isolate">Isolate selected</button></div><div class="key"><h3>VISUAL CHANNELS</h3><p><i class="water"></i>Water carrier</p><p><i class="hydrogen"></i>H₂ bubble symbols</p><p><i class="aerosol"></i>Aerosol symbols</p><p><i class="metal"></i>Component envelopes</p></div><div class="scope-note"><strong>Not a fabrication release</strong><p>No pressure ratings, vessel sizing or hardware control. Enlarged symbols do not represent a measured population.</p></div></aside>
 <main class="center"><div class="view-toolbar"><div class="view-buttons" aria-label="Camera presets"><button data-view="iso" class="active">Isometric</button><button data-view="front">Front</button><button data-view="top">Top</button></div><div class="view-options"><label><input id="cutaway" type="checkbox" checked>Cutaway</label><label><input id="symbols" type="checkbox" checked>Symbols</label><button id="fit" title="Fit complete assembly">Fit</button></div></div>
-<section class="theatre" id="viewport" tabindex="0" aria-label="Interactive 3D concept model. Drag to orbit, shift-drag to pan, scroll or pinch to zoom. Arrow keys orbit. Plus and minus zoom."><canvas id="cad" aria-label="HydroCycle parametric three-dimensional assembly"></canvas><div class="model-title"><span>HYDROGEN–WATER RESEARCH ASSEMBLY</span><h1>Follow the concept.<br><em>Inspect the assumptions.</em></h1></div><div id="markers" aria-label="Select a model component"></div><div class="view-legend"><span>700 × 400 mm conditioning deck [P]</span><span>Symbols not to scale · no flow field</span></div><div class="axis" aria-hidden="true"><b>Y</b><span>X — Z</span></div><div id="gpu-error" hidden><strong>3D rendering unavailable</strong><p>WebGL could not start. Component information, parameter editing and file exports are still available.</p></div></section>
-<div class="kinematics"><div class="play-row"><button id="play" class="play">Play mechanism</button><label for="angle">CRANK ANGLE <output id="angle-value">350°</output></label><input id="angle" type="range" min="0" max="360" value="350" step="1" aria-label="Crank angle"><span class="small">0° = TDC · kinematic motion only</span></div><div class="mechanism-readouts"><div><span>STROKE [CALC]</span><strong id="stroke">—</strong><small>mm</small></div><div><span>ROD LENGTH [CALC]</span><strong id="rod">—</strong><small>mm</small></div><div><span>CYLINDER VOLUME [CALC]</span><strong id="volume">—</strong><small>cm³</small></div><svg id="volume-chart" viewBox="0 0 270 62" role="img" aria-label="Geometric cylinder volume over one crank revolution"><path id="volume-path"/><line id="volume-cursor" y1="4" y2="48"/><text x="8" y="61">0° TDC</text><text x="117" y="61">180° BDC</text><text x="227" y="61">360°</text></svg></div></div>
-<div class="process-strip"><span>CONDITION</span><i>→</i><span>CHARACTERIZE</span><i>→</i><span>AEROSOLIZE</span><i>→</i><span>ENGINE BOUNDARY</span><i>→</i><span>RECOVER</span></div></main>
-<aside class="inspector"><div class="panel-heading"><h2>INSPECTOR</h2><span id="part-id">NBG-104</span></div><h2 id="part-name" class="part-name">Nanobubble conditioner</h2><p id="part-phase" class="part-phase"></p><p id="part-note" class="part-note"></p><button id="focus" class="focus">Focus selected component</button>
+<div class="inspection-bar"><label>Projection <select id="projection"><option value="perspective">Perspective</option><option value="orthographic">Orthographic</option></select></label><label>Section <input id="section-angle" aria-label="Section orientation" type="range" min="0" max="360" step="15" value="0"><output id="section-value">0°</output></label><button id="focus-view">Focus</button><button id="restore-view">Restore view</button></div><section class="theatre" id="viewport" tabindex="0" aria-label="Interactive 3D concept model. Drag to orbit, shift-drag to pan, scroll or pinch to zoom. Arrow keys orbit. Plus and minus zoom."><canvas id="cad" aria-label="HydroCycle parametric three-dimensional assembly"></canvas><div class="model-title"><span>HYDROGEN–WATER RESEARCH ASSEMBLY</span><h1>Process assembly <em>/ 08 stages</em></h1></div><div id="markers" aria-label="Select a model component"></div><div class="view-legend"><span>700 × 400 mm conditioning deck [P]</span><span>Symbols not to scale · no flow field</span></div><div class="symbol-notice">VISUALIZATION NOT TO SCALE<br>Fixed symbols · not CFD</div><div id="selection-status" class="selection-status" aria-live="polite"></div><div class="axis" aria-hidden="true"><b>Y</b><span>X — Z</span></div><div id="gpu-error" hidden><strong>3D rendering unavailable</strong><p>WebGL could not start. Component information, parameter editing and file exports are still available.</p></div></section>
+<div class="kinematics"><div class="play-row"><button id="play" class="play">Play mechanism</button><label for="angle">CRANK ANGLE <output id="angle-value">350°</output></label><input id="angle" type="range" min="0" max="360" value="350" step="1" aria-label="Crank angle"><span class="small">0° = TDC · kinematic motion only</span></div><div class="motion-tools"><button data-angle="0">TDC · 0°</button><button data-angle="90">90°</button><button data-angle="180">BDC · 180°</button><button data-angle="270">270°</button><label>Playback <select id="playback-speed"><option value="20">Slow</option><option value="55" selected>Normal</option><option value="110">Fast</option></select></label></div><div class="mechanism-readouts"><div><span>STROKE [CALC]</span><strong id="stroke">—</strong><small>mm</small></div><div><span>ROD LENGTH [CALC]</span><strong id="rod">—</strong><small>mm</small></div><div><span>CYLINDER VOLUME [CALC]</span><strong id="volume">—</strong><small>cm³</small></div><svg id="volume-chart" viewBox="0 0 270 62" role="img" aria-label="Geometric cylinder volume over one crank revolution"><path id="volume-path"/><line id="volume-cursor" y1="4" y2="48"/><text x="8" y="61">0° TDC</text><text x="117" y="61">180° BDC</text><text x="227" y="61">360°</text></svg></div></div>
+<nav id="process-stages" class="process-strip" aria-label="Process stage selection"></nav></main>
+<aside class="inspector"><div class="panel-heading"><h2>INSPECTOR</h2><span id="part-id">NBG-104</span></div><h2 id="part-name" class="part-name">Nanobubble conditioner</h2><p id="part-phase" class="part-phase"></p><p id="part-note" class="part-note"></p><details open><summary>Selected subcomponents</summary><ul id="components" class="component-list"></ul></details><button id="focus" class="focus">Focus selected component</button>
 <div class="section-head"><h3>GEOMETRY</h3><span>Live / parametric</span></div>
 <label class="number-field">Bore [P]<div><input data-param="boreMm" type="number" min="65" max="110" step="0.5" value="86"><span>mm</span></div></label>
 <label class="number-field">Displacement [S]<div><input data-param="displacementCc" type="number" min="100" max="800" step="10" value="500"><span>cm³</span></div></label>
@@ -30,13 +44,19 @@
 <label class="range-field">Liquid fill <span>Visual only</span><input id="fill" type="range" min="10" max="90" value="65"></label>
 <label class="range-field">Explode assembly <span id="explode-value">0%</span><input id="exploded" type="range" min="0" max="100" value="0"></label>
 <details open><summary>Nanobubble assumptions [S]</summary><label class="number-field">Median diameter<div><input data-param="bubbleNm" type="number" min="50" max="1000" step="10" value="180"><span>nm</span></div></label><label class="number-field">Number density<div><input data-param="bubbleCount" type="number" min="0" max="10000000000" step="100000" value="1000000"><span>/mL</span></div></label><label class="number-field">Retention<div><input data-param="retention" type="number" min="0" max="1" step="0.01" value="0.72"><span>fraction</span></div></label><p class="mini-note">Editable assumptions, not measured results. Glyph count and size stay independent of these values.</p></details>
-<details><summary>Model boundary + provenance</summary><p class="mini-note">[S] Supplied P0 basis · [P] Proposed reference geometry · [CALC] Geometric calculation.</p><p class="mini-note">The source simulator remains separate. This view calculates no gas inventory, vapor fraction, acoustic field, pressure trace or shaft output. Missing measurements remain unknown.</p><p class="mini-note">V(θ) = Vc + A[r(1 − cos θ) + L − √(L² − r² sin² θ)]. Legacy −10° reference: 59.354 cm³. The physical reference is approximately 60.431 cm³, not silently fitted to match.</p></details><button id="reset" class="reset">Reset P0 reference</button></aside>
-</div><footer><span><i></i><strong id="render-status">INITIALIZING 3D</strong></span><span id="mesh-stats">Preparing geometry</span><span>H₂ inventory: unknown · vapor fraction: unknown · output: not computed</span></footer><div id="toast" role="status" aria-live="polite" hidden></div>
+<details><summary>Model boundary + provenance</summary><p class="mini-note">[S] Supplied P0 basis · [P] Proposed reference geometry · [CALC] Geometric calculation.</p><p class="mini-note">The source simulator remains separate. This view calculates no gas inventory, vapor fraction, acoustic field, pressure trace or shaft output. Missing measurements remain unknown.</p><p class="mini-note">V(θ) = Vc + A[r(1 − cos θ) + L − √(L² − r² sin² θ)]. Legacy −10° reference: 59.354 cm³. The geometric reference is approximately 60.431 cm³, not silently fitted to match.</p></details><button id="reset" class="reset">Reset P0 reference</button></aside>
+</div>
+<section class="evidence" aria-labelledby="evidence-title"><div class="evidence-heading"><h2 id="evidence-title">Engineering evidence</h2><span class="badge">UNVALIDATED CONCEPT</span><div class="buttons"><button id="load-result">Open model result</button><button id="clear-result" disabled>Clear result</button><input id="result-file" type="file" accept=".json,application/json" hidden></div></div>
+<p id="result-status" class="evidence-status" role="status">No simulation result loaded. Missing measurements remain unknown. Hydrogen is fuel; water is carrier and thermal load.</p>
+<div class="evidence-grid"><article><h3>Mass accounting <span class="mini-note">mg / cycle</span></h3><dl id="mass-ledger" class="ledger"></dl><p class="mini-note">Imported model accounting is not a measurement. Measured total hydrogen replaces derived loading, never adds to it. Glyph count does not enter the ledger.</p><h3>Validation boundary</h3><p class="mini-note" id="gate-status">Feasibility not evaluated here. Geometry and mechanism motion do not validate hydrogen loading, vaporization or output.</p></article>
+<article><h3>Energy accounting <span class="mini-note">J / cycle</span></h3><dl id="energy-ledger" class="ledger"></dl><p class="mini-note">Water chemical contribution: none. Thermal loads and losses require evidence. Unknown is not zero. No shaft power is inferred from indicated work.</p></article>
+<article><h3>P–V / saved motored baseline</h3><p id="pv-empty" class="mini-note">No pressure trace available. Open a saved HydroCycle SimulationResult JSON to inspect its existing 0D output. No pressure solver runs in this workspace.</p><div id="pv-loaded" hidden><svg class="pv-chart" viewBox="0 0 340 160" role="img" aria-label="Imported motored pressure versus volume, model output, not measurements"><path class="axes" d="M42 10V130H328"/><path id="pv-path"/><circle id="pv-cursor" r="4"/><text x="8" y="12">bar</text><text x="270" y="155">V / cm³</text><text id="pv-max" x="4" y="30"/><text id="pv-volume-min" x="42" y="147"/><text id="pv-volume-max" x="215" y="147"/></svg><label class="result-label">Saved sample <input id="result-sample" class="result-sample" type="range" min="0" max="1" value="0" step="1"></label><p id="pv-readout" class="mini-note"></p><p class="mini-note">Independent saved scenario. CAD parameter edits and crank playback do not change this trace. Pressure is single-zone 0D, not CFD.</p></div><details><summary>Result provenance</summary><div id="result-meta" class="result-meta">No result source. Geometry: P0 assumptions / proposed envelopes. Kinematics: geometric calculation only.</div></details></article></div></section>
+<footer><span><i></i><strong id="render-status">INITIALIZING 3D</strong></span><span id="mesh-stats">Preparing geometry</span><span>H₂ inventory: unknown · vapor fraction: unknown · output: not computed</span></footer><div id="toast" role="status" aria-live="polite" hidden></div>
 <script id="hydrocycle-model-source">
 /* HydroCycle CAD: presentation geometry only. No fluid, acoustic or combustion solver. */
 (function (root) {
   'use strict';
-  const defaults = Object.freeze({boreMm:86,displacementCc:500,compressionRatio:10,rodRatio:3.5,angle:350,fill:0.65,bubbleNm:180,bubbleCount:1000000,retention:0.72,exploded:0,cutaway:true,symbols:true});
+  const defaults = Object.freeze({boreMm:86,displacementCc:500,compressionRatio:10,rodRatio:3.5,angle:350,fill:0.65,bubbleNm:180,bubbleCount:1000000,retention:0.72,exploded:0,sectionAngle:0,cutaway:true,symbols:true});
   const limits = {boreMm:[65,110],displacementCc:[100,800],compressionRatio:[2,20],rodRatio:[2,5],angle:[0,360],fill:[0.1,0.9],bubbleNm:[50,1000],bubbleCount:[0,1e10],retention:[0,1],exploded:[0,1]};
   function validate(p) {
     if (!p || typeof p !== 'object') throw new Error('A parameter object is required.');
@@ -49,6 +69,9 @@
       if (typeof p[k] !== 'boolean') throw new Error(k+' must be true or false.');
       out[k]=p[k];
     }
+    const section=p.sectionAngle===undefined?0:p.sectionAngle;
+    if(typeof section!=="number"||!Number.isFinite(section)||section<0||section>360)throw new Error("Section angle must be from 0 to 360 degrees.");
+    out.sectionAngle=section;
     return out;
   }
   function kinematics(p, degrees) {
@@ -71,12 +94,12 @@
     for (const [a,b,c,d] of [[0,3,2,1],[4,5,6,7],[0,4,7,3],[1,2,6,5],[3,7,6,2],[0,1,5,4]]){triangle(v,p[a],p[b],p[c]);triangle(v,p[a],p[c],p[d]);}
     return v;
   }
-  function tube(a,b,r,segments=24,cut=false,caps=true) {
+  function tube(a,b,r,segments=24,cut=false,caps=true,rotation=0) {
     const axis=norm(sub(b,a)), u=norm(cross(axis,Math.abs(axis[1])<0.9?[0,1,0]:[1,0,0])), w=cross(axis,u), v=[];
     const point=(o,t)=>add(o,add(mul(u,r*Math.cos(t)),mul(w,r*Math.sin(t))));
     for(let i=0;i<segments;i++) {
       if(cut && i<segments/3)continue;
-      const t=i/segments*Math.PI*2, t2=(i+1)/segments*Math.PI*2, p=point(a,t),q=point(a,t2),s=point(b,t),topp=point(b,t2);
+      const t=i/segments*Math.PI*2+rotation*Math.PI/180, t2=(i+1)/segments*Math.PI*2+rotation*Math.PI/180, p=point(a,t),q=point(a,t2),s=point(b,t),topp=point(b,t2);
       triangle(v,p,q,topp);triangle(v,p,topp,s);
       if(caps){triangle(v,a,q,p);triangle(v,b,s,topp);}
     }
@@ -98,39 +121,45 @@
     ['ENG-601','Cylinder + crank','Kinematic section','Slider-crank geometry only. No ignition, reactive trace, predicted pressure or mechanical rating.',[365,170,0]],
     ['CON-702','Condensation boundary','Exhaust / recovery','Proposed condenser envelope. No predicted heat recovery or phase fraction.',[535,83,0]]
   ];
-  function buildScene(raw) {
+  function buildScene(raw,engineOnly=false) {
     const p=validate(raw),g=kinematics(p,p.angle),meshes=[],parts=[];
     const metal=[0.30,0.42,0.57,1],rim=[0.53,0.67,0.82,1],shell=[0.23,0.64,0.80,0.17],water=[0.02,0.43,0.66,0.68],cyan=[0.12,0.89,0.91,1],violet=[0.56,0.46,0.93,1],dark=[0.09,0.14,0.23,1];
-    function mesh(id,verts,color,decorative=false){meshes.push({id,vertices:verts,color,decorative});}
-    mesh('BASE',box([-150,-10,0],[700,15,400]),dark);
-    mesh('BASE',box([420,-10,0],[330,15,260]),dark);
+    function mesh(id,verts,color,decorative=false,name){meshes.push({id,name:name||(decorative?'Static symbolic samples':color===shell?(p.cutaway?'Sectioned envelope':'Envelope'):color===water?'Illustrative liquid':id==='PIPE'?'Concept connection':'Structural envelope'),vertices:verts,color,decorative});}
+    if(!engineOnly){mesh('BASE',box([-150,-10,0],[700,15,400]),dark);
+    mesh('BASE',box([420,-10,0],[330,15,260]),dark);}
     // The actual conditioning deck retains the P0 700 x 400 x 15 mm envelope.
     for(const [id,name,phase,note,c]of info){const idx=parts.length;const center=[c[0]+(idx-3.5)*p.exploded*22,c[1]+(idx%2)*p.exploded*25,c[2]];parts.push({id,name,phase,note,center});}
     function center(id){return parts.find(x=>x.id===id).center;}
     function vessel(id,r,h,liquid=true){
       const [x,y,z]=center(id),base=y-h/2;
-      mesh(id,tube([x,base,z],[x,base+h,z],r,32,p.cutaway,false),shell);
+      mesh(id,tube([x,base,z],[x,base+h,z],r,32,p.cutaway,false,p.sectionAngle),shell);
       mesh(id,tube([x,base-5,z],[x,base+1,z],r+5),metal);
-      mesh(id,tube([x,base+h-1,z],[x,base+h+5,z],r+5),rim);
+      mesh(id,tube([x,base+h-1+p.exploded*36,z],[x,base+h+5+p.exploded*36,z],r+5,32,p.cutaway,true,p.sectionAngle),rim,false,'Removable lid');
+      mesh(id,tube([x,base+2,z],[x,base+h-2,z],r-2,32,p.cutaway,false,p.sectionAngle),shell,false,'Inner wall');
+      for(const side of [-1,1])mesh(id,box([x+side*(r+2),y,-r*.55],[4,h-8,4]),rim,false,'Support rail');
       if(liquid)mesh(id,tube([x,base+2,z],[x,base+(h-6)*p.fill,z],r-3,32),water);
       for(const dx of [-r*.65,r*.65])mesh(id,box([x+dx,base/2,z],[7,Math.max(8,base),20]),metal);
     }
-    vessel('RSV-101',45,135);vessel('NBG-104',38,155);vessel('CND-105',36,128);vessel('CON-702',35,132);
-    let c=center('PMP-103');mesh('PMP-103',box(c,[61,48,62]),metal);mesh('PMP-103',tube(add(c,[-38,0,0]),add(c,[-28,0,0]),23),rim);mesh('PMP-103',tube(add(c,[0,18,0]),add(c,[0,57,0]),15),shell);
-    c=center('USC-401');mesh('USC-401',box(add(c,[0,-49,0]),[94,27,90]),metal);mesh('USC-401',tube(add(c,[0,-36,0]),add(c,[0,62,0]),42,32,p.cutaway,false),shell);mesh('USC-401',tube(add(c,[0,-33,0]),add(c,[0,-23,0]),37),violet);
+    let c;if(!engineOnly){vessel('RSV-101',45,135);vessel('NBG-104',38,155);vessel('CND-105',36,128);vessel('CON-702',35,132);
+    c=center('PMP-103');mesh('PMP-103',box(c,[61,48,62]),metal);mesh('PMP-103',tube(add(c,[-38,0,0]),add(c,[-28,0,0]),23),rim);mesh('PMP-103',tube(add(c,[0,18,0]),add(c,[0,57,0]),15),shell);
+    c=center('USC-401');mesh('USC-401',box(add(c,[0,-49,0]),[94,27,90]),metal);mesh('USC-401',tube(add(c,[0,-36,0]),add(c,[0,62,0]),42,32,p.cutaway,false,p.sectionAngle),shell);mesh('USC-401',tube(add(c,[0,-33,0]),add(c,[0,-23,0]),37),violet);
     c=center('MTR-106');mesh('MTR-106',box(c,[35,65,36]),metal);mesh('MTR-106',tube(add(c,[0,-4,20]),add(c,[0,-4,26]),12),cyan);
-    c=center('ENG-601');const ex=c[0],base=67+c[1]-170,top=base+g.rodMm+g.crankMm;
+    }c=center('ENG-601');const ex=c[0],base=67+c[1]-170,top=base+g.rodMm+g.crankMm;
     mesh('ENG-601',tube([ex-45,base,-17],[ex+45,base,-17],19),metal);
     mesh('ENG-601',tube([ex,base,-26],[ex,base,-16],g.crankMm+14),rim);
-    mesh('ENG-601',tube([ex+g.pinX,base+g.pinY,0],[ex,base+g.pistonY,0],8),rim);
-    mesh('ENG-601',tube([ex+g.pinX,base+g.pinY,-15],[ex+g.pinX,base+g.pinY,15],12),cyan);
-    mesh('ENG-601',tube([ex,base+g.pistonY-18,0],[ex,base+g.pistonY,0],p.boreMm/2-1),rim);
-    const chamberTop=top+g.clearanceHeightMm;
-    mesh('ENG-601',tube([ex,top-g.strokeMm-24,0],[ex,chamberTop,0],p.boreMm/2+4,40,p.cutaway,false),shell);
-    mesh('ENG-601',tube([ex,chamberTop,0],[ex,chamberTop+11,0],p.boreMm/2+12),metal);
-    mesh('ENG-601',box([ex,16,0],[140,24,100]),metal);
+    mesh('ENG-601',tube([ex+g.pinX,base+g.pinY,0],[ex,base+g.pistonY,0],8),rim,false,'Connecting rod');
+    mesh('ENG-601',tube([ex+g.pinX,base+g.pinY,-15],[ex+g.pinX,base+g.pinY,15],12),cyan,false,'Crank pin');
+    mesh('ENG-601',tube([ex,base+g.pistonY-9,0],[ex,base+g.pistonY+9,0],p.boreMm/2-1),rim,false,'Piston');
+    mesh('ENG-601',tube([ex,base+g.pistonY,-p.boreMm*.42],[ex,base+g.pistonY,p.boreMm*.42],4),cyan,false,'Wrist pin');
+    for(const dy of [-3,-7])mesh('ENG-601',tube([ex,base+g.pistonY+9+dy-1,0],[ex,base+g.pistonY+9+dy,0],p.boreMm/2-.5),dark,false,'Piston ring');
+    const chamberTop=top+9+g.clearanceHeightMm;
+    mesh('ENG-601',tube([ex,top-g.strokeMm-24,0],[ex,chamberTop,0],p.boreMm/2+4,40,p.cutaway,false,p.sectionAngle),shell);
+    mesh('ENG-601',tube([ex,chamberTop+p.exploded*65,0],[ex,chamberTop+11+p.exploded*65,0],p.boreMm/2+12),metal);
+    mesh('ENG-601',box([ex,16,0],[140,24,100]),metal,false,'Engine cradle');
+    for(const dx of [-1,1])mesh('ENG-601',box([ex+dx*(p.boreMm/2+14),(chamberTop+35)/2,-32],[7,chamberTop-35,7]),metal,false,'Cylinder support');
+    mesh('ENG-601',tube([ex,base+g.pistonY+9,0],[ex,chamberTop,0],p.boreMm/2-2,32,p.cutaway,false,p.sectionAngle),[.65,.47,.19,.13],false,'Geometric chamber volume');
     // Fixed symbolic samples. They encode no motion or measured gas inventory.
-    if(p.symbols){let seed=109;const rnd=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
+    if(p.symbols&&!engineOnly){let seed=109;const rnd=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
       for(const id of ['NBG-104','CND-105','USC-401']){
         const [x,y,z]=center(id),n=id==='USC-401'?25:35,all=[];
         for(let i=0;i<n;i++){const a=rnd()*Math.PI*2,r=22*Math.sqrt(rnd()),h=(rnd()-.5)*65;all.push(...sphere([x+r*Math.cos(a),y+h,z+r*Math.sin(a)],id==='USC-401'?1.9:2.4));}
@@ -138,14 +167,14 @@
       }
     }
     // Process connections are conceptual; hidden in exploded view to avoid false mating geometry.
-    if(p.exploded<0.01)for(let i=0;i<parts.length-1;i++){
+    if(!engineOnly&&p.exploded<0.01)for(let i=0;i<parts.length-1;i++){
       const a=parts[i].center,b=parts[i+1].center,ya=i===5?chamberTop-30:55;
       const pts=[[a[0]+30,55,-36],[a[0]+50,55,-36],[a[0]+50,ya,-62],[b[0]-45,ya,-62],[b[0]-30,ya,-10]];
       for(let j=0;j<pts.length-1;j++)mesh('PIPE',tube(pts[j],pts[j+1],4.5,10),i<4?cyan:metal);
     }
     return {parts,meshes,geometry:g,parameters:p};
   }
-  function documentFor(p){return {schema:'hydrocycle-cad/1',modelVersion:'P1-web-geometry-1',validation:'UNVALIDATED_CONCEPT',units:'mm',parameters:validate(p),provenance:{bubbleNm:'S: P0 assumption; not measured',bubbleCount:'S: P0 assumption; not measured',retention:'S: P0 assumption; not measured',boreMm:'P: reference geometry',displacementCc:'S: model basis',geometry:'CALC: kinematics only'},physics:{hydrogenMassMg:null,waterVaporFraction:null,shaftPowerW:null},limitations:['Concept envelopes; NOT FOR FABRICATION; no pressure ratings.','Symbols are enlarged and fixed; not a flow simulation.','No acoustic, phase-change, combustion or thermodynamic solver is connected.']};}
+  function documentFor(p){return {schema:'hydrocycle-cad/1',modelVersion:'P2-web-inspection-2',validation:'UNVALIDATED_CONCEPT',units:'mm',parameters:validate(p),provenance:{bubbleNm:'S: P0 assumption; not measured',bubbleCount:'S: P0 assumption; not measured',retention:'S: P0 assumption; not measured',boreMm:'P: reference geometry',displacementCc:'S: model basis',geometry:'CALC: kinematics only'},physics:{hydrogenMassMg:null,waterVaporFraction:null,shaftPowerW:null},limitations:['Concept envelopes; NOT FOR FABRICATION; no pressure ratings.','VISUALIZATION NOT TO SCALE. Symbols are enlarged and fixed; not a flow simulation.','No acoustic, phase-change, combustion or thermodynamic solver is connected.']};}
   function parseDocument(text){if(text.length>100000)throw new Error('Parameter file exceeds 100 kB.');const d=JSON.parse(text);if(d.schema!=='hydrocycle-cad/1')throw new Error('Unsupported CAD parameter schema.');return validate(d.parameters);}
   function toOBJ(scene,visible){
     const lines=['# HydroCycle concept mesh — NOT FOR FABRICATION','# units: millimeters','# No pressure ratings; liquid surfaces are illustrative.'];let offset=1;
@@ -154,7 +183,25 @@
       for(let i=0;i<v.length/6;i+=3)lines.push('f '+[offset+i,offset+i+1,offset+i+2].join(' '));offset+=v.length/6;
     }return lines.join('\n')+'\n';
   }
-  const api={defaults,limits,validate,kinematics,buildScene,document:documentFor,parseDocument,toOBJ};
+  // Read the existing SimulationResult export. Only display model-supplied values;
+  // geometry controls never alter imported results or compute a pressure trace.
+  function parseResult(text){
+    if(text.length>5000000)throw new Error('Result exceeds 5 MB.');
+    const raw=JSON.parse(text),r=raw.result||raw;
+    if(!r||typeof r.result_id!=='string'||r.result_id.length>256||!r.reproducibility||typeof r.gate?.passed!=='boolean')throw new Error('Expected a HydroCycle SimulationResult JSON export.');
+    if(!r.gate.passed&&r.proposed_cycle!=null)throw new Error('Failed gate cannot contain a proposed reactive cycle.');
+    const meta=r.reproducibility;
+    if(meta.schema_version!=='1.0.0')throw new Error('Unsupported result schema.');
+    for(const key of ['model_version','solver_version','python_version','mechanism'])if(typeof meta[key]!=='string'||!meta[key]||meta[key].length>256)throw new Error('Missing reproducibility metadata: '+key);
+    if(!Number.isSafeInteger(meta.random_seed)||!(meta.cantera_version===null||typeof meta.cantera_version==='string'))throw new Error('Incomplete seed or Cantera metadata.');
+    const t=r.motored_baseline,n=t?.crank_angle_deg?.length;
+    if(!Number.isInteger(n)||n<2||n>10000)throw new Error('Missing or oversized motored trace.');
+    for(const key of ['crank_angle_deg','volume_m3','pressure_pa'])if(!Array.isArray(t[key])||t[key].length!==n||!t[key].every(Number.isFinite))throw new Error('Invalid trace array: '+key);
+    if(t.volume_m3.some(x=>x<=0)||t.pressure_pa.some(x=>x<0)||t.crank_angle_deg.some((x,i)=>i&&x<=t.crank_angle_deg[i-1]))throw new Error('Trace must have positive volume, nonnegative pressure and ordered angles.');
+    function quantities(source,keys){const out={};for(const key of keys){const v=source?.[key];if(v!==undefined&&v!==null&&(typeof v!=='number'||!Number.isFinite(v)))throw new Error('Invalid result quantity: '+key);out[key]=v??null;}return out;}
+    return {id:r.result_id,metadata:{schema_version:meta.schema_version,model_version:meta.model_version,solver_version:meta.solver_version,python_version:meta.python_version,cantera_version:meta.cantera_version,mechanism:meta.mechanism,random_seed:meta.random_seed},passed:r.gate.passed,trace:{crank_angle_deg:t.crank_angle_deg,volume_m3:t.volume_m3,pressure_pa:t.pressure_pa},mass:quantities(r.gate.mass_balance,['initial_h2_mg_per_cycle','retained_h2_mg_per_cycle','released_h2_mg_per_cycle','unaccounted_h2_mg_per_cycle','residual_h2_mg_per_cycle']),energy:quantities(r.gate.energy_terms,['hydrogen_chemical_energy_j','water_sensible_heating_j','water_phase_change_j','net_external_preheat_j','estimated_wall_loss_j','usable_energy_margin_j'])};
+  }
+  const api={defaults,limits,validate,kinematics,buildScene,document:documentFor,parseDocument,toOBJ,parseResult};
   root.HydroCad=api;
   if(typeof module!=='undefined' && module.exports)module.exports=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
@@ -164,6 +211,7 @@
 (function () {
   'use strict';
   const M=window.HydroCad, $=id=>document.getElementById(id), canvas=$('cad');
+  let projection='perspective',result=null,savedCamera=null;
   let params={...M.defaults},scene=M.buildScene(params),selected='NBG-104',hidden=new Set(),isolated=false,playing=false,lastTick=0,frame=0,gpu=[],lost=false;
   let camera={yaw:0.27,pitch:0.36,distance:1400,target:[50,80,0]},matrix=null,drag=null;
   const pointers=new Map();let pinchDistance=0,cameraPreset='iso',autoFit=true;
@@ -176,6 +224,7 @@
     const z=vec.norm(vec.sub(eye,t)),x=vec.norm(vec.cross([0,1,0],z)),u=vec.cross(z,x);
     const view=new Float32Array([x[0],u[0],z[0],0,x[1],u[1],z[1],0,x[2],u[2],z[2],0,-vec.dot(x,eye),-vec.dot(u,eye),-vec.dot(z,eye),1]);
     const f=1/Math.tan(40*Math.PI/360),aspect=canvas.width/canvas.height,n=1,far=8000;
+    if(projection==='orthographic'){const h=d*Math.tan(40*Math.PI/360),w=h*aspect;return multiply(new Float32Array([1/w,0,0,0,0,1/h,0,0,0,0,-2/(far-n),0,0,0,-(far+n)/(far-n),1]),view);}
     return multiply(new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+n)/(n-far),-1,0,0,2*far*n/(n-far),0]),view);
   }
   function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s;}
@@ -190,7 +239,7 @@
   }
   function makeBuffer(m){const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(m.vertices),gl.STATIC_DRAW);let center=[0,0,0];for(let i=0;i<m.vertices.length;i+=6)for(let j=0;j<3;j++)center[j]+=m.vertices[i+j]/(m.vertices.length/6);return {...m,buffer,count:m.vertices.length/6,center};}
   function upload(engineOnly=false){if(!gl||lost)return;if(engineOnly){for(const b of gpu.filter(x=>x.id==='ENG-601'))gl.deleteBuffer(b.buffer);gpu=gpu.filter(x=>x.id!=='ENG-601');gpu.push(...scene.meshes.filter(x=>x.id==='ENG-601').map(makeBuffer));}else{for(const b of gpu)gl.deleteBuffer(b.buffer);gpu=scene.meshes.map(makeBuffer);}canvas.dataset.triangles=String(gpu.reduce((s,m)=>s+m.count/3,0));}
-  function visible(id){if(isolated)return id===selected;return !hidden.has(id);}
+  function visible(id){if(isolated)return id===selected;if(id==='PIPE'&&hidden.size)return false;return !hidden.has(id);}
   function bind(b){gl.bindBuffer(gl.ARRAY_BUFFER,b.buffer);gl.enableVertexAttribArray(position);gl.vertexAttribPointer(position,3,gl.FLOAT,false,24,0);gl.enableVertexAttribArray(normal);gl.vertexAttribPointer(normal,3,gl.FLOAT,false,24,12);}
   function project(c){if(!matrix)return null;const r=[0,0,0,0];for(let j=0;j<4;j++)r[j]=matrix[j]*c[0]+matrix[4+j]*c[1]+matrix[8+j]*c[2]+matrix[12+j];if(r[3]<=0)return null;return [(r[0]/r[3]*.5+.5)*canvas.clientWidth,(-r[1]/r[3]*.5+.5)*canvas.clientHeight];}
   function render(){if(!gl){renderSoftware();return;}if(lost)return;const dpr=Math.min(window.devicePixelRatio||1,2),w=Math.max(1,Math.round(canvas.clientWidth*dpr)),h=Math.max(1,Math.round(canvas.clientHeight*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
@@ -209,7 +258,7 @@
     const dpr=Math.min(window.devicePixelRatio||1,1.5),w=Math.max(1,Math.round(canvas.clientWidth*dpr)),h=Math.max(1,Math.round(canvas.clientHeight*dpr));
     if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
     matrix=cameraMatrix();ctx2d.setTransform(dpr,0,0,dpr,0,0);ctx2d.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);
-    function pp(x,y,z){const q=matrix[3]*x+matrix[7]*y+matrix[11]*z+matrix[15];if(q<=1)return null;return [(matrix[0]*x+matrix[4]*y+matrix[8]*z+matrix[12])/q*canvas.clientWidth*.5+canvas.clientWidth*.5,-(matrix[1]*x+matrix[5]*y+matrix[9]*z+matrix[13])/q*canvas.clientHeight*.5+canvas.clientHeight*.5,q];}
+    function pp(x,y,z){const q=matrix[3]*x+matrix[7]*y+matrix[11]*z+matrix[15];if(q<=0)return null;return [(matrix[0]*x+matrix[4]*y+matrix[8]*z+matrix[12])/q*canvas.clientWidth*.5+canvas.clientWidth*.5,-(matrix[1]*x+matrix[5]*y+matrix[9]*z+matrix[13])/q*canvas.clientHeight*.5+canvas.clientHeight*.5,vec.dot(vec.sub([x,y,z],camera.target),[Math.sin(camera.yaw)*Math.cos(camera.pitch),Math.sin(camera.pitch),Math.cos(camera.yaw)*Math.cos(camera.pitch)])*-1];}
     ctx2d.strokeStyle='#193246';ctx2d.lineWidth=.6;
     for(let i=-800;i<=800;i+=50){let a=pp(i,-20,-500),b=pp(i,-20,500);if(a&&b){ctx2d.beginPath();ctx2d.moveTo(a[0],a[1]);ctx2d.lineTo(b[0],b[1]);ctx2d.stroke();}if(i>=-500&&i<=500){a=pp(-800,-20,i);b=pp(800,-20,i);if(a&&b){ctx2d.beginPath();ctx2d.moveTo(a[0],a[1]);ctx2d.lineTo(b[0],b[1]);ctx2d.stroke();}}}
     const faces=[],light=vec.norm([-.3,.9,.6]),light2=vec.norm([1,.2,-.2]);
@@ -221,40 +270,71 @@
     canvas.dataset.renderer='canvas';canvas.dataset.triangles=String(scene.meshes.reduce((s,m)=>s+m.vertices.length/18,0));$('render-status').textContent='CANVAS 3D / CONCEPT GEOMETRY';
   }
   let toastTimer;function toast(text){$('toast').textContent=text;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,5500);}
-  function readouts(){const g=scene.geometry;$('angle-value').textContent=Math.round(params.angle)+'°';$('angle').value=String(params.angle);$('stroke').textContent=g.strokeMm.toFixed(3);$('rod').textContent=g.rodMm.toFixed(3);$('volume').textContent=g.volumeCc.toFixed(3);$('explode-value').textContent=Math.round(params.exploded*100)+'%';
+  function readouts(){const g=scene.geometry;$('angle-value').textContent=Math.round(params.angle)+'°';$('angle').value=String(params.angle);$('stroke').textContent=g.strokeMm.toFixed(3);$('rod').textContent=g.rodMm.toFixed(3);$('volume').textContent=g.volumeCc.toFixed(3);$('explode-value').textContent=Math.round(params.exploded*100)+'%';$('section-value').textContent=params.sectionAngle+'°';
     const values=[];for(let a=0;a<=360;a+=5){const q=M.kinematics(params,a);values.push((a?'L':'M')+(8+a/360*250).toFixed(2)+','+(47-(q.volumeCc-q.clearanceCc)/params.displacementCc*40).toFixed(2));}$('volume-path').setAttribute('d',values.join(' '));const x=8+((params.angle%360+360)%360)/360*250;$('volume-cursor').setAttribute('x1',String(x));$('volume-cursor').setAttribute('x2',String(x));
     const count=scene.meshes.filter(m=>visible(m.id)).reduce((n,m)=>n+m.vertices.length/18,0);$('mesh-stats').textContent=count.toLocaleString()+' triangles · units mm';
   }
-  function rebuild(){scene=M.buildScene(params);upload();readouts();render();}
-  function select(id){selected=id;const p=scene.parts.find(x=>x.id===id);$('part-id').textContent=id;$('part-name').textContent=p.name;$('part-phase').textContent=p.phase;$('part-note').textContent=p.note;document.querySelectorAll('[data-part]').forEach(el=>el.classList.toggle('selected',el.dataset.part===id));document.querySelectorAll('[data-marker]').forEach(el=>el.classList.toggle('selected',el.dataset.marker===id));readouts();render();}
-  function createTree(){const tree=$('assembly'),markers=$('markers');tree.replaceChildren();markers.replaceChildren();for(const p of scene.parts){const row=document.createElement('div');row.className='assembly-row';row.dataset.part=p.id;const check=document.createElement('input');check.type='checkbox';check.checked=!hidden.has(p.id);check.setAttribute('aria-label','Show '+p.name);check.onchange=()=>{if(check.checked)hidden.delete(p.id);else hidden.add(p.id);readouts();render();};const button=document.createElement('button');const id=document.createElement('b');id.textContent=p.id;const name=document.createElement('span');name.textContent=p.name;button.append(id,name);button.onclick=()=>select(p.id);row.append(check,button);tree.append(row);const marker=document.createElement('button');marker.className='marker';marker.dataset.marker=p.id;marker.textContent=p.id;marker.setAttribute('aria-label','Select '+p.name+' in model');marker.onclick=()=>select(p.id);markers.append(marker);}}
-  function stop(){playing=false;$('play').textContent='Play mechanism';cancelAnimationFrame(frame);frame=0;}
-  function tick(t){if(!playing)return;if(!document.hidden&&t-lastTick>70){const dt=Math.min((t-lastTick)/1000,.1);lastTick=t;params.angle=(params.angle+dt*55)%360;
-      const motion=M.buildScene({...params,symbols:false});scene.geometry=motion.geometry;scene.parameters={...params};scene.meshes=[...scene.meshes.filter(m=>m.id!=='ENG-601'),...motion.meshes.filter(m=>m.id==='ENG-601')];upload(true);readouts();render();}frame=requestAnimationFrame(tick);}
-  function setCamera(mode){cameraPreset=mode;autoFit=true;const aspect=Math.max(.5,canvas.clientWidth/Math.max(canvas.clientHeight,1));camera={yaw:mode==='iso'?.27:0,pitch:mode==='top'?1.56:mode==='iso'?.36:.05,distance:Math.max(1350,1730/aspect),target:[50,75,0]};document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===mode));render();}
-  function syncInputs(){document.querySelectorAll('[data-param]').forEach(el=>el.value=String(params[el.dataset.param]));$('cutaway').checked=params.cutaway;$('symbols').checked=params.symbols;$('fill').value=String(params.fill*100);$('exploded').value=String(params.exploded*100);$('angle').value=String(params.angle);}
+  function rebuild(){scene=M.buildScene(params);upload();if(autoFit)setCamera(cameraPreset);select(selected);}
+  function select(id){selected=id;const p=scene.parts.find(x=>x.id===id);$('part-id').textContent=id;$('part-name').textContent=p.name;$('part-phase').textContent=p.phase;$('part-note').textContent=p.note;$('selection-status').textContent=id+' / '+p.name;$('components').replaceChildren(...[...new Set(scene.meshes.filter(m=>m.id===id).map(m=>m.name))].map(name=>{const li=document.createElement('li');li.textContent=name;return li;}));document.querySelectorAll('[data-stage]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.stage===id)));document.querySelectorAll('[data-select]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.select===id)));document.querySelectorAll('[data-part]').forEach(el=>el.classList.toggle('selected',el.dataset.part===id));document.querySelectorAll('[data-marker]').forEach(el=>el.classList.toggle('selected',el.dataset.marker===id));if(isolated)fitMeshes(scene.meshes.filter(m=>m.id===selected));readouts();render();}
+  function createTree(){const tree=$('assembly'),markers=$('markers');tree.replaceChildren();markers.replaceChildren();$('process-stages').replaceChildren();for(const [index,p] of scene.parts.entries()){
+    if([0,4,6,7].includes(index)){const heading=document.createElement('h3');heading.className='group-heading';heading.textContent=({0:'01 / CONDITION + MEASURE',4:'02 / TRANSFER',6:'03 / MECHANISM',7:'04 / RECOVERY'})[index];tree.append(heading);}
+    const stage=document.createElement('button');stage.dataset.stage=p.id;stage.setAttribute('aria-label','Process stage '+(index+1)+': '+p.name);stage.textContent=String(index+1).padStart(2,'0');const stageName=document.createElement('span');stageName.textContent=['Feed','Filter','Condition','Sample','Aerosol','Meter','Engine','Recover'][index];stage.append(stageName);stage.onclick=()=>select(p.id);$('process-stages').append(stage);
+    const row=document.createElement('div');row.className='assembly-row';row.dataset.part=p.id;const check=document.createElement('input');check.type='checkbox';check.checked=!hidden.has(p.id);check.setAttribute('aria-label','Show '+p.name);check.onchange=()=>{isolated=false;$('isolate').textContent='Isolate selected';if(check.checked)hidden.delete(p.id);else hidden.add(p.id);readouts();render();};const button=document.createElement('button');button.dataset.select=p.id;button.setAttribute('aria-pressed',String(selected===p.id));const id=document.createElement('b');id.textContent=p.id;const name=document.createElement('span');name.textContent=p.name;button.append(id,name);button.onclick=()=>select(p.id);row.append(check,button);tree.append(row);const marker=document.createElement('button');marker.className='marker';marker.dataset.marker=p.id;marker.textContent=p.id;marker.setAttribute('aria-label','Select '+p.name+' in model');marker.onclick=()=>select(p.id);markers.append(marker);}}
+  function stop(){playing=false;$('play').textContent='Play mechanism';$('play').setAttribute('aria-pressed','false');cancelAnimationFrame(frame);frame=0;}
+  function tick(t){if(!playing)return;if(!document.hidden&&t-lastTick>16){const dt=Math.min((t-lastTick)/1000,.1);lastTick=t;params.angle=(params.angle+dt*Number($('playback-speed').value))%360;
+      const motion=M.buildScene(params,true);scene.geometry=motion.geometry;scene.parameters={...params};scene.meshes=[...scene.meshes.filter(m=>m.id!=='ENG-601'),...motion.meshes.filter(m=>m.id==='ENG-601')];upload(true);readouts();render();}frame=requestAnimationFrame(tick);}
+  function fitMeshes(meshes){
+    const lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];
+    for(const m of meshes)for(let i=0;i<m.vertices.length;i+=6)for(let j=0;j<3;j++){lo[j]=Math.min(lo[j],m.vertices[i+j]);hi[j]=Math.max(hi[j],m.vertices[i+j]);}
+    if(!Number.isFinite(lo[0]))return;camera.target=lo.map((v,i)=>(v+hi[i])/2);
+    const y=camera.yaw,p=camera.pitch,z=[Math.sin(y)*Math.cos(p),Math.sin(p),Math.cos(y)*Math.cos(p)],x=vec.norm(vec.cross([0,1,0],z)),u=vec.cross(z,x),f=Math.tan(40*Math.PI/360),aspect=Math.max(.2,canvas.clientWidth/Math.max(canvas.clientHeight,1));
+    let distance=150;
+    for(const a of [lo[0],hi[0]])for(const b of [lo[1],hi[1]])for(const c of [lo[2],hi[2]]){const v=vec.sub([a,b,c],camera.target);distance=Math.max(distance,Math.abs(vec.dot(v,x))/(f*aspect)+Math.abs(vec.dot(v,z)),Math.abs(vec.dot(v,u))/f+Math.abs(vec.dot(v,z)));}
+    camera.distance=distance*1.32;camera.target[1]+=(hi[1]-lo[1])*.08;
+  }
+  function setCamera(mode){cameraPreset=mode;autoFit=true;camera.yaw=mode==='iso'?.27:0;camera.pitch=mode==='top'?1.56:mode==='iso'?.36:.05;fitMeshes(scene.meshes.filter(m=>visible(m.id)));document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===mode);b.setAttribute('aria-pressed',String(b.dataset.view===mode));});render();}
+  function syncInputs(){document.querySelectorAll('[data-param]').forEach(el=>el.value=String(params[el.dataset.param]));$('cutaway').checked=params.cutaway;$('symbols').checked=params.symbols;$('fill').value=String(params.fill*100);$('exploded').value=String(params.exploded*100);$('angle').value=String(params.angle);$('section-angle').value=String(params.sectionAngle);}
   function download(name,text,type){const url=URL.createObjectURL(new Blob([text],{type})),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   document.querySelectorAll('[data-param]').forEach(el=>el.addEventListener('change',()=>{try{if(el.value.trim()==='')throw new Error('A numeric value is required.');params=M.validate({...params,[el.dataset.param]:Number(el.value)});el.removeAttribute('aria-invalid');rebuild();}catch(err){el.setAttribute('aria-invalid','true');toast(err.message);el.value=String(params[el.dataset.param]);}}));
   for(const id of ['cutaway','symbols'])$(id).onchange=()=>{params[id]=$(id).checked;rebuild();};
   for(const id of ['fill','exploded'])$(id).oninput=()=>{params[id]=Number($(id).value)/100;rebuild();};
   $('angle').oninput=()=>{stop();params.angle=Number($('angle').value);rebuild();};
-  $('play').onclick=()=>{if(playing){stop();return;}playing=true;lastTick=performance.now();$('play').textContent='Pause mechanism';frame=requestAnimationFrame(tick);};
+  $('play').onclick=()=>{if(playing){stop();return;}playing=true;lastTick=performance.now();$('play').textContent='Pause mechanism';$('play').setAttribute('aria-pressed','true');frame=requestAnimationFrame(tick);};
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
   $('reset').onclick=()=>{stop();params={...M.defaults};hidden.clear();isolated=false;$('isolate').textContent='Isolate selected';syncInputs();rebuild();createTree();select('NBG-104');setCamera('iso');toast('P0 reference geometry and supplied assumptions restored.');};
   $('show-all').onclick=()=>{hidden.clear();isolated=false;$('isolate').textContent='Isolate selected';createTree();select(selected);};
   $('isolate').onclick=()=>{isolated=!isolated;$('isolate').textContent=isolated?'Exit isolation':'Isolate selected';readouts();render();};
-  $('focus').onclick=()=>{autoFit=false;const p=scene.parts.find(x=>x.id===selected);camera.target=[...p.center];camera.distance=(selected==='ENG-601'?620:430)*Math.max(1,canvas.clientHeight/Math.max(canvas.clientWidth,1));render();};
+  $('focus').onclick=()=>{savedCamera={...camera,target:[...camera.target]};autoFit=false;fitMeshes(scene.meshes.filter(m=>m.id===selected));render();};
+  $('focus-view').onclick=()=>$('focus').click();
+  $('restore-view').onclick=()=>{if(savedCamera){camera=savedCamera;savedCamera=null;autoFit=false;render();}else setCamera(cameraPreset);};
+  $('projection').onchange=()=>{projection=$('projection').value;render();};
+  $('section-angle').oninput=()=>{params.sectionAngle=Number($('section-angle').value);rebuild();};
+  document.querySelectorAll('[data-angle]').forEach(el=>el.onclick=()=>{stop();params.angle=Number(el.dataset.angle);rebuild();});
   $('fit').onclick=()=>setCamera('iso');document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setCamera(b.dataset.view));
   $('save').onclick=()=>download('hydrocycle-cad-parameters.json',JSON.stringify(M.document(params),null,2),'application/json');
   $('obj').onclick=()=>{const ids=new Set(scene.meshes.filter(m=>visible(m.id)).map(m=>m.id));download('hydrocycle-concept.obj',M.toOBJ(scene,ids),'text/plain');toast('Exported visible concept mesh in millimeters. Not for fabrication.');};
   $('import').onclick=()=>$('file').click();$('file').onchange=async()=>{const f=$('file').files[0];if(!f)return;try{if(f.size>100000)throw new Error('Parameter file exceeds 100 kB.');const p=M.parseDocument(await f.text());stop();params=p;syncInputs();rebuild();toast('Parameter file loaded. Validation remains UNVALIDATED CONCEPT.');}catch(e){toast('Import rejected: '+e.message);}finally{$('file').value='';}};
+  const massLabels={initial_h2_mg_per_cycle:'Initial hydrogen',retained_h2_mg_per_cycle:'Retained hydrogen',released_h2_mg_per_cycle:'Released hydrogen',unaccounted_h2_mg_per_cycle:'Unaccounted hydrogen',residual_h2_mg_per_cycle:'Balance residual'};
+  const energyLabels={hydrogen_chemical_energy_j:'Hydrogen chemical energy',water_sensible_heating_j:'Water sensible load',water_phase_change_j:'Water phase-change load',net_external_preheat_j:'External preheat',estimated_wall_loss_j:'Estimated wall loss',usable_energy_margin_j:'Usable energy margin'};
+  function ledger(id,labels,values){$(id).replaceChildren(...Object.entries(labels).map(([key,label])=>{const row=document.createElement('div'),term=document.createElement('dt'),value=document.createElement('dd');term.textContent=label;const n=values?.[key];value.textContent=n==null?'Unknown':n!==0&&(Math.abs(n)<.001||Math.abs(n)>=1e7)?n.toExponential(4):n.toLocaleString(undefined,{maximumSignificantDigits:5});row.append(term,value);return row;}));}
+  function renderEvidence(){ledger('mass-ledger',massLabels,result?.mass);ledger('energy-ledger',energyLabels,result?.energy);$('clear-result').disabled=!result;$('pv-empty').hidden=!!result;$('pv-loaded').hidden=!result;
+    $('result-status').textContent=result?'Imported model result '+result.id+' / model output, not verified measurements. Read-only; no live connection.':'No simulation result loaded. Missing measurements remain unknown. Hydrogen is fuel; water is carrier and thermal load.';
+    $('gate-status').textContent=result?(result.passed?'Imported feasibility gate: passed within that model scenario. Hardware validation remains unestablished.':'Imported feasibility gate: FAILED. Showing only the saved motored baseline; no proposed cycle.'):'Feasibility not evaluated here. Geometry and mechanism motion do not validate hydrogen loading, vaporization or output.';
+    $('result-meta').textContent=result?Object.entries(result.metadata).map(([key,value])=>key+': '+(value??'unknown')).join('\n'):'No result source. Geometry: P0 assumptions / proposed envelopes. Kinematics: geometric calculation only.';
+    if(!result)return;const t=result.trace,v=t.volume_m3.map(x=>x*1e6),p=t.pressure_pa.map(x=>x/1e5),v0=Math.min(...v),v1=Math.max(...v),p1=Math.max(...p,1e-9);
+    result.points=v.map((x,i)=>[42+(x-v0)/(v1-v0||1)*280,130-p[i]/p1*110]);$('pv-path').setAttribute('d',result.points.map((p,i)=>(i?'L':'M')+p.join(',')).join(' '));$('pv-max').textContent=p1.toPrecision(3);$('pv-volume-min').textContent=v0.toPrecision(3);$('pv-volume-max').textContent=v1.toPrecision(3);$('result-sample').max=String(v.length-1);$('result-sample').value='0';sampleResult();
+  }
+  function sampleResult(){if(!result)return;const i=Number($('result-sample').value),p=result.points[i],t=result.trace;$('pv-cursor').setAttribute('cx',p[0]);$('pv-cursor').setAttribute('cy',p[1]);$('pv-readout').textContent=t.crank_angle_deg[i].toFixed(1)+'° / '+(t.volume_m3[i]*1e6).toFixed(3)+' cm³ / '+(t.pressure_pa[i]/1e5).toFixed(4)+' bar (saved model sample)';}
+  $('load-result').onclick=()=>$('result-file').click();$('result-sample').oninput=sampleResult;
+  $('clear-result').onclick=()=>{result=null;renderEvidence();};
+  $('result-file').onchange=async()=>{const f=$('result-file').files[0];if(!f)return;try{if(f.size>5000000)throw new Error('Result exceeds 5 MB.');const parsed=M.parseResult(await f.text());result=parsed;renderEvidence();toast('Read-only motored baseline loaded. Geometry remains independent.');}catch(e){toast('Result rejected: '+e.message);}finally{$('result-file').value='';}};
   canvas.onpointerdown=e=>{autoFit=false;canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,[e.clientX,e.clientY]);drag={x:e.clientX,y:e.clientY,pan:e.shiftKey||e.button===2};if(pointers.size===2){const a=[...pointers.values()];pinchDistance=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);}};
   canvas.onpointermove=e=>{if(!pointers.has(e.pointerId)||!drag)return;pointers.set(e.pointerId,[e.clientX,e.clientY]);if(pointers.size===2){const a=[...pointers.values()],d=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);if(d>1&&pinchDistance>1)camera.distance=Math.max(150,Math.min(6000,camera.distance*pinchDistance/d));pinchDistance=d;}else{const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(drag.pan){const scale=camera.distance/1000;camera.target[0]-=dx*scale;camera.target[1]+=dy*scale;}else{camera.yaw-=dx*.005;camera.pitch=Math.max(-.2,Math.min(1.56,camera.pitch+dy*.004));}}drag.x=e.clientX;drag.y=e.clientY;render();};
   const end=e=>{pointers.delete(e.pointerId);if(!pointers.size)drag=null;else{const a=[...pointers.values()][0];drag={x:a[0],y:a[1],pan:false};}};canvas.onpointerup=end;canvas.onpointercancel=end;canvas.oncontextmenu=e=>e.preventDefault();canvas.addEventListener('wheel',e=>{autoFit=false;e.preventDefault();camera.distance=Math.max(150,Math.min(6000,camera.distance*Math.exp(e.deltaY*.001)));render();},{passive:false});
   $('viewport').onkeydown=e=>{if(e.target!==$('viewport'))return;const actions={ArrowLeft:()=>camera.yaw-=.12,ArrowRight:()=>camera.yaw+=.12,ArrowUp:()=>camera.pitch=Math.min(1.56,camera.pitch+.1),ArrowDown:()=>camera.pitch=Math.max(-.2,camera.pitch-.1),'+':()=>camera.distance=Math.max(150,camera.distance*.9),'-':()=>camera.distance=Math.min(6000,camera.distance*1.1)};if(actions[e.key]){autoFit=false;e.preventDefault();actions[e.key]();render();}};
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();lost=true;stop();$('render-status').textContent='GPU CONTEXT LOST';$('gpu-error').hidden=false;});
   canvas.addEventListener('webglcontextrestored',()=>{lost=false;gpu=[];try{initGL();upload();$('gpu-error').hidden=true;render();}catch(e){toast(e.message);}});
-  createTree();syncInputs();readouts();if(gl){try{initGL();upload();}catch(e){lost=true;$('gpu-error').hidden=false;$('render-status').textContent='3D UNAVAILABLE';}}else if(!ctx2d){$('gpu-error').hidden=false;$('render-status').textContent='3D UNAVAILABLE';}
+  $('play').setAttribute('aria-pressed','false');createTree();syncInputs();readouts();renderEvidence();if(gl){try{initGL();upload();}catch(e){lost=true;$('gpu-error').hidden=false;$('render-status').textContent='3D UNAVAILABLE';}}else if(!ctx2d){$('gpu-error').hidden=false;$('render-status').textContent='3D UNAVAILABLE';}
   select(selected);setCamera('iso');new ResizeObserver(()=>{if(autoFit)setCamera(cameraPreset);else render();}).observe(canvas);
 })();
 

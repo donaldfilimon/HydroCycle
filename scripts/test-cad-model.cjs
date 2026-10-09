@@ -91,3 +91,58 @@ test('input limits keep generated geometry finite at both extremes',()=>{
     assert.ok(M.buildScene(p).meshes.every(m=>m.vertices.every(Number.isFinite)));
   }
 });
+
+test('section orientation is backward compatible, bounded and changes cut surfaces',()=>{
+  const old={...M.defaults};delete old.sectionAngle;
+  assert.equal(M.validate(old).sectionAngle,0);
+  assert.throws(()=>M.validate({...M.defaults,sectionAngle:361}));
+  assert.notDeepEqual(M.buildScene({...M.defaults,sectionAngle:90}).meshes[2].vertices,M.buildScene(M.defaults).meshes[2].vertices);
+});
+test('hierarchy names mesh components and symbols remain static during crank motion',()=>{
+  const a=M.buildScene(M.defaults),b=M.buildScene({...M.defaults,angle:180});
+  assert.ok(a.meshes.every(m=>typeof m.name==='string'&&m.name.length>0));
+  assert.deepEqual(a.meshes.filter(m=>m.decorative),b.meshes.filter(m=>m.decorative));
+  assert.ok(a.meshes.some(m=>m.name==='Wrist pin'));
+});
+test('real model result is a read-only motored trace, never a fabricated pressure curve',()=>{
+  const raw=JSON.parse(readFileSync(resolve(__dirname,'fixtures/cad-model-result.json'),'utf8'));
+  const result=M.parseResult(JSON.stringify(raw));
+  assert.deepEqual(result.trace.pressure_pa,raw.motored_baseline.pressure_pa);
+  assert.equal(result.id,raw.result_id);
+  assert.equal(result.metadata.random_seed,raw.reproducibility.random_seed);
+  const bad=structuredClone(raw);bad.motored_baseline.volume_m3.pop();
+  assert.throws(()=>M.parseResult(JSON.stringify(bad)));
+  bad.motored_baseline=raw.motored_baseline;bad.gate.passed=false;bad.proposed_cycle={};
+  assert.throws(()=>M.parseResult(JSON.stringify(bad)));
+  assert.throws(()=>M.parseResult('{"result_id":"unproven"}'));
+});
+
+test('piston crown and wrist pin agree with the volume geometry across crank positions',()=>{
+  for(const angle of [0,90,180,270]){
+    const s=M.buildScene({...M.defaults,angle}),piston=s.meshes.find(m=>m.name==='Piston');
+    const ys=piston.vertices.filter((_,i)=>i%6===1);
+    assert.ok(Math.abs(Math.max(...ys)-(67+s.geometry.pistonY+9))<1e-9);
+    const pin=s.meshes.find(m=>m.name==='Wrist pin');
+    const py=pin.vertices.filter((_,i)=>i%6===1);
+    assert.ok(Math.abs((Math.min(...py)+Math.max(...py))/2-(67+s.geometry.pistonY))<1e-9);
+  }
+});
+test('result nulls stay null, zero stays zero, unsupported metadata and numeric strings reject',()=>{
+  const raw=JSON.parse(readFileSync(resolve(__dirname,'fixtures/cad-model-result.json'),'utf8'));
+  raw.gate.mass_balance.initial_h2_mg_per_cycle=null;
+  raw.gate.mass_balance.retained_h2_mg_per_cycle=0;
+  const r=M.parseResult(JSON.stringify(raw));
+  assert.equal(r.mass.initial_h2_mg_per_cycle,null);
+  assert.equal(r.mass.retained_h2_mg_per_cycle,0);
+  raw.gate.mass_balance.initial_h2_mg_per_cycle='2';
+  assert.throws(()=>M.parseResult(JSON.stringify(raw)));
+  raw.gate.mass_balance.initial_h2_mg_per_cycle=null;
+  raw.reproducibility.schema_version='2.0.0';
+  assert.throws(()=>M.parseResult(JSON.stringify(raw)));
+});
+test('animation-only rebuild returns the exact engine without rebuilding static stages',()=>{
+  const p={...M.defaults,angle:130,exploded:.8};
+  const full=M.buildScene(p),motion=M.buildScene(p,true);
+  assert.ok(JSON.stringify(motion.meshes)===JSON.stringify(full.meshes.filter(m=>m.id==='ENG-601')), 'Animation meshes must match the full-scene engine exactly');
+  assert.deepEqual(motion.geometry,full.geometry);
+});

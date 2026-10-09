@@ -1,73 +1,82 @@
 # HydroCycle browser CAD workspace
 
-This adds `/cad` to the existing web app. Summary, Workbench, Test Runs,
-contracts, and the Python thermodynamic solver are unchanged.
+`/cad` embeds the self-contained `public/hydrocycle-cad.html` document in a
+sandbox with scripts and downloads permitted. The standalone workspace needs
+no network, external libraries, Blender, or model service. The route honors
+the GitHub Pages base path; a root-path fixture-only Sites export is also available.
 
-The route embeds `public/hydrocycle-cad.html` in an isolated iframe and uses
-`runtimeConfigFromEnvironment().basePath`, including the GitHub Pages prefix.
-The document also works independently, without external scripts, styles,
-fonts, network requests, accounts, telemetry, or Blender.
+## Inspection and geometry
 
-## What is implemented
+Eight selectable process stages are grouped into conditioning/metrology,
+transfer, mechanism, and recovery. Stage buttons, component markers, assembly
+selection, and the inspector share selection state. The inspector lists named
+subcomponents and their scientific boundary.
 
-- Eight named concept stages, selectable from the assembly tree or markers.
-- Perspective orbit, pan, zoom, presets, component focus, and keyboard control.
-- Real mesh cutaways, visibility filtering, and exploded assembly coordinates.
-- Parameterized slider-crank geometry with synchronized volume readouts.
-- Explicitly symbolic, fixed nanobubble and aerosol glyphs, not trajectories.
-- Validated JSON parameter import/export and actual visible-mesh OBJ export.
-- Native WebGL rendering and a shared-mesh Canvas 3D fallback.
-- Responsive desktop/mobile controls and resize-aware camera framing.
+Perspective and orthographic projections support orbit, pan, zoom, camera
+presets, focus/restore, isolation, visibility, and fit from mesh bounds.
+Sections remove mesh sectors and can rotate through 360 degrees. Exploding
+separates stages and lifts removable covers; conceptual connections disappear
+when exploded or when stages are hidden. These are open concept mesh sections,
+not watertight solid CAD or manufacturing drawings.
 
-## Scientific boundary
+The engine has a crank pin, connecting rod, wrist pin, piston rings, cylinder
+supports, removable head, and illustrative chamber volume. The rod meets the
+wrist-pin center; the piston crown offset is included in the chamber envelope.
+Playback rebuilds only engine geometry. TDC/BDC and quarter-turn controls,
+three display speeds, and the volume plot work at desktop and mobile sizes.
+Playback is opt-in, stops when the document is hidden, and offers no operating
+speed, ignition timing, or hardware controls.
 
-This is a concept-mesh workstation, not a solid-modeling CAD kernel or a
-fabrication release. Envelope dimensions do not establish pressure ratings.
-The geometry is not evidence for hydrogen loading, vaporization, engine power,
-or the feasibility of the proposed process.
+Fixed nanobubble and aerosol glyphs always carry **VISUALIZATION NOT TO SCALE**.
+They do not move along paths; their count and size do not establish concentration,
+mass, vapor fraction, or CFD output. Water is carrier and thermal load;
+hydrogen is fuel. No pressure rating, gas-source sizing, combustible-mixture
+recipe, or actuator endpoint is supplied.
 
-Hydrogen mass, molecular vapor fraction, and shaft power remain `null` in
-exports. The current solver is not called or replaced. No actuator, ignition,
-or other hardware-control path exists.
+## Evidence and read-only results
 
-The P0 reference is 500 cubic centimeters displacement, compression ratio 10,
-86 mm bore, and rod/crank ratio 3.5. Stroke is derived from displacement and
-bore rather than copied from rounded drawings. At minus 10 degrees the
-geometric volume is about 60.431 cubic centimeters; the legacy 59.354 value
-is retained as a discrepancy, not silently fitted away.
+Mass, energy, provenance, and validation panels begin with unknown values.
+**Open model result** accepts an existing HydroCycle `SimulationResult` JSON
+object, either directly or under a `result` property. It does not call a solver.
+Canonical Test Run bundles containing multiple simulations must first have the
+chosen simulation's `result` extracted; the workspace never silently chooses one.
 
-## Verification
+The importer checks schema version, reproducibility fields, array lengths,
+finite values, angle ordering, and the failed-gate/proposed-cycle invariant.
+Files are bounded to 5 MB and traces to 10,000 samples. It displays only the
+saved motored baseline, with an independent sample scrubber and P–V cursor.
+Unit conversions are for display only. No pressure or energy is re-derived.
+Model results are not represented as measurements or hardware validation.
 
-Run the dependency-free checks against the exact published document:
+CAD geometry and result geometry are independent. Editing geometry cannot
+alter a saved result, and the result plot explicitly says so. Missing ledger
+values remain `null` internally and `Unknown` on screen; actual zero remains
+zero. Imported content is rendered as text, not HTML. Invalid imports preserve
+the previous accepted result. Clearing a result restores unknowns.
 
-```sh
-node --test scripts/test-cad-model.cjs
-```
+## Files and compatibility
 
-There are 14 checks covering kinematic invariants, units, finite geometry,
-cutaways, exploded coordinates, input validation, unknown physical values,
-JSON round trips, and real OBJ geometry with visibility filtering.
+Parameter JSON remains `hydrocycle-cad/1`; old files without `sectionAngle`
+default to zero. New files include the orientation. Unknown hydrogen mass,
+vapor fraction, and shaft power remain null. Parameter exports do not include
+imported results and cannot accidentally turn model output into measurements.
 
-`apps/web/src/test/cad-document.test.ts` adds six checks to the existing
-Vitest suite. The regular repository gate should still run before deployment:
+OBJ exports contain real visible triangles in millimeters, respect isolation
+and visibility, and exclude symbolic samples. They remain NOT FOR FABRICATION.
+The volume calculation preserves the P0 500 cm³ / 86 mm / 10:1 / 3.5 reference
+and the documented discrepancy with the legacy minus-ten-degree value.
 
-```sh
-bun run check
-```
+## Verification commands
 
-This change was exercised offline with Playwright/Chromium at 1536 by 960 and
-390 by 844, including the sandboxed iframe, controls, invalid imports, and
-actual JSON/OBJ downloads. No JavaScript runtime errors were observed.
-The validation environment exposed Canvas 3D but not WebGL. GPU rendering,
-full Next builds, existing-route regressions, and live-domain publication
-were not validated there.
+- `bun run test:cad`: 20 dependency-free tests executing the shipped model script.
+- `bun run test:cad:browser`: 10 Chromium scenarios at 1536×1024 and 390×844,
+  WebGL and forced Canvas fallback, stage synchronization, motion/inspection,
+  accessibility scans, downloads, imports, and null/invalid result handling.
+- `bun run test:e2e`: complete application browser suite, including sandboxed
+  `/cad` route interaction/download checks at desktop and mobile widths.
+- `bun run check`: full repository gate, now including the CAD model tests.
+- `bun run build:sites:static`: root-path fixture-only static Next export.
 
-## Publishing and maintenance
-
-The portable document intentionally retains its embedded formatting. Its
-geometry script has the stable id `hydrocycle-model-source`, so tests execute
-the actual shipped geometry code rather than a separate duplicate.
-
-Source commits do not themselves prove a successful deployment. GitHub Pages
-is gated by the existing CI workflow. The original Sites project requires
-its own publication step; its hosting configuration is not changed here.
+Screenshots are written under `apps/web/test-results`. Chromium viewport tests
+are not native Safari/iPhone or physical-device acceptance. Publication is a
+separate action; source commits and local builds do not establish a live update.
